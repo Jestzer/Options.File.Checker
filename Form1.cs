@@ -49,6 +49,15 @@ namespace Options.File.Checker
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
+
+                    bool missingServer = System.IO.File.ReadAllText(selectedFile).Contains("SERVER");
+                    bool missingDaemon = System.IO.File.ReadAllText(selectedFile).Contains("DAEMON");
+                    if (!missingDaemon && !missingServer) 
+                    { 
+                        MessageBox.Show("The selected license file is missing the SERVER and/or DAEMON line.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        LicenseFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
                 }
             }
             Properties.Settings.Default.LicenseFilePathSetting = LicenseFileLocationTextBox.Text;
