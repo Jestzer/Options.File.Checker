@@ -60,3 +60,12 @@ EXCLUDE "MATLAB key=efgh5678" USER <NNU username>
 #R2008a or newer, will have asset_info= in the INCREMENT lines, corresponds to the license number
 INCLUDE "MATLAB asset_info=220668" USER <NNU username>
 EXCLUDE "MATLAB asset_info=36678" USER <NNU username>
+
+
+#Custom additions
+HOST_GROUP subnet 192.168.1.*
+HOST_GROUP special_hosts 192.168.1.90 192.168.1.91
+
+INCLUDE MATLAB:asset_info=123465 HOST_GROUP subnet
+EXCLUDE MATLAB:asset_info=123465 HOST_GROUP special_hosts
+INCLUDE MATLAB:asset_info=987654 HOST_GROUP special_hosts

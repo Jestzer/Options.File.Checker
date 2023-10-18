@@ -1,5 +1,6 @@
 using static System.Windows.Forms.LinkLabel;
 using System.Text.RegularExpressions;
+using System.Runtime.CompilerServices;
 
 namespace Options.File.Checker
 {
@@ -320,7 +321,7 @@ namespace Options.File.Checker
                     }
                 }
 
-                // Group dictionary.
+                // GROUP dictionary.
                 Dictionary<string, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<string, Tuple<string, string, int>>();
                 for (int optionsGroupLineIndex = 0; optionsGroupLineIndex < filteredOptionsFileLines.Length; optionsGroupLineIndex++)
                 {
@@ -385,17 +386,127 @@ namespace Options.File.Checker
                             includeProductKey = null;
                         }
 
-                        OutputTextBox.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
+                        //OutputTextBox.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
                         optionsIncludeIndex[includeProductName] = Tuple.Create(includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
                     }
                 }
-                OutputTextBox.Text += $"Is case sensitivity turned off?: {caseSensitivity.ToString()}";
+                OutputTextBox.Text += $"Is case sensitivity turned off?: {caseSensitivity.ToString()}\r\n";
+
                 // RESERVE dictionary.
+                Dictionary<string, Tuple<string, string, string>> optionsReserveIndex = new Dictionary<string, Tuple<string, string, string>>();
+                for (int optionsReserveLineIndex = 0; optionsReserveLineIndex < filteredOptionsFileLines.Length; optionsReserveLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[optionsReserveLineIndex];
+                    string reserveSeats = "broken-reserveSeats";
+                    string reserveProductName = "broken-reserveProductName";
+                    string reserveClientType = "broken-reserveClientType";
+                    string reserveClientSpecified = "broken-reserveClientSpecified";
+
+                    if (line.TrimStart().StartsWith("RESERVE "))
+                    {
+                        string[] lineParts = line.Split(' ');
+                        reserveSeats = lineParts[1];
+                        reserveProductName = lineParts[2];
+                        reserveClientType = lineParts[3];
+                        reserveClientSpecified = string.Join(" ", lineParts.Skip(4));
+
+                        OutputTextBox.Text += $"Seats reserved: {reserveSeats}. Product: {reserveProductName}. CT: {reserveClientType}. CS: {reserveClientSpecified}\r\n";
+                        optionsReserveIndex[reserveProductName] = Tuple.Create(reserveSeats, reserveClientType, reserveClientSpecified);
+                    }
+                }
 
                 // MAX dictionary.
+                Dictionary<string, Tuple<string, string, string>> optionsMaxIndex = new Dictionary<string, Tuple<string, string, string>>();
+                for (int optionsMaxLineIndex = 0; optionsMaxLineIndex < filteredOptionsFileLines.Length; optionsMaxLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[optionsMaxLineIndex];
+                    string maxSeats = "broken-maxSeats";
+                    string maxProductName = "broken-maxProductName";
+                    string maxClientType = "broken-maxClientType";
+                    string maxClientSpecified = "broken-maxClientSpecified";
+
+                    if (line.TrimStart().StartsWith("MAX "))
+                    {
+                        string[] lineParts = line.Split(' ');
+                        maxSeats = lineParts[1];
+                        maxProductName = lineParts[2];
+                        maxClientType = lineParts[3];
+                        maxClientSpecified = string.Join(" ", lineParts.Skip(4));
+
+                        OutputTextBox.Text += $"Max seats: {maxSeats}. Product: {maxProductName}. CT: {maxClientType}. CS: {maxClientSpecified}\r\n";
+                        optionsMaxIndex[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
+                    }
+                }
 
                 // EXCLUDE dictionary.
+                Dictionary<string, Tuple<string?, string?, string, string>> optionsExcludeIndex = new Dictionary<string, Tuple<string?, string?, string, string>>();
+                for (int optionsExcludeLineIndex = 0; optionsExcludeLineIndex < filteredOptionsFileLines.Length; optionsExcludeLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[optionsExcludeLineIndex];
+                    string excludeProductName = "brokenProductName";
+                    string? excludeLicenseNumber = "brokenLicenseNumber";
+                    string? excludeProductKey = "brokenProductKey";
+                    string excludeClientType = "brokenClientType";
+                    string excludeClientSpecified = "brokenClientSpecified";
+                    if (line.TrimStart().StartsWith("EXCLUDE "))
+                    {
+                        string[] lineParts = line.Split(' ');
+                        excludeProductName = lineParts[1];
+                        if (excludeProductName.Contains('"'))
+                        {
+                            excludeProductName = excludeProductName.Replace("\"", "");
+                            excludeLicenseNumber = lineParts[2];
+                            if (excludeLicenseNumber.Contains("key="))
+                            {
+                                excludeProductKey = lineParts[2];
+                                string unfixedExcludeProductKey = excludeProductKey;
+                                string quotedExcludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
+                                excludeProductKey = quotedExcludeProductKey.Replace("\"", "");
+                                excludeLicenseNumber = null;
+                            }
+                            else
+                            {
+                                string unfixedExcludeLicenseNumber = excludeLicenseNumber;
+                                string quoteExcludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                excludeLicenseNumber = quoteExcludeLicenseNumber.Replace("\"", "");
+                                excludeProductKey = null;
+                            }
 
+                            excludeClientType = lineParts[3];
+                            excludeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                        }
+                        else
+                        {
+                            excludeClientType = lineParts[2];
+                            excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            excludeLicenseNumber = null;
+                            excludeProductKey = null;
+                        }
+
+                        OutputTextBox.Text += $"{excludeProductName}: SN:{excludeLicenseNumber}. PK:{excludeProductKey} CT:{excludeClientType} CS: {excludeClientSpecified}\r\n";
+                        optionsExcludeIndex[excludeProductName] = Tuple.Create(excludeLicenseNumber, excludeProductKey, excludeClientType, excludeClientSpecified);
+                    }
+                }
+
+                // HOST_GROUP dictionary.
+                Dictionary<string, Tuple<string>> optionsHostGroupIndex = new Dictionary<string, Tuple<string>>();
+                for (int optionsHostGroupLineIndex = 0; optionsHostGroupLineIndex < filteredOptionsFileLines.Length; optionsHostGroupLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[optionsHostGroupLineIndex];
+                    string hostGroupName = "broken-hostGroupName";
+                    string hostGroupClientSpecified = "broken-hostGroupClientSpecified";
+
+                    if (line.TrimStart().StartsWith("HOST_GROUP "))
+                    {
+                        string[] lineParts = line.Split(' ');
+                        hostGroupName = lineParts[1];
+                        hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
+
+                        OutputTextBox.Text += $"HOST_GROUP Name: {hostGroupName}. Clients: {hostGroupClientSpecified}\r\n";
+                        optionsHostGroupIndex[hostGroupName] = Tuple.Create(hostGroupClientSpecified);
+
+                    }
+                }
             }
             catch (Exception ex)
             { MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
