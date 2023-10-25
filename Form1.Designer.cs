@@ -81,6 +81,7 @@
             // 
             // AnalyzerButton
             // 
+            AnalyzerButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
             AnalyzerButton.Enabled = false;
             AnalyzerButton.Location = new Point(142, 175);
             AnalyzerButton.Margin = new Padding(2, 1, 2, 1);
@@ -113,6 +114,7 @@
             // 
             // OutputTextBox
             // 
+            OutputTextBox.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
             OutputTextBox.Location = new Point(404, 16);
             OutputTextBox.Margin = new Padding(2, 1, 2, 1);
             OutputTextBox.Multiline = true;
@@ -125,6 +127,7 @@
             // 
             // SaveOutputButton
             // 
+            SaveOutputButton.Anchor = AnchorStyles.Bottom | AnchorStyles.Right;
             SaveOutputButton.Location = new Point(573, 175);
             SaveOutputButton.Margin = new Padding(2, 1, 2, 1);
             SaveOutputButton.Name = "SaveOutputButton";
@@ -138,6 +141,7 @@
             // 
             AutoScaleDimensions = new SizeF(96F, 96F);
             AutoScaleMode = AutoScaleMode.Dpi;
+            AutoValidate = AutoValidate.EnablePreventFocusChange;
             ClientSize = new Size(687, 211);
             Controls.Add(SaveOutputButton);
             Controls.Add(OutputTextBox);
@@ -148,9 +152,10 @@
             Controls.Add(LicenseFileBrowseButton);
             Controls.Add(OptionsFileLocationTextBox);
             Controls.Add(LicenseFileLocationTextBox);
-            FormBorderStyle = FormBorderStyle.FixedSingle;
             Margin = new Padding(2, 1, 2, 1);
             MaximizeBox = false;
+            MaximumSize = new Size(2000, 1000);
+            MinimumSize = new Size(703, 250);
             Name = "Form1";
             StartPosition = FormStartPosition.CenterScreen;
             Text = "Options File Checker";
