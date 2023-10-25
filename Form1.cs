@@ -6,6 +6,14 @@ namespace Options.File.Checker
 {
     public partial class Form1 : Form
     {
+        // INCLUDE dictionary for the options file.
+        Dictionary<string, Tuple<string?, string?, string, string>> optionsIncludeIndex = new Dictionary<string, Tuple<string?, string?, string, string>>();
+
+        // License file dictionary.
+        Dictionary<string, Tuple<int, string, string, string>> licenseFileIndex = new Dictionary<string, Tuple<int, string, string, string>>();
+
+        // We need to not overwrite results as calculations are being done.
+        private string accumulatedResults = "";
         public Form1()
         {
             InitializeComponent();
@@ -53,8 +61,8 @@ namespace Options.File.Checker
 
                     bool missingServer = System.IO.File.ReadAllText(selectedFile).Contains("SERVER");
                     bool missingDaemon = System.IO.File.ReadAllText(selectedFile).Contains("DAEMON");
-                    if (!missingDaemon && !missingServer) 
-                    { 
+                    if (!missingDaemon && !missingServer)
+                    {
                         MessageBox.Show("The selected license file is missing the SERVER and/or DAEMON line.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
@@ -188,7 +196,6 @@ namespace Options.File.Checker
                 OutputTextBox.Text = null;
                 string? productName = null;
                 int seatCount = 0;
-                Dictionary<string, Tuple<int, string, string, string>> productIndex = new Dictionary<string, Tuple<int, string, string, string>>();
 
                 for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
                 {
@@ -298,7 +305,7 @@ namespace Options.File.Checker
                         }
 
                         //OutputTextBox.Text += $"{productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
-                        productIndex[productName] = Tuple.Create(seatCount, productKey, licenseOffering, licenseNumber);
+                        licenseFileIndex[productName] = Tuple.Create(seatCount, productKey, licenseOffering, licenseNumber);
                     }
                 }
 
@@ -342,15 +349,15 @@ namespace Options.File.Checker
                 }
 
                 // INCLUDE dictionary.
-                Dictionary<string, Tuple<string?, string?, string, string>> optionsIncludeIndex = new Dictionary<string, Tuple<string?, string?, string, string>>();
+
                 for (int optionsIncludeLineIndex = 0; optionsIncludeLineIndex < filteredOptionsFileLines.Length; optionsIncludeLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsIncludeLineIndex];
-                    string includeProductName = "brokenProductName";
-                    string? includeLicenseNumber = "brokenLicenseNumber";
-                    string? includeProductKey = "brokenProductKey";
-                    string includeClientType = "brokenClientType";
-                    string includeClientSpecified = "brokenClientSpecified";
+                    string includeProductName = "brokenIncludeProductName";
+                    string? includeLicenseNumber = "brokenIncludeLicenseNumber";
+                    string? includeProductKey = "brokenIncludeProductKey";
+                    string includeClientType = "brokenIncludeClientType";
+                    string includeClientSpecified = "brokenIncludeClientSpecified";
                     if (line.TrimStart().StartsWith("INCLUDE "))
                     {
                         string[] lineParts = line.Split(' ');
@@ -386,7 +393,7 @@ namespace Options.File.Checker
                             includeProductKey = null;
                         }
 
-                        //OutputTextBox.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
+                        OutputTextBox.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
                         optionsIncludeIndex[includeProductName] = Tuple.Create(includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
                     }
                 }
@@ -507,10 +514,54 @@ namespace Options.File.Checker
 
                     }
                 }
+                CalculateRemainingSeats();
+                OutputTextBox.Text += accumulatedResults;
             }
             catch (Exception ex)
             { MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             return;
+        }
+
+        private void CalculateRemainingSeats()
+        {
+            // Initialize seat count
+            int remainingSeats = 0;
+            int seatsToSubtract = 0;
+
+            // Iterate through optionsIncludeIndex dictionary
+            foreach (var optionEntry in optionsIncludeIndex)
+            {
+                string includeProductName = optionEntry.Key;
+                var optionValues = optionEntry.Value;
+                string? includeLicenseNumber = optionValues.Item1;
+                string? includeProductKey = optionValues.Item2;
+                string includeClientType = optionValues.Item3;
+                string includeClientSpecified = optionValues.Item4;
+
+                // Check if there's a matching product in licenseFileIndex
+                if (licenseFileIndex.TryGetValue(includeProductName, out var licenseFileEntry))
+                {
+                    int seatCount = licenseFileEntry.Item1;
+                    string licenseFileLicenseNumber = licenseFileEntry.Item4;
+
+                    // Check if the license numbers and product keys match
+                    if (includeLicenseNumber == licenseFileLicenseNumber)
+                    {
+                        // Subtract the includeClientSpecified count from seatCount
+                        if (!string.IsNullOrEmpty(includeClientSpecified))
+                        {
+                            seatsToSubtract += 1;
+                            seatCount -= seatsToSubtract; 
+                        }
+
+                        // Update the remainingSeats variable
+                        remainingSeats += seatCount;
+                    }
+                }
+            }
+
+            // Append the result to accumulatedResults
+            accumulatedResults += remainingSeats.ToString() + Environment.NewLine;
         }
     }
 }
