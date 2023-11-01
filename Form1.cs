@@ -7,10 +7,10 @@ namespace Options.File.Checker
     public partial class Form1 : Form
     {
         // INCLUDE dictionary for the options file.
-        Dictionary<string, Tuple<string?, string?, string, string>> optionsIncludeIndex = new Dictionary<string, Tuple<string?, string?, string, string>>();
+        Dictionary<int, Tuple<string, string?, string?, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string?, string?, string, string>>();
 
         // License file dictionary.
-        Dictionary<string, Tuple<int, string, string, string>> licenseFileIndex = new Dictionary<string, Tuple<int, string, string, string>>();
+        Dictionary<int, Tuple<string, int, string, string, string>> licenseFileIndex = new Dictionary<int, Tuple<string, int, string, string, string>>();
 
         // We need to not overwrite results as calculations are being done.
         private string accumulatedResults = "";
@@ -305,7 +305,7 @@ namespace Options.File.Checker
                         }
 
                         //OutputTextBox.Text += $"{productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
-                        licenseFileIndex[productName] = Tuple.Create(seatCount, productKey, licenseOffering, licenseNumber);
+                        licenseFileIndex[lineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
                 }
 
@@ -349,7 +349,6 @@ namespace Options.File.Checker
                 }
 
                 // INCLUDE dictionary.
-
                 for (int optionsIncludeLineIndex = 0; optionsIncludeLineIndex < filteredOptionsFileLines.Length; optionsIncludeLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsIncludeLineIndex];
@@ -394,7 +393,7 @@ namespace Options.File.Checker
                         }
 
                         OutputTextBox.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
-                        optionsIncludeIndex[includeProductName] = Tuple.Create(includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
+                        optionsIncludeIndex[optionsIncludeLineIndex] = Tuple.Create(includeProductName, includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
                     }
                 }
                 OutputTextBox.Text += $"Is case sensitivity turned off?: {caseSensitivity.ToString()}\r\n";
@@ -515,7 +514,6 @@ namespace Options.File.Checker
                     }
                 }
                 CalculateRemainingSeats();
-                OutputTextBox.Text += accumulatedResults;
             }
             catch (Exception ex)
             { MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
@@ -524,44 +522,48 @@ namespace Options.File.Checker
 
         private void CalculateRemainingSeats()
         {
-            // Initialize seat count
-            int remainingSeats = 0;
-            int seatsToSubtract = 0;
-
-            // Iterate through optionsIncludeIndex dictionary
-            foreach (var optionEntry in optionsIncludeIndex)
+            foreach (var optionsIncludeEntry in optionsIncludeIndex)
             {
-                string includeProductName = optionEntry.Key;
-                var optionValues = optionEntry.Value;
-                string? includeLicenseNumber = optionValues.Item1;
-                string? includeProductKey = optionValues.Item2;
-                string includeClientType = optionValues.Item3;
-                string includeClientSpecified = optionValues.Item4;
+                int optionsIncludeLineIndex = optionsIncludeEntry.Key;
+                Tuple<string, string?, string?, string, string> optionsIncludeData = optionsIncludeEntry.Value;
 
-                // Check if there's a matching product in licenseFileIndex
-                if (licenseFileIndex.TryGetValue(includeProductName, out var licenseFileEntry))
+                string includeProductName = optionsIncludeData.Item1;
+                string? includeLicenseNumber = optionsIncludeData.Item2;
+
+                foreach (var licenseFileEntry in licenseFileIndex)
                 {
-                    int seatCount = licenseFileEntry.Item1;
-                    string licenseFileLicenseNumber = licenseFileEntry.Item4;
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
-                    // Check if the license numbers and product keys match
-                    if (includeLicenseNumber == licenseFileLicenseNumber)
+                    string productName = licenseFileData.Item1;
+                    string licenseNumber = licenseFileData.Item5;
+
+                    // Check for a matching includeProductName and productName.
+                    if (includeProductName == productName)
                     {
-                        // Subtract the includeClientSpecified count from seatCount
-                        if (!string.IsNullOrEmpty(includeClientSpecified))
+                        if (includeLicenseNumber == licenseNumber)
                         {
-                            seatsToSubtract += 1;
-                            seatCount -= seatsToSubtract; 
-                        }
+                            // Subtract 1 from seatCount.
+                            int seatCount = licenseFileData.Item2;
+                            seatCount--;
 
-                        // Update the remainingSeats variable
-                        remainingSeats += seatCount;
+                            // Update the seatCount in the licenseFileData tuple.
+                            licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                            // Update the seatCount in the licenseFileIndex dictionary.
+                            licenseFileIndex[lineIndex] = licenseFileData;
+
+                            // Update the OutputTextBox.Text with the new seatCount value.
+                            OutputTextBox.Text += $"Seat count for {productName} is now {seatCount}\r\n";
+                        }
+                        else
+                        {
+                            OutputTextBox.Text += $"Matching product {productName} found, but the license numbers don't match.\r\n";
+                        }
                     }
                 }
             }
 
-            // Append the result to accumulatedResults
-            accumulatedResults += remainingSeats.ToString() + Environment.NewLine;
         }
     }
 }
