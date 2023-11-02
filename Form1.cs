@@ -527,8 +527,12 @@ namespace Options.File.Checker
                 int optionsIncludeLineIndex = optionsIncludeEntry.Key;
                 Tuple<string, string?, string?, string, string> optionsIncludeData = optionsIncludeEntry.Value;
 
+                // Load INCLUDE specifications.
                 string includeProductName = optionsIncludeData.Item1;
                 string? includeLicenseNumber = optionsIncludeData.Item2;
+                string? includeProductKey = optionsIncludeData.Item3;
+                string includeClientType = optionsIncludeData.Item4;
+                string includeClientSpecified = optionsIncludeData.Item5;
 
                 foreach (var licenseFileEntry in licenseFileIndex)
                 {
