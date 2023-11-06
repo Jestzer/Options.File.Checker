@@ -6,14 +6,14 @@ namespace Options.File.Checker
 {
     public partial class Form1 : Form
     {
-        // INCLUDE dictionary for the options file.
+        // INCLUDE dictionary from the options file.
         Dictionary<int, Tuple<string, string?, string?, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string?, string?, string, string>>();
+
+        // GROUP dictionary from the options file.
+        Dictionary<int, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<int, Tuple<string, string, int>>();
 
         // License file dictionary.
         Dictionary<int, Tuple<string, int, string, string, string>> licenseFileIndex = new Dictionary<int, Tuple<string, int, string, string, string>>();
-
-        // We need to not overwrite results as calculations are being done.
-        private string accumulatedResults = "";
         public Form1()
         {
             InitializeComponent();
@@ -328,8 +328,7 @@ namespace Options.File.Checker
                     }
                 }
 
-                // GROUP dictionary.
-                Dictionary<string, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<string, Tuple<string, string, int>>();
+                // GROUP dictionary.                
                 for (int optionsGroupLineIndex = 0; optionsGroupLineIndex < filteredOptionsFileLines.Length; optionsGroupLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsGroupLineIndex];
@@ -343,8 +342,8 @@ namespace Options.File.Checker
                         groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
                         groupUserCount = groupUsers.Split(' ').Length;
 
-                        //OutputTextBox.Text += $"{groupName}: {groupUsers}. User count: {groupUserCount}\r\n";
-                        optionsGroupIndex[groupName] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                        OutputTextBox.Text += $"{optionsGroupLineIndex}, {groupName}: {groupUsers}. User count: {groupUserCount}\r\n";
+                        optionsGroupIndex[optionsGroupLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                     }
                 }
 
@@ -547,27 +546,233 @@ namespace Options.File.Checker
                     {
                         if (includeLicenseNumber == licenseNumber)
                         {
-                            // Subtract 1 from seatCount.
+                            // Putting this here should make the seats counts divided by product and license number.
                             int seatCount = licenseFileData.Item2;
-                            seatCount--;
 
-                            // Update the seatCount in the licenseFileData tuple.
-                            licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                            if (includeClientType == "USER")
+                            {
+                                // Check that a user has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
 
-                            // Update the seatCount in the licenseFileIndex dictionary.
-                            licenseFileIndex[lineIndex] = licenseFileData;
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    OutputTextBox.Text = null;
+                                    return;
+                                }
 
-                            // Update the OutputTextBox.Text with the new seatCount value.
-                            OutputTextBox.Text += $"Seat count for {productName} is now {seatCount}\r\n";
+                                // Subtract 1 from seatCount, since you only specified a single user.
+                                seatCount--;
+
+                                // Error out if the seat count is negative.
+                                if (seatCount < 0)
+                                {
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    OutputTextBox.Text = null;
+                                    return;
+                                }
+
+                                // Update the seatCount in the licenseFileData tuple.
+                                licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                // Update the seatCount in the licenseFileIndex dictionary.
+                                licenseFileIndex[lineIndex] = licenseFileData;
+
+                                // Update the OutputTextBox.Text with the new seatCount value.
+                                OutputTextBox.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                            }
+                            if (includeClientType == "GROUP")
+                            {
+
+                                // Check that a group has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    OutputTextBox.Text = null;
+                                    return;
+                                }
+
+                                foreach (var optionsGroupEntry in optionsGroupIndex)
+                                {
+                                    // Load GROUP specifications.
+                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                    string groupName = optionsGroupData.Item1;
+                                    string groupUsers = optionsGroupData.Item2;
+                                    int groupUserCount = optionsGroupData.Item3;
+
+                                    if (groupName == includeClientSpecified)
+                                    {
+                                        // Subtract the appropriate number of seats.
+                                        seatCount -= groupUserCount;
+
+                                        // Error out if the seat count is negative.
+                                        if (seatCount < 0)
+                                        {
+                                            MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                            OutputTextBox.Text = null;
+                                            return;
+                                        }
+
+                                        // Update the seatCount in the licenseFileData tuple.
+                                        licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                        // Update the seatCount in the licenseFileIndex dictionary.
+                                        licenseFileIndex[lineIndex] = licenseFileData;
+
+                                        // Update the OutputTextBox.Text with the new seatCount value.
+                                        OutputTextBox.Text += $"Line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                    }
+                                }
+                            }
                         }
                         else
                         {
+                            // We'll get to the uncategorized products later.
                             OutputTextBox.Text += $"Matching product {productName} found, but the license numbers don't match.\r\n";
                         }
                     }
                 }
             }
 
+            // Now we have to filter out the stragglers (no license number specified.)
+            foreach (var optionsIncludeEntry in optionsIncludeIndex)
+            {
+                string productName = "brokenProductNamePart2ofCalculateRemainingSeats";
+                int optionsIncludeLineIndex = optionsIncludeEntry.Key;
+                Tuple<string, string?, string?, string, string> optionsIncludeData = optionsIncludeEntry.Value;
+
+                // Load INCLUDE specifications.
+                string includeProductName = optionsIncludeData.Item1;
+                string? includeLicenseNumber = optionsIncludeData.Item2;
+                string? includeProductKey = optionsIncludeData.Item3;
+                string includeClientType = optionsIncludeData.Item4;
+                string includeClientSpecified = optionsIncludeData.Item5;
+
+                // Skip INCLUDE entries with specified license numbers. We already accounted for them.
+                bool includeHasNoLicenseNumber = string.IsNullOrWhiteSpace(includeLicenseNumber);
+
+                if (!includeHasNoLicenseNumber)
+                {
+                    continue;
+                }
+
+                // Set this up now so that if there are no entries left to subtract the seat(s), we know to stop the for loops.
+                bool allSeatCountsZero = true;
+                int seatCount = 0;
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                    productName = licenseFileData.Item1;
+
+                    // Check for a matching includeProductName and productName.
+                    if (includeProductName == productName)
+                    {
+                        seatCount = licenseFileData.Item2;
+                        if (seatCount == 0)
+                        {
+                            // See if we can find another entry with the same product that does not have a seat count of 0.
+                            continue;
+                        }
+                        if (seatCount > 0) 
+                        {
+                            if (includeClientType == "USER")
+                            {
+                                // Check that a user has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    OutputTextBox.Text = null;
+                                    return;
+                                }
+
+                                // Subtract 1 from seatCount, since you only specified a single user.
+                                seatCount--;
+
+                                // Error out if the seat count is negative.
+                                if (seatCount < 0)
+                                {
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    OutputTextBox.Text = null;
+                                    return;
+                                }
+
+                                // Update the seatCount in the licenseFileData tuple.
+                                licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                // Update the seatCount in the licenseFileIndex dictionary.
+                                licenseFileIndex[lineIndex] = licenseFileData;
+
+                                // Update the OutputTextBox.Text with the new seatCount value.
+                                OutputTextBox.Text += $"Remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                            }
+                            if (includeClientType == "GROUP")
+                            {
+
+                                // Check that a group has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    OutputTextBox.Text = null;
+                                    return;
+                                }
+
+                                foreach (var optionsGroupEntry in optionsGroupIndex)
+                                {
+                                    // Load GROUP specifications.
+                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                    string groupName = optionsGroupData.Item1;
+                                    string groupUsers = optionsGroupData.Item2;
+                                    int groupUserCount = optionsGroupData.Item3;
+
+                                    if (groupName == includeClientSpecified)
+                                    {
+                                        // Subtract the appropriate number of seats.
+                                        seatCount -= groupUserCount;
+
+                                        // Error out if the seat count is negative.
+                                        if (seatCount < 0)
+                                        {
+                                            MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                            OutputTextBox.Text = null;
+                                            return;
+                                        }
+
+                                        // Update the seatCount in the licenseFileData tuple.
+                                        licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                        // Update the seatCount in the licenseFileIndex dictionary.
+                                        licenseFileIndex[lineIndex] = licenseFileData;
+
+                                        // Update the OutputTextBox.Text with the new seatCount value.
+                                        OutputTextBox.Text += $"Remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                    }
+                                }
+                            }
+
+                            // We still have seats!
+                            allSeatCountsZero = false;
+                        }
+                    }
+                }
+                if (allSeatCountsZero && seatCount == 0)
+                {
+                    MessageBox.Show($"You have specified too many users to be able to use {includeProductName}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    OutputTextBox.Text = null;
+                    return;
+                }
+            }
         }
     }
 }
