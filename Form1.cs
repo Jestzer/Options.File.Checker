@@ -14,6 +14,9 @@ namespace Options.File.Checker
 
         // License file dictionary.
         Dictionary<int, Tuple<string, int, string, string, string>> licenseFileIndex = new Dictionary<int, Tuple<string, int, string, string, string>>();
+
+        // End operations if needed.
+        bool analysisOfServerAndDaemonLinesFailed = false;
         public Form1()
         {
             InitializeComponent();
@@ -148,6 +151,7 @@ namespace Options.File.Checker
             optionsIncludeIndex.Clear();
             optionsGroupIndex.Clear();
             licenseFileIndex.Clear();
+            analysisOfServerAndDaemonLinesFailed = false;
 
             try
             {
@@ -200,6 +204,11 @@ namespace Options.File.Checker
 
                 // Look for issues with your SERVER or DAEMON lines
                 AnalyzeServerAndDaemonLine();
+                if (analysisOfServerAndDaemonLinesFailed)
+                {
+                    OutputTextBox.Text = null;
+                    return;
+                }
 
                 // Get the things we care about from the license file so that we can go through the options file appropriately.
                 OutputTextBox.Text = null;
@@ -800,10 +809,11 @@ namespace Options.File.Checker
                 string line = filteredLicenseFileLines[lineIndex];
                 if (line.TrimStart().StartsWith("SERVER"))
                 {
+                    // SERVER lines should come before the product(s).
                     if (productLinesHaveBeenReached)
                     {
                         MessageBox.Show("Your SERVER line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        OutputTextBox.Text = null;
+                        analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
                     serverLineCount++;
@@ -816,27 +826,86 @@ namespace Options.File.Checker
                     if (serverLineCount > 3)
                     {
                         MessageBox.Show("Your license file has too many SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        OutputTextBox.Text = null;
+                        analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
                 }
 
                 if (line.TrimStart().StartsWith("DAEMON"))
                 {
+                    // DAEMON line should come before the product(s).
+                    if (productLinesHaveBeenReached)
+                    {
+                        MessageBox.Show("Your DAEMON line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    // There should only be one DAEMON line.
                     daemonLineCount++;
-
-                    // daemonProperty1 and 2 could either be a port number or path to an options file.
-                    string[] lineParts = line.Split(' ');
-                    string daemonVendor = lineParts[1];
-                    string daemonPath = lineParts[2];
-                    string daemonProperty1 = lineParts[3];
-                    string daemonProperty2 = lineParts[4];
-
                     if (daemonLineCount > 1)
                     {
                         MessageBox.Show("You have too many DAEMON lines in your license file. You only need 1, even if you have 3 SERVER lines.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                        OutputTextBox.Text = null;
+                        analysisOfServerAndDaemonLinesFailed = true;
                         return;
+                    }
+
+                    // daemonProperty1 and 2 could either be a port number or path to an options file.
+                    string[] lineParts = line.Split(' ');
+
+                    // Just having the word "DAEMON" isn't enough.
+                    if (lineParts.Length == 1)
+                    {
+                        MessageBox.Show("You have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    // Checking for the vendor daemon MLM.
+                    string daemonVendor = lineParts[1];
+                    bool daemonVendorIsEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(daemonVendor);
+
+                    if (daemonVendorIsEmptyOrWhiteSpace)
+                    {
+                        MessageBox.Show("There are too many spaces between \"DAEMON\" and \"MLM\".", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    if (daemonVendor != "MLM")
+                    {
+                        MessageBox.Show("You have incorrectly specified the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                        
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    // Just specifying "DAEMON MLM" isn't enough.
+                    if (lineParts.Length == 2)
+                    {
+                        MessageBox.Show("You did not specify the path to the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                        
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    if (lineParts.Length == 3)
+                    {
+                        MessageBox.Show("You did not specify the path to options file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    string daemonPath = lineParts[2];
+                    string? daemonProperty1 = null;
+                    string? daemonProperty2 = null;
+
+                    if (lineParts.Length > 3)
+                    {
+                        daemonProperty1 = lineParts[3];
+                    }
+
+                    if (lineParts.Length > 4)
+                    {
+                        daemonProperty2 = lineParts[4];
                     }
                 }
 
@@ -850,7 +919,7 @@ namespace Options.File.Checker
             if (serverLineCount == 2)
             {
                 MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                OutputTextBox.Text = null;
+                analysisOfServerAndDaemonLinesFailed = true;
                 return;
             }
         }
