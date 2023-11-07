@@ -831,6 +831,7 @@ namespace Options.File.Checker
                     }
                 }
 
+                // DAEMON line checks.
                 if (line.TrimStart().StartsWith("DAEMON"))
                 {
                     // DAEMON line should come before the product(s).
@@ -872,6 +873,7 @@ namespace Options.File.Checker
                         return;
                     }
 
+                    // The vendor daemon needs to MLM. Not mlm or anything else.
                     if (daemonVendor != "MLM")
                     {
                         MessageBox.Show("You have incorrectly specified the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                        
@@ -894,7 +896,52 @@ namespace Options.File.Checker
                         return;
                     }
 
-                    string daemonPath = lineParts[2];
+                    // If you're using spaces in your file path, treat any number of the lineParts as the daemonPath.
+                    string daemonPath = string.Empty;
+                    bool isConcatenating = false;
+
+                    for (int i = 2; i < lineParts.Length; i++)
+                    {
+                        // Check if the current part starts with a quotation mark.
+                        if (lineParts[i].StartsWith("\""))
+                        {
+                            isConcatenating = true;
+                            daemonPath += lineParts[i].Substring(1) + " "; // Remove the first character (quotation mark)
+                        }
+                        // Check if the current part ends with a quotation mark.
+                        else if (lineParts[i].EndsWith("\""))
+                        {
+                            daemonPath += lineParts[i].Substring(0, lineParts[i].Length - 1); // Remove the last character (quotation mark)
+                            isConcatenating = false;
+                            break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                        }
+                        else if (isConcatenating)
+                        {
+                            daemonPath += lineParts[i] + " ";
+                        }
+                    }
+
+                    // Setup accepted MLM paths and check them.
+                    //string daemonPath = lineParts[2];
+                    List<string> acceptedDaemonPaths = new List<string> { "mlm.exe\"", "mlm.exe", "mlm.exe\\", "mlm.exe\\\"", "MLM", "MLM/", "MLM\"", "MLM/\""};
+                    bool isDaemonPathAccepted = false;
+
+                    for (int j = 0; j < acceptedDaemonPaths.Count; j++)
+                    {
+                        if (daemonPath.TrimEnd().EndsWith(acceptedDaemonPaths[j]))
+                        {
+                            isDaemonPathAccepted = true;
+                            break;
+                        }
+                    }
+
+                    if (!isDaemonPathAccepted)
+                    {
+                        MessageBox.Show("You did not correctly specify the full path to MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+                    // This stuff below needs to be redone/expanded based on the code above.
                     string? daemonProperty1 = null;
                     string? daemonProperty2 = null;
 
