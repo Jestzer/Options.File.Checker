@@ -192,6 +192,10 @@ namespace Options.File.Checker
                 }
 
                 // Congrats. You passed.
+
+                // Look for issues with your SERVER or DAEMON lines
+                AnalyzeServerAndDaemonLine();
+
                 // Get the things we care about from the license file so that we can go through the options file appropriately.
                 OutputTextBox.Text = null;
                 string? productName = null;
@@ -241,7 +245,7 @@ namespace Options.File.Checker
 
                             if (licenseOffering.Contains("lr="))
                             {
-                                MessageBox.Show("Trial licenses are currently unsupported.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                MessageBox.Show($"Trial licenses are currently unsupported. Product in question: {productName}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                                 OptionsFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
@@ -679,7 +683,7 @@ namespace Options.File.Checker
                             // See if we can find another entry with the same product that does not have a seat count of 0.
                             continue;
                         }
-                        if (seatCount > 0) 
+                        if (seatCount > 0)
                         {
                             if (includeClientType == "USER")
                             {
@@ -771,6 +775,41 @@ namespace Options.File.Checker
                     MessageBox.Show($"You have specified too many users to be able to use {includeProductName}.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                     OutputTextBox.Text = null;
                     return;
+                }
+            }
+        }
+        private void AnalyzeServerAndDaemonLine()
+        {
+            string[] licenseFileContentsLines = System.IO.File.ReadAllLines(LicenseFileLocationTextBox.Text);
+            string[] filteredLicenseFileLines = licenseFileContentsLines.Where(line => !line.TrimStart().StartsWith("#")
+            && !string.IsNullOrWhiteSpace(line)).ToArray();
+            string filteredLicenseFileContents = string.Join(Environment.NewLine, filteredLicenseFileLines);
+
+            int serverLineCount = 0;
+            int daemonLineCount = 0;
+
+            for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
+            {
+                string line = filteredLicenseFileLines[lineIndex];
+                if (line.TrimStart().StartsWith("SERVER"))
+                {
+                    serverLineCount++;
+                    if (serverLineCount == 2 || serverLineCount > 3)
+                    {
+                        MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 is accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        OutputTextBox.Text = null;
+                        return;
+                    }
+                }
+                if (line.TrimStart().StartsWith("DAEMON"))
+                {
+                    daemonLineCount++;
+                    if (daemonLineCount > 1)
+                    {
+                        MessageBox.Show("You have too many DAEMON lines in your license file. You only need 1, even if you have 3 SERVER lines.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        OutputTextBox.Text = null;
+                        return;
+                    }
                 }
             }
         }
