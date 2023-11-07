@@ -144,6 +144,11 @@ namespace Options.File.Checker
             //start with some simple comparsion files.
             //use counting and not dlls because you're a shit programmer.
 
+            // Prevent previous entries/modified files from skewing data.
+            optionsIncludeIndex.Clear();
+            optionsGroupIndex.Clear();
+            licenseFileIndex.Clear();
+
             try
             {
                 string[] optionsFileContentsLines = System.IO.File.ReadAllLines(OptionsFileLocationTextBox.Text);
@@ -787,23 +792,46 @@ namespace Options.File.Checker
 
             int serverLineCount = 0;
             int daemonLineCount = 0;
+            bool productLinesHaveBeenReached = false;
 
+            // Start looking for the goodies.
             for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
             {
                 string line = filteredLicenseFileLines[lineIndex];
                 if (line.TrimStart().StartsWith("SERVER"))
                 {
-                    serverLineCount++;
-                    if (serverLineCount == 2 || serverLineCount > 3)
+                    if (productLinesHaveBeenReached)
                     {
-                        MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 is accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("Your SERVER line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        OutputTextBox.Text = null;
+                        return;
+                    }
+                    serverLineCount++;
+
+                    string[] lineParts = line.Split(' ');
+                    string serverHostnameOrIPAddress = lineParts[1];
+                    string serverHostID = lineParts[2];
+                    int.TryParse(lineParts[3], out int serverPort);
+
+                    if (serverLineCount > 3)
+                    {
+                        MessageBox.Show("Your license file has too many SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         OutputTextBox.Text = null;
                         return;
                     }
                 }
+
                 if (line.TrimStart().StartsWith("DAEMON"))
                 {
                     daemonLineCount++;
+
+                    // daemonProperty1 and 2 could either be a port number or path to an options file.
+                    string[] lineParts = line.Split(' ');
+                    string daemonVendor = lineParts[1];
+                    string daemonPath = lineParts[2];
+                    string daemonProperty1 = lineParts[3];
+                    string daemonProperty2 = lineParts[4];
+
                     if (daemonLineCount > 1)
                     {
                         MessageBox.Show("You have too many DAEMON lines in your license file. You only need 1, even if you have 3 SERVER lines.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -811,6 +839,19 @@ namespace Options.File.Checker
                         return;
                     }
                 }
+
+                if (line.TrimStart().StartsWith("INCREMENT"))
+                {
+                    productLinesHaveBeenReached = true;
+                }
+            }
+
+            // We have to do this after the loop so that it doesn't get stuck while counting to 3.
+            if (serverLineCount == 2)
+            {
+                MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                OutputTextBox.Text = null;
+                return;
             }
         }
     }
