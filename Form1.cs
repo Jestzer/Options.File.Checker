@@ -152,6 +152,7 @@ namespace Options.File.Checker
             optionsGroupIndex.Clear();
             licenseFileIndex.Clear();
             analysisOfServerAndDaemonLinesFailed = false;
+            OutputTextBox.Text = null;
 
             try
             {
@@ -211,7 +212,7 @@ namespace Options.File.Checker
                 }
 
                 // Get the things we care about from the license file so that we can go through the options file appropriately.
-                OutputTextBox.Text = null;
+
                 string? productName = null;
                 int seatCount = 0;
 
@@ -821,8 +822,27 @@ namespace Options.File.Checker
                     string[] lineParts = line.Split(' ');
                     string serverHostnameOrIPAddress = lineParts[1];
                     string serverHostID = lineParts[2];
-                    int.TryParse(lineParts[3], out int serverPort);
 
+                    // Set this now since it'll be used twice.
+                    string unspecifiedServerPortMessage = "Warning: You have not specified a port number for the SERVER. " +
+                            "This is acceptable if you are defining it with lmadmin or if you're okay with " +
+                            "FlexLM picking the port number for you. However, if you did not specify the Host ID and instead put the port number in its place, " +
+                            "the specified port number will not be used.\r\n";
+
+                    if (lineParts.Length == 3)
+                    {
+                        OutputTextBox.Text += unspecifiedServerPortMessage;
+                    }
+                    else
+                    {
+                        if (!int.TryParse(lineParts[3], out int serverPort))
+                        {
+                            OutputTextBox.Text += unspecifiedServerPortMessage;
+                        }
+                        OutputTextBox.Text += $"SERVER port: {serverPort}\r\n";
+                    }
+
+                    // There is no situation where you should have more than 3 SERVER lines.
                     if (serverLineCount > 3)
                     {
                         MessageBox.Show("Your license file has too many SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
@@ -876,7 +896,7 @@ namespace Options.File.Checker
                     // The vendor daemon needs to MLM. Not mlm or anything else.
                     if (daemonVendor != "MLM")
                     {
-                        MessageBox.Show("You have incorrectly specified the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                        
+                        MessageBox.Show("You have incorrectly specified the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -884,7 +904,7 @@ namespace Options.File.Checker
                     // Just specifying "DAEMON MLM" isn't enough.
                     if (lineParts.Length == 2)
                     {
-                        MessageBox.Show("You did not specify the path to the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);                        
+                        MessageBox.Show("You did not specify the path to the vendor daemon MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -899,31 +919,63 @@ namespace Options.File.Checker
                     // If you're using spaces in your file path, treat any number of the lineParts as the daemonPath.
                     string daemonPath = string.Empty;
                     bool isConcatenating = false;
+                    bool waitingForNextQuotationMark = false;
+                    bool quotationMarksUsedInDaemonPath = false;
+                    int daemonLinePartNumber = 0;
 
-                    for (int i = 2; i < lineParts.Length; i++)
+                    // Check if the current part starts with a quotation mark.
+                    if (lineParts[2].StartsWith("\""))
                     {
-                        // Check if the current part starts with a quotation mark.
-                        if (lineParts[i].StartsWith("\""))
+                        waitingForNextQuotationMark = true;
+                        quotationMarksUsedInDaemonPath = true;
+                        for (daemonLinePartNumber = 2; daemonLinePartNumber < lineParts.Length; daemonLinePartNumber++)
                         {
-                            isConcatenating = true;
-                            daemonPath += lineParts[i].Substring(1) + " "; // Remove the first character (quotation mark)
+                            // Check if the current part ends with a quotation mark.
+                            if (lineParts[daemonLinePartNumber].EndsWith("\""))
+                            {
+                                waitingForNextQuotationMark = false;
+                                if (daemonLinePartNumber != 2)
+                                {
+                                    daemonPath += lineParts[daemonLinePartNumber].Substring(0, lineParts[daemonLinePartNumber].Length - 1); // Remove the last character (quotation mark)
+                                    isConcatenating = false;
+                                    break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                                }
+                                if (daemonLinePartNumber == 2)
+                                {
+                                    daemonPath += lineParts[daemonLinePartNumber].Substring(1, lineParts[daemonLinePartNumber].Length - 2); // Remove the first and last character (quotation mark)
+                                    break; // If you put quotation marks around a MLM path with no spaces, then we're done here.
+                                }
+                            }
+                            else if (isConcatenating)
+                            {
+                                daemonPath += lineParts[daemonLinePartNumber] + " ";
+                            }
+                            else
+                            {
+                                daemonPath += lineParts[daemonLinePartNumber].Substring(1) + " "; // Remove the first character (quotation mark)
+                                isConcatenating = true;
+                            }
                         }
-                        // Check if the current part ends with a quotation mark.
-                        else if (lineParts[i].EndsWith("\""))
-                        {
-                            daemonPath += lineParts[i].Substring(0, lineParts[i].Length - 1); // Remove the last character (quotation mark)
-                            isConcatenating = false;
-                            break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
-                        }
-                        else if (isConcatenating)
-                        {
-                            daemonPath += lineParts[i] + " ";
-                        }
+                    }
+                    else { daemonPath = lineParts[2]; }
+
+                    // Make sure you're not forgetting a quotation mark, if you used one.
+                    if (waitingForNextQuotationMark)
+                    {
+                        MessageBox.Show("You are missing a quotation mark at the end of the full path to MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    if (daemonPath.EndsWith("\""))
+                    {
+                        MessageBox.Show("You are missing a quotation mark at the beginning of the full path to MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
                     }
 
                     // Setup accepted MLM paths and check them.
-                    //string daemonPath = lineParts[2];
-                    List<string> acceptedDaemonPaths = new List<string> { "mlm.exe\"", "mlm.exe", "mlm.exe\\", "mlm.exe\\\"", "MLM", "MLM/", "MLM\"", "MLM/\""};
+                    List<string> acceptedDaemonPaths = new List<string> { "mlm.exe", "mlm.exe\\", "MLM.exe", "MLM.exe\\", "MLM", "MLM/" };
                     bool isDaemonPathAccepted = false;
 
                     for (int j = 0; j < acceptedDaemonPaths.Count; j++)
@@ -937,23 +989,46 @@ namespace Options.File.Checker
 
                     if (!isDaemonPathAccepted)
                     {
-                        MessageBox.Show("You did not correctly specify the full path to MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        MessageBox.Show("You incorrectly specifed the full path to MLM.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
+
                     // This stuff below needs to be redone/expanded based on the code above.
+                    // There is a possibility that you specified MLM's port and it doesn't matter which order it's in when also specifying an options file.
+                    // With this in mind, we cannot predict in the variable names which will be which.
+
                     string? daemonProperty1 = null;
                     string? daemonProperty2 = null;
 
-                    if (lineParts.Length > 3)
+                    // The lineParts need to specified differently if you used quotation marks in your MLM (daemon) path.
+                    if (quotationMarksUsedInDaemonPath)
                     {
-                        daemonProperty1 = lineParts[3];
+                        // Something is broken in these lines below. Check them out later.
+                        if (lineParts.Length > daemonLinePartNumber)
+                        {
+                            daemonProperty1 = lineParts[daemonLinePartNumber + 1];
+                        }
+
+                        if (lineParts.Length > daemonLinePartNumber + 1)
+                        {
+                            daemonProperty1 = lineParts[daemonLinePartNumber + 2];
+                        }
+                    }
+                    else
+                    {
+                        if (lineParts.Length > 3)
+                        {
+                            daemonProperty1 = lineParts[3];
+                        }
+
+                        if (lineParts.Length > 4)
+                        {
+                            daemonProperty2 = lineParts[4];
+                        }
                     }
 
-                    if (lineParts.Length > 4)
-                    {
-                        daemonProperty2 = lineParts[4];
-                    }
+                    OutputTextBox.Text += $"Daemon path: {daemonPath}.\r\ndprop1: {daemonProperty1}. dprop2: {daemonProperty2}.\r\n";
                 }
 
                 if (line.TrimStart().StartsWith("INCREMENT"))
