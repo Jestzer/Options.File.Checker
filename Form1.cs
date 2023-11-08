@@ -1001,24 +1001,74 @@ namespace Options.File.Checker
                     string? daemonProperty1 = null;
                     string? daemonProperty2 = null;
 
+                    // Make sure you're not using options= or port= twice.
+                    bool optionsFileHasBeenSpecified = false;
+                    bool daemonPortNumberHasBeenSpecified = false;
+
                     // The lineParts need to specified differently if you used quotation marks in your MLM (daemon) path.
+                    // We need to at least find the path to the options file. If you've incorrectly specified an options file or port number, we'll say so.
                     if (quotationMarksUsedInDaemonPath)
                     {
-                        // Something is broken in these lines below. Check them out later.
+                        // daemonProperty1.
                         if (lineParts.Length > daemonLinePartNumber)
                         {
-                            daemonProperty1 = lineParts[daemonLinePartNumber + 1];
+                            if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options="))
+                            {
+                                daemonProperty1 = lineParts[daemonLinePartNumber + 1];
+                                optionsFileHasBeenSpecified = true;
+                            }
+                            else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("port="))
+                            {
+                                daemonProperty1 = lineParts[daemonLinePartNumber + 1];
+                                daemonPortNumberHasBeenSpecified = true;
+                            }
+                            else
+                            {
+                                MessageBox.Show("You incorrectly specified either the MLM port or path to the options file. They should start with port= and options=.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                analysisOfServerAndDaemonLinesFailed = true;
+                                return;
+                            }
                         }
-
-                        if (lineParts.Length > daemonLinePartNumber + 1)
+                        
+                        // daemonProperty2.
+                        if (lineParts.Length > daemonLinePartNumber + 2)
                         {
-                            daemonProperty1 = lineParts[daemonLinePartNumber + 2];
+                            if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options="))
+                            {
+                                if (optionsFileHasBeenSpecified)
+                                {
+                                    MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    return;
+                                }
+                                else
+                                {
+                                    daemonProperty2 = lineParts[daemonLinePartNumber + 2];
+                                }
+                            }
+                            if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port="))
+                            {
+                                if (daemonPortNumberHasBeenSpecified)
+                                {
+                                    MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    return;
+                                }
+                                else
+                                {
+                                    daemonProperty2 = lineParts[daemonLinePartNumber + 2];
+                                }
+                            }
                         }
                     }
                     else
-                    {
+                    { // Finish this with the code used above.
                         if (lineParts.Length > 3)
                         {
+                            if (lineParts[3].TrimStart().StartsWith("options="))
+                            {
+                                optionsFileHasBeenSpecified = true;
+                            }
                             daemonProperty1 = lineParts[3];
                         }
 
