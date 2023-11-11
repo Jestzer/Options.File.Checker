@@ -1,0 +1,21 @@
+﻿<Window x:Class="Options.File.Checker.WPF.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:Options.File.Checker.WPF"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="450" Width="800">
+    <Grid Background="#FF2D2B2B">
+        <TextBox x:Name="LicenseFileLocationTextBox" HorizontalAlignment="Left" Margin="36,97,0,0" Text="" VerticalAlignment="Top" Width="330" TextChanged="LicenseFileLocationTextBox_TextChanged"/>
+        <Button x:Name="LicenseFileBrowseButton" Content="Browse" HorizontalAlignment="Left" Margin="400,95,0,0" VerticalAlignment="Top" Click="LicenseFileBrowseButton_Click" Width="61"/>
+        <Label x:Name="LicenseFileLocationLabel" Content="License file path" HorizontalAlignment="Left" Margin="36,71,0,0" VerticalAlignment="Top" Width="123" Foreground="White"/>
+        <TextBox x:Name="OptionsFileLocationTextBox" HorizontalAlignment="Left" Margin="36,160,0,0" Text="" VerticalAlignment="Top" Width="330" TextChanged="OptionsFileLocationTextBox_TextChanged"/>
+        <Button x:Name="OptionsFileBrowseButton" Content="Browse" HorizontalAlignment="Left" Margin="400,158,0,0" VerticalAlignment="Top" Click="OptionsFileBrowseButton_Click" Width="61"/>
+        <TextBlock x:Name="OutputTextBlock" HorizontalAlignment="Left" Margin="36,217,0,0" TextWrapping="Wrap" Text="Warning messages will appear here after analysis. Errors will appear in a pop-up window." VerticalAlignment="Top" Height="192" Width="737" Foreground="White"/>
+        <Label x:Name="OptionsFileLocationLabel" Content="Options file path" HorizontalAlignment="Left" Margin="36,134,0,0" VerticalAlignment="Top" Width="123" Foreground="White"/>
+        <Button x:Name="AnalyzerButton" Content="Analyze" HorizontalAlignment="Left" Margin="509,127,0,0" VerticalAlignment="Top" Width="64" Click="AnalyzerButton_Click" IsEnabled="False"/>
+        <Button x:Name="SaveOutputButton" Content="Save Output" HorizontalAlignment="Left" Margin="509,97,0,0" VerticalAlignment="Top" Width="92" Click="SaveOutputButton_Click"/>
+
+    </Grid>
+</Window>
