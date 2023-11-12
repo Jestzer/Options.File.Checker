@@ -1,5 +1,6 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -40,6 +41,31 @@ namespace Options.File.Checker.WPF
             InitializeComponent();
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
+        }
+
+        // The efforts one must go through to make this UI not look horrible is truly incredible.
+        // Implement window dragging with the mouse.
+        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            
+            if (e.ChangedButton == MouseButton.Left)
+                this.DragMove();
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.Close();
+        }
+
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Toggle between maximized and not.
+            this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            this.WindowState = WindowState.Minimized;
         }
 
         private void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
@@ -814,7 +840,7 @@ namespace Options.File.Checker.WPF
                                 }
                             }
 
-                            // We still have seats!
+                            // We still have seats to count from other licenses!
                             allSeatCountsZero = false;
                         }
                     }
@@ -1029,12 +1055,12 @@ namespace Options.File.Checker.WPF
                         return;
                     }
 
-                    // This stuff below needs to be redone/expanded based on the code above.
                     // There is a possibility that you specified MLM's port and it doesn't matter which order it's in when also specifying an options file.
                     // With this in mind, we cannot predict in the variable names which will be which.
 
                     string? daemonProperty1 = null;
                     string? daemonProperty2 = null;
+                    string generalDaemonOrPortErrorMessage = "You incorrectly specified either the MLM port or path to the options file. They should start with port = and options =.";
 
                     // Make sure you're not using options= or port= twice.
                     bool optionsFileHasBeenSpecified = false;
@@ -1043,7 +1069,8 @@ namespace Options.File.Checker.WPF
                     // The lineParts need to specified differently if you used quotation marks in your MLM (daemon) path.
                     // We need to at least find the path to the options file. If you've incorrectly specified an options file or port number, we'll say so.
                     if (quotationMarksUsedInDaemonPath)
-                    {
+                    {                        
+                        
                         // daemonProperty1.
                         if (lineParts.Length > daemonLinePartNumber)
                         {
@@ -1059,7 +1086,7 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                MessageBox.Show("You incorrectly specified either the MLM port or path to the options file. They should start with port= and options=.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 analysisOfServerAndDaemonLinesFailed = true;
                                 return;
                             }
@@ -1081,7 +1108,7 @@ namespace Options.File.Checker.WPF
                                     daemonProperty2 = lineParts[daemonLinePartNumber + 2];
                                 }
                             }
-                            if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port="))
+                            else if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port="))
                             {
                                 if (daemonPortNumberHasBeenSpecified)
                                 {
@@ -1094,25 +1121,74 @@ namespace Options.File.Checker.WPF
                                     daemonProperty2 = lineParts[daemonLinePartNumber + 2];
                                 }
                             }
+                            else
+                            {
+                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                analysisOfServerAndDaemonLinesFailed = true;
+                                return;
+                            }
                         }
                     }
+                    // If quotes aren't used in the daemon path.
                     else
-                    { // Finish this with the code used above. #Add some code.
+                    {
+                        // daemonProperty1.
                         if (lineParts.Length > 3)
                         {
                             if (lineParts[3].TrimStart().StartsWith("options="))
                             {
                                 optionsFileHasBeenSpecified = true;
+                                daemonProperty1 = lineParts[3];
                             }
-                            daemonProperty1 = lineParts[3];
+                            else if (lineParts[3].TrimStart().StartsWith("port="))
+                            {
+                                daemonPortNumberHasBeenSpecified = true;
+                                daemonProperty1 = lineParts[3];
+                            }
+                            else
+                            {
+                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                analysisOfServerAndDaemonLinesFailed = true;
+                                return;
+                            }                            
                         }
-
+                        // daemonProperty2.
                         if (lineParts.Length > 4)
                         {
-                            daemonProperty2 = lineParts[4];
+                            if (lineParts[4].TrimStart().StartsWith("options="))
+                            {
+                                if (optionsFileHasBeenSpecified)
+                                {
+                                    MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    return;
+                                }
+                                else
+                                {
+                                    daemonProperty2 = lineParts[4];
+                                }
+                            }
+                            else if (lineParts[4].TrimStart().StartsWith("port="))
+                            {
+                                if (daemonPortNumberHasBeenSpecified)
+                                {
+                                    MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    return;
+                                }
+                                else
+                                {
+                                    daemonProperty2 = lineParts[4];
+                                }
+                            }
+                            else
+                            {
+                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                analysisOfServerAndDaemonLinesFailed = true;
+                                return;
+                            }
                         }
                     }
-
                     OutputTextBlock.Text += $"Daemon path: {daemonPath}.\r\ndprop1: {daemonProperty1}. dprop2: {daemonProperty2}.\r\n";
                 }
 
