@@ -521,6 +521,7 @@ namespace Options.File.Checker.WPF
                     string excludeClientSpecified = "brokenClientSpecified";
                     if (line.TrimStart().StartsWith("EXCLUDE "))
                     {
+                        excludeLinesAreUsed = true;
                         string[] lineParts = line.Split(' ');
                         excludeProductName = lineParts[1];
                         if (excludeProductName.Contains('"'))
@@ -569,6 +570,7 @@ namespace Options.File.Checker.WPF
 
                     if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
+                        hostGroupsAreUsed = true;
                         string[] lineParts = line.Split(' ');
                         hostGroupName = lineParts[1];
                         hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
@@ -578,6 +580,10 @@ namespace Options.File.Checker.WPF
 
                     }
                 }
+
+                // EXCLUDEALL
+                // INCLUDEALL
+                //
                 CheckForValidProducts();
                 if (analysisOfOptionsFileProductsFailed)
                 {
