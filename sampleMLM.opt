@@ -35,7 +35,6 @@ RESERVE 3 MATLAB GROUP MATLAB_power_users
 INCLUDE MATLAB USER user1
 INCLUDE SIMULINK USER user1
 INCLUDE Compiler USER user1
-INCLUDE Simulink USER chicken
 
 #To use other toolboxes, replace <Toolbox_Name> with the name of the toolbox - as it appears in your license.dat file
 
