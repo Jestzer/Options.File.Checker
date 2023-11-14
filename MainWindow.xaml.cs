@@ -963,6 +963,24 @@ namespace Options.File.Checker.WPF
                         return;
                     }
 
+                    // port= and options= should only appear once.
+                    int countPortEquals = Regex.Matches(line, "port=").Count;
+                    int countOptionsEquals = Regex.Matches(line, "options=").Count;
+
+                    if (countPortEquals > 1)
+                    {
+                        MessageBox.Show("You have specified more than 1 port number for MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    if (countOptionsEquals > 1)
+                    {
+                        MessageBox.Show("You have specified more than 1 options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
                     // daemonProperty1 and 2 could either be a port number or path to an options file.
                     string[] lineParts = line.Split(' ');
 
@@ -1117,29 +1135,39 @@ namespace Options.File.Checker.WPF
                             {
                                 quotationMarksUsedinOptionsFilePath = true;
                                 optionsFileHasBeenSpecified = true;
-                                waitingForNextQuotationMark = true;
-                                StringBuilder sb = new StringBuilder();
-                                sb.Append(lineParts[daemonLinePartNumber + 1]);
 
-                                quotedOptionsFileLinePartNumber = daemonLinePartNumber + 2;
-                                while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                if (lineParts[daemonLinePartNumber + 1].TrimStart().EndsWith("\""))
                                 {
-                                    // Check if the current part ends with a quotation mark.
-                                    if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
-                                    {
-                                        waitingForNextQuotationMark = false;
-                                        sb.Append(" ");
-                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
-                                        break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
-                                    }
-                                    else if (isConcatenating)
-                                    {
-                                        sb.Append(" ");
-                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
-                                    }
-                                    quotedOptionsFileLinePartNumber++;
+                                    quotedOptionsFileLinePartNumber = daemonLinePartNumber + 1;
+                                    daemonProperty1 = lineParts[daemonLinePartNumber + 1];
                                 }
-                                daemonProperty1 = sb.ToString();
+                                else
+                                {
+                                    waitingForNextQuotationMark = true;
+                                    StringBuilder sb = new StringBuilder();
+                                    sb.Append(lineParts[daemonLinePartNumber + 1]);
+                                    isConcatenating = true;
+
+                                    quotedOptionsFileLinePartNumber = daemonLinePartNumber + 2;
+                                    while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                    {
+                                        // Check if the current part ends with a quotation mark.
+                                        if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                        {
+                                            waitingForNextQuotationMark = false;
+                                            sb.Append(" ");
+                                            sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
+                                            break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                                        }
+                                        else if (isConcatenating)
+                                        {
+                                            sb.Append(" ");
+                                            sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                        }
+                                        quotedOptionsFileLinePartNumber++;
+                                    }
+                                    daemonProperty1 = sb.ToString();
+                                }
                             }
                             else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options="))
                             {
@@ -1181,29 +1209,38 @@ namespace Options.File.Checker.WPF
                                         {
                                             quotationMarksUsedinOptionsFilePath = true;
                                             optionsFileHasBeenSpecified = true;
-                                            waitingForNextQuotationMark = true;
-                                            StringBuilder sb = new StringBuilder();
-                                            sb.Append(lineParts[daemonLinePartNumber + 2]);
-
-                                            quotedOptionsFileLinePartNumber = daemonLinePartNumber + 3;
-                                            while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                            if (lineParts[daemonLinePartNumber + 2].TrimStart().EndsWith("\""))
                                             {
-                                                // Check if the current part ends with a quotation mark.
-                                                if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
-                                                {
-                                                    waitingForNextQuotationMark = false;
-                                                    sb.Append(" ");
-                                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
-                                                    break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
-                                                }
-                                                else if (isConcatenating)
-                                                {
-                                                    sb.Append(" ");
-                                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
-                                                }
-                                                quotedOptionsFileLinePartNumber++;
+                                                quotedOptionsFileLinePartNumber = daemonLinePartNumber + 2;
+                                                daemonProperty2 = lineParts[daemonLinePartNumber + 2];
                                             }
-                                            daemonProperty2 = sb.ToString();
+                                            else
+                                            {
+                                                waitingForNextQuotationMark = true;
+                                                StringBuilder sb = new StringBuilder();
+                                                sb.Append(lineParts[daemonLinePartNumber + 2]);
+                                                isConcatenating = true;
+
+                                                quotedOptionsFileLinePartNumber = daemonLinePartNumber + 3;
+                                                while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                                {
+                                                    // Check if the current part ends with a quotation mark.
+                                                    if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                                    {
+                                                        waitingForNextQuotationMark = false;
+                                                        sb.Append(" ");
+                                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
+                                                        break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                                                    }
+                                                    else if (isConcatenating)
+                                                    {
+                                                        sb.Append(" ");
+                                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                                    }
+                                                    quotedOptionsFileLinePartNumber++;
+                                                }
+                                                daemonProperty2 = sb.ToString();
+                                            }
                                         }
                                         else
                                         {
@@ -1232,20 +1269,22 @@ namespace Options.File.Checker.WPF
                                 }
                             }
                         }
-                        // You have already specified an options file with a quoted path.
-                        // This is the first part of code that is broken. Fix it. Use the previous code that gets the last linePart...
+                        // You have already specified an options file with a quoted path.                        
                         else
                         {
-                            if (lineParts[lineParts.Length - 1].TrimStart().StartsWith("options="))
+                            if (lineParts.Length > quotedOptionsFileLinePartNumber + 1)
                             {
-                                MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                analysisOfServerAndDaemonLinesFailed = true;
-                                return;
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options="))
+                                {
+                                    MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    return;
 
-                            }
-                            if (lineParts[lineParts.Length - 1].TrimStart().StartsWith("port="))
-                            {
-                                daemonProperty2 = (lineParts[lineParts.Length - 1]);
+                                }
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("port="))
+                                {
+                                    daemonProperty2 = (lineParts[quotedOptionsFileLinePartNumber + 1]);
+                                }
                             }
                         }
                     }
@@ -1255,28 +1294,44 @@ namespace Options.File.Checker.WPF
                         // daemonProperty1.
                         if (lineParts.Length > 3)
                         {
+                            isConcatenating = false;
+                            waitingForNextQuotationMark = false;
                             if (lineParts[3].TrimStart().StartsWith("options=\""))
                             {
                                 quotationMarksUsedinOptionsFilePath = true;
                                 optionsFileHasBeenSpecified = true;
-                                StringBuilder sb = new StringBuilder();
-                                sb.Append(lineParts[3]);
 
-                                quotedOptionsFileLinePartNumber = 4;
-                                while (quotedOptionsFileLinePartNumber < lineParts.Length && !lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                if (lineParts[3].TrimStart().EndsWith("\""))
                                 {
-                                    sb.Append(" ");
-                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
-                                    quotedOptionsFileLinePartNumber++;
+                                    quotedOptionsFileLinePartNumber = 3;
+                                    daemonProperty1 = (lineParts[3]);
                                 }
-
-                                if (quotedOptionsFileLinePartNumber < lineParts.Length)
-                                {
-                                    sb.Append(" ");
-                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                else
+                                {                                    
+                                    StringBuilder sb = new StringBuilder();
+                                    sb.Append(lineParts[3]);
+                                    isConcatenating = true;
+                                    waitingForNextQuotationMark = true;
+                                    quotedOptionsFileLinePartNumber = 4;
+                                    while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                    {
+                                        // Check if the current part ends with a quotation mark.
+                                        if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                        {
+                                            waitingForNextQuotationMark = false;
+                                            sb.Append(" ");
+                                            sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
+                                            break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                                        }
+                                        else if (isConcatenating)
+                                        {
+                                            sb.Append(" ");
+                                            sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                        }
+                                        quotedOptionsFileLinePartNumber++;
+                                    }
+                                    daemonProperty1 = sb.ToString();
                                 }
-
-                                daemonProperty1 = sb.ToString();
                             }
                             else if (lineParts[3].TrimStart().StartsWith("options="))
                             {
@@ -1296,39 +1351,60 @@ namespace Options.File.Checker.WPF
                             }
                         }
                         // daemonProperty2.
-                        if (lineParts.Length > 4)
+                        if (!quotationMarksUsedinOptionsFilePath)
                         {
-                            if (lineParts[4].TrimStart().StartsWith("options="))
+                            if (lineParts.Length > 4)
                             {
-                                if (optionsFileHasBeenSpecified)
+                                if (lineParts[4].TrimStart().StartsWith("options="))
+                                {
+                                    if (optionsFileHasBeenSpecified)
+                                    {
+                                        MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        daemonProperty2 = lineParts[4];
+                                    }
+                                }
+                                else if (lineParts[4].TrimStart().StartsWith("port="))
+                                {
+                                    if (daemonPortNumberHasBeenSpecified)
+                                    {
+                                        MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        daemonProperty2 = lineParts[4];
+                                    }
+                                }
+                                else
+                                {
+                                    MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    return;
+                                }
+                            }
+                        }
+                        // You have already specified an options file with a quoted path.
+                        else
+                        {
+                            if (lineParts.Length > quotedOptionsFileLinePartNumber + 1)
+                            {
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options="))
                                 {
                                     MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
+
                                 }
-                                else
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("port="))
                                 {
-                                    daemonProperty2 = lineParts[4];
+                                    daemonProperty2 = (lineParts[quotedOptionsFileLinePartNumber + 1]);
                                 }
-                            }
-                            else if (lineParts[4].TrimStart().StartsWith("port="))
-                            {
-                                if (daemonPortNumberHasBeenSpecified)
-                                {
-                                    MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    analysisOfServerAndDaemonLinesFailed = true;
-                                    return;
-                                }
-                                else
-                                {
-                                    daemonProperty2 = lineParts[4];
-                                }
-                            }
-                            else
-                            {
-                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                analysisOfServerAndDaemonLinesFailed = true;
-                                return;
                             }
                         }
                     }
