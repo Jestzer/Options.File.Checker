@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
@@ -37,7 +38,7 @@ namespace Options.File.Checker.WPF
         // Implement window dragging with the mouse.
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-            
+
             if (e.ChangedButton == MouseButton.Left)
                 this.DragMove();
         }
@@ -582,8 +583,37 @@ namespace Options.File.Checker.WPF
                 }
 
                 // EXCLUDEALL
+                for (int optionsExcludeAllLineIndex = 0; optionsExcludeAllLineIndex < filteredOptionsFileLines.Length; optionsExcludeAllLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[optionsExcludeAllLineIndex];
+
+                    if (line.TrimStart().StartsWith("HOST_GROUP "))
+                    {
+                        excludeAllLinesAreUsed = true;
+                        return;
+                    }
+                }
                 // INCLUDEALL
                 //
+
+                // Output some warning messages, if needed.
+                if (excludeLinesAreUsed)
+                {
+                    OutputTextBlock.Text += "\r\nYou are using at least 1 EXCLUDE line in your options file. If a user is encountering an License Manager Error -38, " +
+                        "then this is because they are listed on an EXCLUDE or EXCLUDEALL line in the options file.\r\n";
+                }
+
+                if (excludeAllLinesAreUsed)
+                {
+                    OutputTextBlock.Text += "\r\nYou are using at least 1 EXCLUDEALL line in your options file. If a user is encountering an License Manager Error -38, " +
+                        "then this is because they are listed on an EXCLUDE or EXCLUDEALL line in the options file.\r\n";
+                }
+
+                if (hostGroupsAreUsed)
+                {
+                    OutputTextBlock.Text += "\r\nYou are using at least 1 HOST_GROUP line in your options file. ";
+                }
+
                 CheckForValidProducts();
                 if (analysisOfOptionsFileProductsFailed)
                 {
@@ -860,6 +890,8 @@ namespace Options.File.Checker.WPF
             && !string.IsNullOrWhiteSpace(line)).ToArray();
             string filteredLicenseFileContents = string.Join(Environment.NewLine, filteredLicenseFileLines);
 
+            string daemonProperty1 = string.Empty;
+            string daemonProperty2 = string.Empty;
             int serverLineCount = 0;
             int daemonLineCount = 0;
             bool productLinesHaveBeenReached = false;
@@ -1049,7 +1081,8 @@ namespace Options.File.Checker.WPF
 
                     if (!isDaemonPathAccepted)
                     {
-                        MessageBox.Show("You incorrectly specifed the full path to MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show("You incorrectly specifed the full path to MLM. If there are spaces in the path, " +
+                            "please put quotes around the path.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -1057,23 +1090,58 @@ namespace Options.File.Checker.WPF
                     // There is a possibility that you specified MLM's port and it doesn't matter which order it's in when also specifying an options file.
                     // With this in mind, we cannot predict in the variable names which will be which.
 
-                    string? daemonProperty1 = null;
-                    string? daemonProperty2 = null;
-                    string generalDaemonOrPortErrorMessage = "You incorrectly specified either the MLM port or path to the options file. They should start with port = and options =.";
+                    string generalDaemonOrPortErrorMessage = "You incorrectly specified either the MLM port or path to the options file. They should start with port= and options=. " +
+                        "If you are using quotation marks to specify the full path to the options file, the first quotation mark should come after options= " +
+                        "(ex: options=\"C:\\license.dat.\")";
 
                     // Make sure you're not using options= or port= twice.
                     bool optionsFileHasBeenSpecified = false;
                     bool daemonPortNumberHasBeenSpecified = false;
 
+                    bool quotationMarksUsedinOptionsFilePath = false;
+                    int quotedOptionsFileLinePartNumber = 0;
+
                     // The lineParts need to specified differently if you used quotation marks in your MLM (daemon) path.
                     // We need to at least find the path to the options file. If you've incorrectly specified an options file or port number, we'll say so.
                     if (quotationMarksUsedInDaemonPath)
-                    {                        
-                        
+                    {
+
                         // daemonProperty1.
                         if (lineParts.Length > daemonLinePartNumber)
                         {
-                            if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options="))
+                            isConcatenating = false;
+                            waitingForNextQuotationMark = false;
+
+                            // Oh yeah, you can also use quotation marks to specify the path to the options file!
+                            if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options=\""))
+                            {
+                                quotationMarksUsedinOptionsFilePath = true;
+                                optionsFileHasBeenSpecified = true;
+                                waitingForNextQuotationMark = true;
+                                StringBuilder sb = new StringBuilder();
+                                sb.Append(lineParts[daemonLinePartNumber + 1]);
+
+                                quotedOptionsFileLinePartNumber = daemonLinePartNumber + 2;
+                                while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                {
+                                    // Check if the current part ends with a quotation mark.
+                                    if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                    {
+                                        waitingForNextQuotationMark = false;
+                                        sb.Append(" ");
+                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
+                                        break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                                    }
+                                    else if (isConcatenating)
+                                    {
+                                        sb.Append(" ");
+                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                    }
+                                    quotedOptionsFileLinePartNumber++;
+                                }
+                                daemonProperty1 = sb.ToString();
+                            }
+                            else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options="))
                             {
                                 daemonProperty1 = lineParts[daemonLinePartNumber + 1];
                                 optionsFileHasBeenSpecified = true;
@@ -1092,39 +1160,92 @@ namespace Options.File.Checker.WPF
                         }
 
                         // daemonProperty2.
-                        if (lineParts.Length > daemonLinePartNumber + 2)
+                        if (!quotationMarksUsedinOptionsFilePath)
                         {
-                            if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options="))
+                            if (lineParts.Length > daemonLinePartNumber + 2)
                             {
-                                if (optionsFileHasBeenSpecified)
+                                if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options="))
                                 {
-                                    MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    analysisOfServerAndDaemonLinesFailed = true;
-                                    return;
+                                    isConcatenating = false;
+                                    waitingForNextQuotationMark = false;
+
+                                    if (optionsFileHasBeenSpecified)
+                                    {
+                                        MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options=\""))
+                                        {
+                                            quotationMarksUsedinOptionsFilePath = true;
+                                            optionsFileHasBeenSpecified = true;
+                                            waitingForNextQuotationMark = true;
+                                            StringBuilder sb = new StringBuilder();
+                                            sb.Append(lineParts[daemonLinePartNumber + 2]);
+
+                                            quotedOptionsFileLinePartNumber = daemonLinePartNumber + 3;
+                                            while (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                            {
+                                                // Check if the current part ends with a quotation mark.
+                                                if (lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                                {
+                                                    waitingForNextQuotationMark = false;
+                                                    sb.Append(" ");
+                                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
+                                                    break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
+                                                }
+                                                else if (isConcatenating)
+                                                {
+                                                    sb.Append(" ");
+                                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                                }
+                                                quotedOptionsFileLinePartNumber++;
+                                            }
+                                            daemonProperty2 = sb.ToString();
+                                        }
+                                        else
+                                        {
+                                            daemonProperty2 = lineParts[daemonLinePartNumber + 2];
+                                        }
+                                    }
+                                }
+                                else if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port="))
+                                {
+                                    if (daemonPortNumberHasBeenSpecified)
+                                    {
+                                        MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        return;
+                                    }
+                                    else
+                                    {
+                                        daemonProperty2 = lineParts[daemonLinePartNumber + 2];
+                                    }
                                 }
                                 else
                                 {
-                                    daemonProperty2 = lineParts[daemonLinePartNumber + 2];
-                                }
-                            }
-                            else if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port="))
-                            {
-                                if (daemonPortNumberHasBeenSpecified)
-                                {
-                                    MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
                                 }
-                                else
-                                {
-                                    daemonProperty2 = lineParts[daemonLinePartNumber + 2];
-                                }
                             }
-                            else
+                        }
+                        // You have already specified an options file with a quoted path.
+                        // This is the first part of code that is broken. Fix it. Use the previous code that gets the last linePart...
+                        else
+                        {
+                            if (lineParts[lineParts.Length - 1].TrimStart().StartsWith("options="))
                             {
-                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 analysisOfServerAndDaemonLinesFailed = true;
                                 return;
+
+                            }
+                            if (lineParts[lineParts.Length - 1].TrimStart().StartsWith("port="))
+                            {
+                                daemonProperty2 = (lineParts[lineParts.Length - 1]);
                             }
                         }
                     }
@@ -1134,7 +1255,30 @@ namespace Options.File.Checker.WPF
                         // daemonProperty1.
                         if (lineParts.Length > 3)
                         {
-                            if (lineParts[3].TrimStart().StartsWith("options="))
+                            if (lineParts[3].TrimStart().StartsWith("options=\""))
+                            {
+                                quotationMarksUsedinOptionsFilePath = true;
+                                optionsFileHasBeenSpecified = true;
+                                StringBuilder sb = new StringBuilder();
+                                sb.Append(lineParts[3]);
+
+                                quotedOptionsFileLinePartNumber = 4;
+                                while (quotedOptionsFileLinePartNumber < lineParts.Length && !lineParts[quotedOptionsFileLinePartNumber].EndsWith("\""))
+                                {
+                                    sb.Append(" ");
+                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                    quotedOptionsFileLinePartNumber++;
+                                }
+
+                                if (quotedOptionsFileLinePartNumber < lineParts.Length)
+                                {
+                                    sb.Append(" ");
+                                    sb.Append(lineParts[quotedOptionsFileLinePartNumber]);
+                                }
+
+                                daemonProperty1 = sb.ToString();
+                            }
+                            else if (lineParts[3].TrimStart().StartsWith("options="))
                             {
                                 optionsFileHasBeenSpecified = true;
                                 daemonProperty1 = lineParts[3];
@@ -1149,7 +1293,7 @@ namespace Options.File.Checker.WPF
                                 MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 analysisOfServerAndDaemonLinesFailed = true;
                                 return;
-                            }                            
+                            }
                         }
                         // daemonProperty2.
                         if (lineParts.Length > 4)
@@ -1204,6 +1348,13 @@ namespace Options.File.Checker.WPF
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
             }
+
+            if ((!daemonProperty1.Contains("options=")) && (!daemonProperty2.Contains("options=")))
+            {
+                MessageBox.Show("Your license file does not specify an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                analysisOfServerAndDaemonLinesFailed = true;
+                return;
+            }
         }
         private void CheckForValidProducts()
         {
@@ -1229,12 +1380,12 @@ namespace Options.File.Checker.WPF
                     {
                         foundMatchingProduct = true;
                         break;
-                    }                    
+                    }
                 }
                 if (!foundMatchingProduct)
                 {
-                    MessageBox.Show($"Invalid product name: \"{includeProductName}\". Product names are case-sensitive and must match the product name " +
-                        $"in the license file, which can be found after the word INCREMENT.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"The following product is not in your license file: \"{includeProductName}\". Product names are case-sensitive " +
+                        $"and must match the product name in the license file, which can be found after the word INCREMENT.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     analysisOfOptionsFileProductsFailed = true;
                     return;
                 }
