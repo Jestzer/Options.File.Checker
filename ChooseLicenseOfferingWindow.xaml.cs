@@ -23,5 +23,38 @@ namespace Options.File.Checker.WPF
         {
             InitializeComponent();
         }
+
+        private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
+        {
+
+            if (e.ChangedButton == MouseButton.Left)
+                DragMove();
+        }
+
+        private void CloseButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
+
+        private void MaximizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Toggle between maximized and not.
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        private void MinimizeButton_Click(object sender, RoutedEventArgs e)
+        {
+            WindowState = WindowState.Minimized;
+        }
+
+        private void TrialSaveButton_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void TrialCancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }
