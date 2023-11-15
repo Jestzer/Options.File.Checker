@@ -258,6 +258,11 @@ namespace Options.File.Checker.WPF
                         string licenseNumber = "this_is_a_bug";
                         int.TryParse(lineParts[5], out seatCount);
 
+                        if (productName == "TMW_Archive")
+                        {
+                            continue;
+                        }
+
                         // You bastards put the product key (that nobody ever uses but I still have to check just in case) on a different line /sometimes/.
                         if (productKey == "\\")
                         {
@@ -404,6 +409,8 @@ namespace Options.File.Checker.WPF
                     string? includeProductKey = "brokenIncludeProductKey";
                     string includeClientType = "brokenIncludeClientType";
                     string includeClientSpecified = "brokenIncludeClientSpecified";
+
+                    // Put in code that deals with this line: "MATLAB:asset_info=112233" GROUP 112233_MATLAB
                     if (line.TrimStart().StartsWith("INCLUDE "))
                     {
                         string[] lineParts = line.Split(' ');
@@ -1313,7 +1320,7 @@ namespace Options.File.Checker.WPF
                                     daemonProperty1 = (lineParts[3]);
                                 }
                                 else
-                                {                                    
+                                {
                                     StringBuilder sb = new StringBuilder();
                                     sb.Append(lineParts[3]);
                                     isConcatenating = true;
