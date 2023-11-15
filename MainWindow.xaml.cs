@@ -970,8 +970,8 @@ namespace Options.File.Checker.WPF
                     }
 
                     // port= and options= should only appear once.
-                    int countPortEquals = Regex.Matches(line, "port=").Count;
-                    int countOptionsEquals = Regex.Matches(line, "options=").Count;
+                    int countPortEquals = Regex.Matches(line, "port=", RegexOptions.IgnoreCase).Count;
+                    int countOptionsEquals = Regex.Matches(line, "options=", RegexOptions.IgnoreCase).Count;
 
                     if (countPortEquals > 1)
                     {
@@ -1137,7 +1137,7 @@ namespace Options.File.Checker.WPF
                             waitingForNextQuotationMark = false;
 
                             // Oh yeah, you can also use quotation marks to specify the path to the options file!
-                            if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options=\""))
+                            if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options=\"", StringComparison.OrdinalIgnoreCase))
                             {
                                 quotationMarksUsedinOptionsFilePath = true;
                                 optionsFileHasBeenSpecified = true;
@@ -1175,12 +1175,12 @@ namespace Options.File.Checker.WPF
                                     daemonProperty1 = sb.ToString();
                                 }
                             }
-                            else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options="))
+                            else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                             {
                                 daemonProperty1 = lineParts[daemonLinePartNumber + 1];
                                 optionsFileHasBeenSpecified = true;
                             }
-                            else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("port="))
+                            else if (lineParts[daemonLinePartNumber + 1].TrimStart().StartsWith("port=", StringComparison.OrdinalIgnoreCase))
                             {
                                 daemonProperty1 = lineParts[daemonLinePartNumber + 1];
                                 daemonPortNumberHasBeenSpecified = true;
@@ -1198,7 +1198,7 @@ namespace Options.File.Checker.WPF
                         {
                             if (lineParts.Length > daemonLinePartNumber + 2)
                             {
-                                if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options="))
+                                if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     isConcatenating = false;
                                     waitingForNextQuotationMark = false;
@@ -1211,7 +1211,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options=\""))
+                                        if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("options=\"", StringComparison.OrdinalIgnoreCase))
                                         {
                                             quotationMarksUsedinOptionsFilePath = true;
                                             optionsFileHasBeenSpecified = true;
@@ -1254,7 +1254,7 @@ namespace Options.File.Checker.WPF
                                         }
                                     }
                                 }
-                                else if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port="))
+                                else if (lineParts[daemonLinePartNumber + 2].TrimStart().StartsWith("port=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
@@ -1280,14 +1280,14 @@ namespace Options.File.Checker.WPF
                         {
                             if (lineParts.Length > quotedOptionsFileLinePartNumber + 1)
                             {
-                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options="))
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
 
                                 }
-                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("port="))
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("port=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     daemonProperty2 = (lineParts[quotedOptionsFileLinePartNumber + 1]);
                                 }
@@ -1302,7 +1302,7 @@ namespace Options.File.Checker.WPF
                         {
                             isConcatenating = false;
                             waitingForNextQuotationMark = false;
-                            if (lineParts[3].TrimStart().StartsWith("options=\""))
+                            if (lineParts[3].TrimStart().StartsWith("options=\"", StringComparison.OrdinalIgnoreCase))
                             {
                                 quotationMarksUsedinOptionsFilePath = true;
                                 optionsFileHasBeenSpecified = true;
@@ -1339,12 +1339,12 @@ namespace Options.File.Checker.WPF
                                     daemonProperty1 = sb.ToString();
                                 }
                             }
-                            else if (lineParts[3].TrimStart().StartsWith("options="))
+                            else if (lineParts[3].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                             {
                                 optionsFileHasBeenSpecified = true;
                                 daemonProperty1 = lineParts[3];
                             }
-                            else if (lineParts[3].TrimStart().StartsWith("port="))
+                            else if (lineParts[3].TrimStart().StartsWith("port=", StringComparison.OrdinalIgnoreCase))
                             {
                                 daemonPortNumberHasBeenSpecified = true;
                                 daemonProperty1 = lineParts[3];
@@ -1361,7 +1361,7 @@ namespace Options.File.Checker.WPF
                         {
                             if (lineParts.Length > 4)
                             {
-                                if (lineParts[4].TrimStart().StartsWith("options="))
+                                if (lineParts[4].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     if (optionsFileHasBeenSpecified)
                                     {
@@ -1374,7 +1374,7 @@ namespace Options.File.Checker.WPF
                                         daemonProperty2 = lineParts[4];
                                     }
                                 }
-                                else if (lineParts[4].TrimStart().StartsWith("port="))
+                                else if (lineParts[4].TrimStart().StartsWith("port=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
@@ -1400,14 +1400,14 @@ namespace Options.File.Checker.WPF
                         {
                             if (lineParts.Length > quotedOptionsFileLinePartNumber + 1)
                             {
-                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options="))
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
 
                                 }
-                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("port="))
+                                if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("port=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     daemonProperty2 = (lineParts[quotedOptionsFileLinePartNumber + 1]);
                                 }
@@ -1431,7 +1431,7 @@ namespace Options.File.Checker.WPF
                 return;
             }
 
-            if ((!daemonProperty1.Contains("options=")) && (!daemonProperty2.Contains("options=")))
+            if ((!daemonProperty1.Contains("options=", StringComparison.OrdinalIgnoreCase)) && (!daemonProperty2.Contains("options=", StringComparison.OrdinalIgnoreCase)))
             {
                 MessageBox.Show("Your license file does not specify an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 analysisOfServerAndDaemonLinesFailed = true;
