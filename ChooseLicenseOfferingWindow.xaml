@@ -5,8 +5,56 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Options.File.Checker.WPF"
         mc:Ignorable="d"
-        Title="ChooseLicenseOfferingWindow" Height="450" Width="800">
-    <Grid Background="#FF2D2B2B" Grid.Row="1">
-        
+        Title="ChooseLicenseOfferingWindow" Height="450" Width="800"
+    WindowStyle="None" AllowsTransparency="True">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- Custom title bar -->
+        <Border Background="Gray" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+            <DockPanel>
+                <Button Content="✕" DockPanel.Dock="Right" Click="CloseButton_Click" Width="45" Background="#FFD80000" Foreground="White" FontWeight="Bold" FontFamily="Cascadia Mono" />
+                <Button Content="⃞" DockPanel.Dock="Right" Click="MaximizeButton_Click" Width="45" Background="Gray" Foreground="White" FontFamily="Arial"  />
+                <Button Content="—" DockPanel.Dock="Right" Click="MinimizeButton_Click" Width="45" Background="Gray" Foreground="White" FontFamily="Arial" FontWeight="Bold" FontSize="10" />
+                <Label Content="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=Title}" Foreground="White" VerticalAlignment="Center" />
+            </DockPanel>
+        </Border>
+        <Grid Background="#FF2D2B2B" Grid.Row="1">
+            <TextBox x:Name="TrialNumber1TextBox" HorizontalAlignment="Left" Margin="36,97,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+            <Button x:Name="TrialSaveButton" Content="Save" HorizontalAlignment="Left" Margin="217,342,0,0" VerticalAlignment="Top" Click="TrialSaveButton_Click" Width="61" Foreground="White">
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="Gray" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <Label x:Name="TrialNumbersLabel" Content="Trial License Number(s)" HorizontalAlignment="Left" Margin="36,71,0,0" VerticalAlignment="Top" Width="135" Foreground="White"/>
+            <Button x:Name="TrialCancelButton" Content="Cancel" HorizontalAlignment="Center" Margin="0,342,0,0" VerticalAlignment="Top" Click="TrialCancelButton_Click" Width="60" Foreground="White">
+                <Button.Template>
+                    <ControlTemplate TargetType="{x:Type Button}">
+                        <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
+                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="border" Property="Background" Value="Gray" />
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+            <RadioButton x:Name="TrialConcurrentButton1" Content="Concurrent" HorizontalAlignment="Left" Margin="430,97,0,0" VerticalAlignment="Top" Foreground="White"/>
+            <GroupBox x:Name="TrialGroupBox1" Header="GroupBox" Margin="387,48,248,259" Foreground="White"/>
+        </Grid>
     </Grid>
 </Window>

@@ -40,23 +40,23 @@ namespace Options.File.Checker.WPF
         {
 
             if (e.ChangedButton == MouseButton.Left)
-                this.DragMove();
+                DragMove();
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
-            this.Close();
+            Close();
         }
 
         private void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
             // Toggle between maximized and not.
-            this.WindowState = this.WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+            WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
         }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
-            this.WindowState = WindowState.Minimized;
+            WindowState = WindowState.Minimized;
         }
 
         private void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
@@ -163,6 +163,12 @@ namespace Options.File.Checker.WPF
                 // Save the text to the selected file
                 System.IO.File.WriteAllText(filePath, OutputTextBlock.Text);
             }
+        }
+
+        private void TrialWindowButton_Click(object sender, RoutedEventArgs e)
+        {
+            ChooseLicenseOfferingWindow chooseLicenseOfferingWindow = new ChooseLicenseOfferingWindow();
+            chooseLicenseOfferingWindow.Show();
         }
         private void AnalyzerButton_Click(object sender, RoutedEventArgs e)
         {
