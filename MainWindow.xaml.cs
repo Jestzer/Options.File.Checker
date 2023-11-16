@@ -1477,7 +1477,7 @@ namespace Options.File.Checker.WPF
                     analysisOfServerAndDaemonLinesFailed = true;
                     return;
                 }
-                    if (line.TrimStart().StartsWith("INCREMENT"))
+                if (line.TrimStart().StartsWith("INCREMENT"))
                 {
                     productLinesHaveBeenReached = true;
                 }
