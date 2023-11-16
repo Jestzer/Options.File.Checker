@@ -83,8 +83,8 @@ namespace Options.File.Checker.WPF
                 string fileContents = System.IO.File.ReadAllText(selectedFile);
                 if (fileContents.Contains("lo=IN") || fileContents.Contains("lo=DC") || fileContents.Contains("lo=CIN"))
                 {
-                    MessageBox.Show("The file you've selected is likely an Individual or Designated Computer license (or has been tampered), which cannot use " +
-                        "an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show("The file you've selected contains an Individual or Designated Computer license. " +
+                        "These License Offerings cannot use an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -419,24 +419,53 @@ namespace Options.File.Checker.WPF
                         {
                             includeProductName = includeProductName.Replace("\"", "");
                             includeLicenseNumber = lineParts[2];
-                            if (includeLicenseNumber.Contains("key="))
+                            if (!includeProductName.Contains(':'))
                             {
-                                includeProductKey = lineParts[2];
-                                string unfixedIncludeProductKey = includeProductKey;
-                                string quotedIncludeProductKey = unfixedIncludeProductKey.Replace("key=", "");
-                                includeProductKey = quotedIncludeProductKey.Replace("\"", "");
-                                includeLicenseNumber = null;
+                                if (includeLicenseNumber.Contains("key="))
+                                {
+                                    includeProductKey = lineParts[2];
+                                    string unfixedIncludeProductKey = includeProductKey;
+                                    string quotedIncludeProductKey = unfixedIncludeProductKey.Replace("key=", "");
+                                    includeProductKey = quotedIncludeProductKey.Replace("\"", "");
+                                    includeLicenseNumber = null;
+                                }
+                                // asset_info=
+                                else
+                                {
+                                    string unfixedIncludeLicenseNumber = includeLicenseNumber;
+                                    string quoteIncludeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                    includeLicenseNumber = quoteIncludeLicenseNumber.Replace("\"", "");
+                                    includeProductKey = null;
+                                }
+
+                                includeClientType = lineParts[3];
+                                includeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
                             }
+                            // If you have " and :
                             else
                             {
-                                string unfixedIncludeLicenseNumber = includeLicenseNumber;
-                                string quoteIncludeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
-                                includeLicenseNumber = quoteIncludeLicenseNumber.Replace("\"", "");
-                                includeProductKey = null;
-                            }
+                                string[] colonParts = includeProductName.Split(":");
+                                if (colonParts.Length != 2)
+                                {
+                                    MessageBox.Show($"One of your INCLUDE lines has a stray colon: {includeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OptionsFileLocationTextBox.Text = string.Empty;
+                                    return;
+                                }
+                                includeProductName = colonParts[0];
+                                if (colonParts[1].Contains("key="))
+                                {
+                                    string unfixedIncludeProductKey = colonParts[1];
+                                    includeProductKey = unfixedIncludeProductKey.Replace("key=", "");
 
-                            includeClientType = lineParts[3];
-                            includeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                                }
+                                else
+                                {
+                                    string unfixedIncludeLicenseNumber = colonParts[1];
+                                    includeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                }
+                                includeClientType = lineParts[2];
+                                includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            }
                         }
                         // In case you decided to use a : instead of ""...
                         else if (includeProductName.Contains(':'))
@@ -979,6 +1008,14 @@ namespace Options.File.Checker.WPF
                     // port= and options= should only appear once.
                     int countPortEquals = Regex.Matches(line, "port=", RegexOptions.IgnoreCase).Count;
                     int countOptionsEquals = Regex.Matches(line, "options=", RegexOptions.IgnoreCase).Count;
+                    int countCommentedBeginLines = Regex.Matches(line, "# BEGIN--------------", RegexOptions.IgnoreCase).Count;
+
+                    if (countCommentedBeginLines > 0)
+                    {
+                        MessageBox.Show("You have content that is intended to be commented out in your DAEMON line. Please remove it.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
 
                     if (countPortEquals > 1)
                     {
@@ -990,6 +1027,15 @@ namespace Options.File.Checker.WPF
                     if (countOptionsEquals > 1)
                     {
                         MessageBox.Show("You have specified more than 1 options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfServerAndDaemonLinesFailed = true;
+                        return;
+                    }
+
+                    if (countOptionsEquals == 0)
+                    {
+                        MessageBox.Show("You did not specify the path to options file. If you included the path, but did not use options= to specify it, " +
+                            "MATLAB licenses ask that you do so, even if technically works without options=.\r\n\r\n" +
+                            "If you used a \\ to indicate a line break, this program currently does not support this.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -1424,7 +1470,14 @@ namespace Options.File.Checker.WPF
                     OutputTextBlock.Text += $"Daemon path: {daemonPath}.\r\ndprop1: {daemonProperty1}. dprop2: {daemonProperty2}.\r\n";
                 }
 
-                if (line.TrimStart().StartsWith("INCREMENT"))
+                if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
+                {
+                    MessageBox.Show("You have USE_SERVER in your license file. This should be in the end user's network.lic file, " +
+                        "not the Network License Manager's license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    analysisOfServerAndDaemonLinesFailed = true;
+                    return;
+                }
+                    if (line.TrimStart().StartsWith("INCREMENT"))
                 {
                     productLinesHaveBeenReached = true;
                 }
@@ -1434,6 +1487,15 @@ namespace Options.File.Checker.WPF
             if (serverLineCount == 2)
             {
                 MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                analysisOfServerAndDaemonLinesFailed = true;
+                return;
+            }
+
+            // These have to happen outside the loop to get a proper tally.
+            if (daemonLineCount == 0)
+            {
+                MessageBox.Show("You have no DAEMON line in your license file. You should not be using VENDOR lines for MATLAB, " +
+                    "if you are.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
             }
