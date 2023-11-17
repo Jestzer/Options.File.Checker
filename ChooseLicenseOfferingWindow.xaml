@@ -23,7 +23,6 @@
             </DockPanel>
         </Border>
         <Grid Background="#FF2D2B2B" Grid.Row="1">
-            <TextBox x:Name="TrialNumberTextBox1" HorizontalAlignment="Left" Margin="24,49,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
             <Button x:Name="TrialSaveButton" Content="Save" HorizontalAlignment="Left" Margin="98,390,0,0" VerticalAlignment="Top" Click="TrialSaveButton_Click" Width="61" Foreground="White">
                 <Button.Template>
                     <ControlTemplate TargetType="{x:Type Button}">
@@ -55,25 +54,34 @@
             </Button>
             <GroupBox x:Name="TrialGroupBox1" Header="1" Margin="16,16,276,345" Foreground="White"/>
             <StackPanel>
-                <RadioButton x:Name="TrialConcurrentButton1" Content="Concurrent" HorizontalAlignment="Left" Margin="370,34,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton1" Content="Network Named User" HorizontalAlignment="Left" Margin="370,4,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <TextBox x:Name="TrialNumberTextBox1" HorizontalAlignment="Left" Margin="24,49,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                <RadioButton x:Name="TrialConcurrentButton1" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialNNUButton1" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
             </StackPanel>
-            <TextBox x:Name="TrialNumberTextBox2" HorizontalAlignment="Left" Margin="24,108,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-            <GroupBox x:Name="TrialGroupBox2" Header="2" Margin="359,75,276,286" Foreground="White"/>
-            <RadioButton x:Name="TrialNNUButton2" Content="Network Named User" HorizontalAlignment="Left" Margin="370,113,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <TextBox x:Name="TrialNumberTextBox3" HorizontalAlignment="Left" Margin="24,168,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-            <GroupBox x:Name="TrialGroupBox3" Header="3" Margin="359,135,276,226" Foreground="White"/>
-            <RadioButton x:Name="TrialNNUButton3" Content="Network Named User" HorizontalAlignment="Left" Margin="370,173,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <TextBox x:Name="TrialNumberTextBox4" HorizontalAlignment="Left" Margin="24,229,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-            <GroupBox x:Name="TrialGroupBox4" Header="4" Margin="359,196,276,165" Foreground="White"/>
-            <RadioButton x:Name="TrialNNUButton4" Content="Network Named User" HorizontalAlignment="Left" Margin="370,234,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <TextBox x:Name="TrialNumberTextBox5" HorizontalAlignment="Left" Margin="24,292,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-            <GroupBox x:Name="TrialGroupBox5" Header="5" Margin="359,259,276,102" Foreground="White"/>
-            <RadioButton x:Name="TrialNNUButton5" Content="Network Named User" HorizontalAlignment="Left" Margin="370,297,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <RadioButton x:Name="TrialConcurrentButton2" Content="Concurrent" HorizontalAlignment="Left" Margin="370,93,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <RadioButton x:Name="TrialConcurrentButton3" Content="Concurrent" HorizontalAlignment="Left" Margin="370,156,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <RadioButton x:Name="TrialConcurrentButton4" Content="Concurrent" HorizontalAlignment="Left" Margin="370,214,0,0" VerticalAlignment="Top" Foreground="White"/>
-            <RadioButton x:Name="TrialConcurrentButton5" Content="Concurrent" HorizontalAlignment="Left" Margin="370,277,0,0" VerticalAlignment="Top" Foreground="White"/>
+            <GroupBox x:Name="TrialGroupBox2" Header="2" Margin="16,75,276,286" Foreground="White"/>
+            <StackPanel>
+                <TextBox x:Name="TrialNumberTextBox2" HorizontalAlignment="Left" Margin="24,108,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                <RadioButton x:Name="TrialConcurrentButton2" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialNNUButton2" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
+            </StackPanel>
+            <GroupBox x:Name="TrialGroupBox3" Header="3" Margin="16,135,276,226" Foreground="White"/>
+            <StackPanel>
+                <TextBox x:Name="TrialNumberTextBox3" HorizontalAlignment="Left" Margin="24,168,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                <RadioButton x:Name="TrialConcurrentButton3" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialNNUButton3" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
+            </StackPanel>
+            <GroupBox x:Name="TrialGroupBox4" Header="4" Margin="16,196,276,165" Foreground="White"/>
+            <StackPanel>
+                <TextBox x:Name="TrialNumberTextBox4" HorizontalAlignment="Left" Margin="24,229,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                <RadioButton x:Name="TrialConcurrentButton4" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialNNUButton4" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
+            </StackPanel>
+            <GroupBox x:Name="TrialGroupBox5" Header="5" Margin="16,259,276,102" Foreground="White"/>
+            <StackPanel>
+                <TextBox x:Name="TrialNumberTextBox5" HorizontalAlignment="Left" Margin="24,292,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                <RadioButton x:Name="TrialNNUButton5" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialConcurrentButton5" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
+            </StackPanel>
         </Grid>
     </Grid>
 </Window>

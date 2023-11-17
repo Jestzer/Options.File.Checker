@@ -35,7 +35,7 @@
     <Setting Name="TrialLicenseOffering4" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="SettingTrialLicenseOffering5" Type="System.String" Scope="User">
+    <Setting Name="TrialLicenseOffering5" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>
