@@ -280,7 +280,7 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 MessageBox.Show("Invalid license file format. Product key is missing for at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                OptionsFileLocationTextBox.Text = string.Empty;
+                                LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
                         }
@@ -295,7 +295,7 @@ namespace Options.File.Checker.WPF
                             if (licenseOffering.Contains("lr="))
                             {
                                 MessageBox.Show($"Trial licenses are currently unsupported. Product in question: {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                OptionsFileLocationTextBox.Text = string.Empty;
+                                LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
 
@@ -307,7 +307,7 @@ namespace Options.File.Checker.WPF
                         else
                         {
                             MessageBox.Show("Invalid license file format. License Offering is missing for at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OptionsFileLocationTextBox.Text = string.Empty;
+                            LicenseFileLocationTextBox.Text = string.Empty;
                             return;
                         }
 
@@ -334,7 +334,7 @@ namespace Options.File.Checker.WPF
                         else
                         {
                             MessageBox.Show("Invalid license file format. License Number is missing from at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OptionsFileLocationTextBox.Text = string.Empty;
+                            LicenseFileLocationTextBox.Text = string.Empty;
                             return;
                         }
 
@@ -352,7 +352,7 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 MessageBox.Show("Invalid license file format. License Number is missing from at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                OptionsFileLocationTextBox.Text = string.Empty;
+                                LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
                         }
@@ -448,7 +448,7 @@ namespace Options.File.Checker.WPF
                                 if (colonParts.Length != 2)
                                 {
                                     MessageBox.Show($"One of your INCLUDE lines has a stray colon: {includeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OptionsFileLocationTextBox.Text = string.Empty;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
                                 includeProductName = colonParts[0];
@@ -474,7 +474,7 @@ namespace Options.File.Checker.WPF
                             if (colonParts.Length != 2)
                             {
                                 MessageBox.Show($"One of your INCLUDE lines has a stray colon: {includeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                OptionsFileLocationTextBox.Text = string.Empty;
+                                OutputTextBlock.Text = string.Empty;
                                 return;
                             }
                             includeProductName = colonParts[0];
