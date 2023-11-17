@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Options.File.Checker.WPF"
         mc:Ignorable="d"
         Title="ChooseLicenseOfferingWindow" Height="450" Width="800"
-    WindowStyle="None" AllowsTransparency="True">
+    WindowStyle="None" AllowsTransparency="True" WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="30"/>
@@ -79,8 +79,8 @@
             <GroupBox x:Name="TrialGroupBox5" Header="5" Margin="16,259,276,102" Foreground="White"/>
             <StackPanel>
                 <TextBox x:Name="TrialNumberTextBox5" HorizontalAlignment="Left" Margin="24,292,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton5" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialConcurrentButton5" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialConcurrentButton5" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-30,0,0" VerticalAlignment="Top" Foreground="White"/>
+                <RadioButton x:Name="TrialNNUButton5" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-15,0,0" VerticalAlignment="Top" Foreground="White"/>
             </StackPanel>
         </Grid>
     </Grid>
