@@ -22,11 +22,34 @@ namespace Options.File.Checker.WPF
         public ChooseLicenseOfferingWindow()
         {
             InitializeComponent();
+            TrialNumberTextBox1.Text = Properties.Settings.Default.TrialNumber1;
+            TrialNumberTextBox2.Text = Properties.Settings.Default.TrialNumber2;
+            TrialNumberTextBox3.Text = Properties.Settings.Default.TrialNumber3;
+            TrialNumberTextBox4.Text = Properties.Settings.Default.TrialNumber4;
+            TrialNumberTextBox5.Text = Properties.Settings.Default.TrialNumber5;
+
+            for (int i = 1; i <= 5; i++)
+            {
+                string settingName = $"{settingPrefix}{i}";
+                RadioButton concurrentButton = FindName($"TrialConcurrentButton{i}") as RadioButton;
+                RadioButton nnuButton = FindName($"TrialNNUButton{i}") as RadioButton;
+
+                if (concurrentButton != null && nnuButton != null)
+                {
+                    if (Properties.Settings.Default[settingName] == "CN")
+                    {
+                        concurrentButton.IsChecked = true;
+                    }
+                    else
+                    {
+                        nnuButton.IsChecked = true;
+                    }
+                }
+            }
         }
 
         private void Border_MouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
-
             if (e.ChangedButton == MouseButton.Left)
                 DragMove();
         }
@@ -49,7 +72,23 @@ namespace Options.File.Checker.WPF
 
         private void TrialSaveButton_Click(object sender, RoutedEventArgs e)
         {
+            Properties.Settings.Default.TrialNumber1 = TrialNumberTextBox1.Text;
+            Properties.Settings.Default.TrialNumber2 = TrialNumberTextBox2.Text;
+            Properties.Settings.Default.TrialNumber3 = TrialNumberTextBox3.Text;
+            Properties.Settings.Default.TrialNumber4 = TrialNumberTextBox4.Text;
+            Properties.Settings.Default.TrialNumber5 = TrialNumberTextBox5.Text;
 
+            if (TrialConcurrentButton1.IsChecked == true)
+            {
+                Properties.Settings.Default.TrialLicenseOffering1 = "CN";
+            }
+            else
+            {
+                Properties.Settings.Default.TrialLicenseOffering1 = "NNU";
+            }
+
+            Properties.Settings.Default.Save();
+            Close();
         }
 
         private void TrialCancelButton_Click(object sender, RoutedEventArgs e)
