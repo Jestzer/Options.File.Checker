@@ -689,24 +689,22 @@ namespace Options.File.Checker.WPF
                         return;
                     }
                 }
-                // INCLUDEALL. Needs to be finished still.
+                // INCLUDEALL
                 Dictionary<string, Tuple<string>> inculdeAllIndex = new Dictionary<string, Tuple<string>>();
                 for (int inculdeAllLineIndex = 0; inculdeAllLineIndex < filteredOptionsFileLines.Length; inculdeAllLineIndex++)
                 {
                     string line = filteredOptionsFileLines[inculdeAllLineIndex];
-                    string hostGroupName = "broken-hostGroupName";
-                    string hostGroupClientSpecified = "broken-hostGroupClientSpecified";
+                    string includeAllClientType = "broken-includeAllClientType";
+                    string includeAllClientSpecified = "broken-includeAllClientSpecified";
 
-                    if (line.TrimStart().StartsWith("HOST_GROUP "))
+                    if (line.TrimStart().StartsWith("INCLUDEALL "))
                     {
-                        hostGroupsAreUsed = true;
                         string[] lineParts = line.Split(' ');
-                        hostGroupName = lineParts[1];
-                        hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
+                        includeAllClientType = lineParts[1];
+                        includeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
-                        OutputTextBlock.Text += $"HOST_GROUP Name: {hostGroupName}. Clients: {hostGroupClientSpecified}\r\n";
-                        inculdeAllIndex[hostGroupName] = Tuple.Create(hostGroupClientSpecified);
-
+                        OutputTextBlock.Text += $"INCLUDEALL: {includeAllClientType}. Clients: {includeAllClientSpecified}\r\n";
+                        inculdeAllIndex[includeAllClientType] = Tuple.Create(includeAllClientSpecified);
                     }
                 }
 
@@ -874,6 +872,8 @@ namespace Options.File.Checker.WPF
                 string? includeProductKey = optionsIncludeData.Item3;
                 string includeClientType = optionsIncludeData.Item4;
                 string includeClientSpecified = optionsIncludeData.Item5;
+
+                // Load INCLUDEALL specifications...
 
                 // Skip INCLUDE entries with specified license numbers. We already accounted for them.
                 bool includeHasNoLicenseNumber = string.IsNullOrWhiteSpace(includeLicenseNumber);
