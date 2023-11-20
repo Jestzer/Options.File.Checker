@@ -552,7 +552,7 @@ namespace Options.File.Checker.WPF
                     }
                 }
 
-                // EXCLUDE dictionary. Make changes to this based on the INCLUDE changes I've made since.
+                // EXCLUDE dictionary.
                 Dictionary<string, Tuple<string?, string?, string, string>> optionsExcludeIndex = new Dictionary<string, Tuple<string?, string?, string, string>>();
                 for (int optionsExcludeLineIndex = 0; optionsExcludeLineIndex < filteredOptionsFileLines.Length; optionsExcludeLineIndex++)
                 {
@@ -571,24 +571,78 @@ namespace Options.File.Checker.WPF
                         {
                             excludeProductName = excludeProductName.Replace("\"", "");
                             excludeLicenseNumber = lineParts[2];
-                            if (excludeLicenseNumber.Contains("key="))
+                            if (!excludeProductName.Contains(':'))
                             {
-                                excludeProductKey = lineParts[2];
-                                string unfixedExcludeProductKey = excludeProductKey;
-                                string quotedExcludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
-                                excludeProductKey = quotedExcludeProductKey.Replace("\"", "");
-                                excludeLicenseNumber = null;
+                                if (excludeLicenseNumber.Contains("key="))
+                                {
+                                    excludeProductKey = lineParts[2];
+                                    string unfixedExcludeProductKey = excludeProductKey;
+                                    string quotedExcludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
+                                    excludeProductKey = quotedExcludeProductKey.Replace("\"", "");
+                                    excludeLicenseNumber = null;
+                                }
+                                // asset_info=
+                                else
+                                {
+                                    string unfixedExcludeLicenseNumber = excludeLicenseNumber;
+                                    string quoteExcludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                    excludeLicenseNumber = quoteExcludeLicenseNumber.Replace("\"", "");
+                                    excludeProductKey = null;
+                                }
+
+                                excludeClientType = lineParts[3];
+                                excludeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                            }
+                            // If you have " and :
+                            else
+                            {
+                                string[] colonParts = excludeProductName.Split(":");
+                                if (colonParts.Length != 2)
+                                {
+                                    MessageBox.Show($"One of your EXCLUDE lines has a stray colon: {excludeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+                                excludeProductName = colonParts[0];
+                                if (colonParts[1].Contains("key="))
+                                {
+                                    string unfixedExcludeProductKey = colonParts[1];
+                                    excludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
+
+                                }
+                                else
+                                {
+                                    string unfixedExcludeLicenseNumber = colonParts[1];
+                                    excludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                }
+                                excludeClientType = lineParts[2];
+                                excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            }
+                        }
+                        // In case you decided to use a : instead of ""...
+                        else if (excludeProductName.Contains(':'))
+                        {
+                            string[] colonParts = excludeProductName.Split(":");
+                            if (colonParts.Length != 2)
+                            {
+                                MessageBox.Show($"One of your EXCLUDE lines has a stray colon: {excludeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                OutputTextBlock.Text = string.Empty;
+                                return;
+                            }
+                            excludeProductName = colonParts[0];
+                            if (colonParts[1].Contains("key="))
+                            {
+                                string unfixedExcludeProductKey = colonParts[1];
+                                excludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
+
                             }
                             else
                             {
-                                string unfixedExcludeLicenseNumber = excludeLicenseNumber;
-                                string quoteExcludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
-                                excludeLicenseNumber = quoteExcludeLicenseNumber.Replace("\"", "");
-                                excludeProductKey = null;
+                                string unfixedExcludeLicenseNumber = colonParts[1];
+                                excludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
                             }
-
-                            excludeClientType = lineParts[3];
-                            excludeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                            excludeClientType = lineParts[2];
+                            excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                         }
                         else
                         {
@@ -629,14 +683,33 @@ namespace Options.File.Checker.WPF
                 {
                     string line = filteredOptionsFileLines[optionsExcludeAllLineIndex];
 
-                    if (line.TrimStart().StartsWith("HOST_GROUP "))
+                    if (line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
                         excludeAllLinesAreUsed = true;
                         return;
                     }
                 }
-                // INCLUDEALL
-                //
+                // INCLUDEALL. Needs to be finished still.
+                Dictionary<string, Tuple<string>> inculdeAllIndex = new Dictionary<string, Tuple<string>>();
+                for (int inculdeAllLineIndex = 0; inculdeAllLineIndex < filteredOptionsFileLines.Length; inculdeAllLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[inculdeAllLineIndex];
+                    string hostGroupName = "broken-hostGroupName";
+                    string hostGroupClientSpecified = "broken-hostGroupClientSpecified";
+
+                    if (line.TrimStart().StartsWith("HOST_GROUP "))
+                    {
+                        hostGroupsAreUsed = true;
+                        string[] lineParts = line.Split(' ');
+                        hostGroupName = lineParts[1];
+                        hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
+
+                        OutputTextBlock.Text += $"HOST_GROUP Name: {hostGroupName}. Clients: {hostGroupClientSpecified}\r\n";
+                        inculdeAllIndex[hostGroupName] = Tuple.Create(hostGroupClientSpecified);
+
+                    }
+                }
+
 
                 // Output some warning messages, if needed.
                 if (excludeLinesAreUsed)
