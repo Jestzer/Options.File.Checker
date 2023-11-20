@@ -66,3 +66,4 @@ C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Ch
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\ChooseLicenseOfferingWindow.g.cs
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\ChooseLicenseOfferingWindow.baml
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.sourcelink.json
+C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.sourcelink.json
