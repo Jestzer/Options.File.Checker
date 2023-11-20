@@ -17,6 +17,9 @@ namespace Options.File.Checker.WPF
         // INCLUDE dictionary from the options file.
         Dictionary<int, Tuple<string, string?, string?, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string?, string?, string, string>>();
 
+        // INCLUDEALL dictionary from the options file.
+        Dictionary<int, Tuple<string, string>> optionsIncludeAllIndex = new Dictionary<int, Tuple<string, string>>();
+
         // GROUP dictionary from the options file.
         Dictionary<int, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<int, Tuple<string, string, int>>();
 
@@ -658,7 +661,7 @@ namespace Options.File.Checker.WPF
                 }
 
                 // HOST_GROUP dictionary.
-                Dictionary<string, Tuple<string>> optionsHostGroupIndex = new Dictionary<string, Tuple<string>>();
+                Dictionary<int, Tuple<string, string>> optionsHostGroupIndex = new Dictionary<int, Tuple<string, string>>();
                 for (int optionsHostGroupLineIndex = 0; optionsHostGroupLineIndex < filteredOptionsFileLines.Length; optionsHostGroupLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsHostGroupLineIndex];
@@ -673,7 +676,7 @@ namespace Options.File.Checker.WPF
                         hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
 
                         OutputTextBlock.Text += $"HOST_GROUP Name: {hostGroupName}. Clients: {hostGroupClientSpecified}\r\n";
-                        optionsHostGroupIndex[hostGroupName] = Tuple.Create(hostGroupClientSpecified);
+                        optionsHostGroupIndex[optionsHostGroupLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
 
                     }
                 }
@@ -689,11 +692,10 @@ namespace Options.File.Checker.WPF
                         return;
                     }
                 }
-                // INCLUDEALL
-                Dictionary<string, Tuple<string>> inculdeAllIndex = new Dictionary<string, Tuple<string>>();
-                for (int inculdeAllLineIndex = 0; inculdeAllLineIndex < filteredOptionsFileLines.Length; inculdeAllLineIndex++)
+                // INCLUDEALL                
+                for (int optionsIncludeAllLineIndex = 0; optionsIncludeAllLineIndex < filteredOptionsFileLines.Length; optionsIncludeAllLineIndex++)
                 {
-                    string line = filteredOptionsFileLines[inculdeAllLineIndex];
+                    string line = filteredOptionsFileLines[optionsIncludeAllLineIndex];
                     string includeAllClientType = "broken-includeAllClientType";
                     string includeAllClientSpecified = "broken-includeAllClientSpecified";
 
@@ -704,7 +706,7 @@ namespace Options.File.Checker.WPF
                         includeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
                         OutputTextBlock.Text += $"INCLUDEALL: {includeAllClientType}. Clients: {includeAllClientSpecified}\r\n";
-                        inculdeAllIndex[includeAllClientType] = Tuple.Create(includeAllClientSpecified);
+                        optionsIncludeAllIndex[optionsIncludeAllLineIndex] = Tuple.Create(includeAllClientType, includeAllClientSpecified);
                     }
                 }
 
@@ -873,8 +875,6 @@ namespace Options.File.Checker.WPF
                 string includeClientType = optionsIncludeData.Item4;
                 string includeClientSpecified = optionsIncludeData.Item5;
 
-                // Load INCLUDEALL specifications...
-
                 // Skip INCLUDE entries with specified license numbers. We already accounted for them.
                 bool includeHasNoLicenseNumber = string.IsNullOrWhiteSpace(includeLicenseNumber);
 
@@ -996,6 +996,57 @@ namespace Options.File.Checker.WPF
                     return;
                 }
             }
+
+            // INCLUDEALL seat subtraction.
+            foreach (var optionsIncludeAllEntry in optionsIncludeAllIndex)
+            {
+                int optionsIncludeAllLineIndex = optionsIncludeAllEntry.Key;
+                Tuple<string, string> optionsIncludeAllData = optionsIncludeAllEntry.Value;
+
+                // Load INCLUDEALL specifications.
+                string includeAllClientType = optionsIncludeAllData.Item1;
+                string includeAllClientSpecified = optionsIncludeAllData.Item2;
+
+                // License file time.
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                    string productName = licenseFileData.Item1;
+                    string licenseNumber = licenseFileData.Item5;
+                    if (includeAllClientType == "USER")
+                    {
+                        // Add some code that does ANOTHER for loop into optionsIncludeAllEntry/Index...
+                        // ... and then subtracts does the code to subtract things/record this.
+                    }
+                    else if (includeAllClientType == "GROUP")
+                    {
+                        bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeAllClientSpecified);
+
+                        if (isEmptyOrWhiteSpace)
+                        {
+                            MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            OutputTextBlock.Text = null;
+                            return;
+                        }
+
+                        // Add some code here too.
+                    }
+                    else if (includeAllClientType == "HOST_GROUP")
+                    {
+                        // There is no math that can be done because you've specified an entire hostname to be allowed, which could be any number of users.
+                    }
+                    else
+                    {
+                        MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        OutputTextBlock.Text = null;
+                        return;
+                    }
+                    // add some code here..
+                }
+            }
+            // RESERVE seat subtraction.
         }
 
         private void AnalyzeServerAndDaemonLine()
