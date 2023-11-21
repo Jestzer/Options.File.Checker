@@ -177,6 +177,7 @@ namespace Options.File.Checker.WPF
         {
             // Prevent previous entries/modified files from skewing data.
             optionsIncludeIndex.Clear();
+            optionsIncludeAllIndex.Clear();
             optionsGroupIndex.Clear();
             licenseFileIndex.Clear();
             analysisOfServerAndDaemonLinesFailed = false;
@@ -507,9 +508,10 @@ namespace Options.File.Checker.WPF
                         optionsIncludeIndex[optionsIncludeLineIndex] = Tuple.Create(includeProductName, includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
                     }
                 }
-                OutputTextBlock.Text += $"Is case sensitivity turned off?: {caseSensitivity.ToString()}\r\n";
+                OutputTextBlock.Text += $"Is case sensitivity turned off?: {caseSensitivity}\r\n";
 
                 // RESERVE dictionary.
+                // Test to see if a license or product key can be specified. Then, include it in the seat calculations. # Add some code
                 Dictionary<string, Tuple<string, string, string>> optionsReserveIndex = new Dictionary<string, Tuple<string, string, string>>();
                 for (int optionsReserveLineIndex = 0; optionsReserveLineIndex < filteredOptionsFileLines.Length; optionsReserveLineIndex++)
                 {
@@ -1007,43 +1009,103 @@ namespace Options.File.Checker.WPF
                 string includeAllClientType = optionsIncludeAllData.Item1;
                 string includeAllClientSpecified = optionsIncludeAllData.Item2;
 
-                // License file time.
-                foreach (var licenseFileEntry in licenseFileIndex)
+                if (includeAllClientType == "USER")
                 {
-                    int lineIndex = licenseFileEntry.Key;
-                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
-
-                    string productName = licenseFileData.Item1;
-                    string licenseNumber = licenseFileData.Item5;
-                    if (includeAllClientType == "USER")
+                    // Subtract 1 from seat count for each product in the license file.
+                    foreach (var licenseFileEntry in licenseFileIndex)
                     {
-                        // Add some code that does ANOTHER for loop into optionsIncludeAllEntry/Index...
-                        // ... and then subtracts does the code to subtract things/record this.
-                    }
-                    else if (includeAllClientType == "GROUP")
-                    {
-                        bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeAllClientSpecified);
+                        int lineIndex = licenseFileEntry.Key;
+                        Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
-                        if (isEmptyOrWhiteSpace)
+                        string productName = licenseFileData.Item1;
+                        int seatCount = licenseFileData.Item2;
+
+                        // Subtract 1 from seatCount, since you only specified a single user.
+                        seatCount--;
+
+                        // Error out if the seat count is negative.
+                        if (seatCount < 0)
                         {
-                            MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             OutputTextBlock.Text = null;
                             return;
                         }
 
-                        // Add some code here too.
+                        // Update the seatCount in the licenseFileData tuple.
+                        licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                        // Update the seatCount in the licenseFileIndex dictionary.
+                        licenseFileIndex[lineIndex] = licenseFileData;
+
+                        // Update the OutputTextBlock.Text with the new seatCount value.
+                        OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount}. INCLUDEALL. \r\n";
                     }
-                    else if (includeAllClientType == "HOST_GROUP")
+                }
+                else if (includeAllClientType == "GROUP")
+                {
+                    bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeAllClientSpecified);
+
+                    if (isEmptyOrWhiteSpace)
                     {
-                        // There is no math that can be done because you've specified an entire hostname to be allowed, which could be any number of users.
-                    }
-                    else
-                    {
-                        MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         OutputTextBlock.Text = null;
                         return;
                     }
-                    // add some code here..
+
+                    // Subtract from seat count based on the number of users in the GROUP.
+                    foreach (var licenseFileEntry in licenseFileIndex)
+                    {
+                        int lineIndex = licenseFileEntry.Key;
+                        Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                        string productName = licenseFileData.Item1;
+                        int seatCount = licenseFileData.Item2;
+
+                        foreach (var optionsGroupEntry in optionsGroupIndex)
+                        {
+                            // Load GROUP specifications.
+                            int optionsGroupLineIndex = optionsGroupEntry.Key;
+                            Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                            string groupName = optionsGroupData.Item1;
+                            string groupUsers = optionsGroupData.Item2;
+                            int groupUserCount = optionsGroupData.Item3;
+
+                            if (groupName == includeAllClientSpecified)
+                            {
+                                // Subtract the appropriate number of seats.
+                                seatCount -= groupUserCount;
+
+                                // Error out if the seat count is negative.
+                                if (seatCount < 0)
+                                {
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget that you are using at least 1 " +
+                                        $"INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = null;
+                                    return;
+                                }
+
+                                // Update the seatCount in the licenseFileData tuple.
+                                licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                // Update the seatCount in the licenseFileIndex dictionary.
+                                licenseFileIndex[lineIndex] = licenseFileData;
+
+                                // Update the OutputTextBlock.Text with the new seatCount value.
+                                OutputTextBlock.Text += $"Line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} INCLUDEALL GROUP.\r\n";
+                            }
+                        }
+                    }
+                }
+                else if (includeAllClientType == "HOST_GROUP")
+                {
+                    // There is no math that can be done because you've specified an entire hostname to be allowed, which could be any number of users.
+                }
+                else
+                {
+                    MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    OutputTextBlock.Text = null;
+                    return;
                 }
             }
             // RESERVE seat subtraction.
