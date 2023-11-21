@@ -39,7 +39,7 @@ INCLUDE Compiler USER user1
 #To use other toolboxes, replace <Toolbox_Name> with the name of the toolbox - as it appears in your license.dat file
 
 #Group Format - this assumes 2 users (could be more) bear in mind this is limited by the number of "keys" on your license
-GROUP MATLAB_USERS user1 user2 
+GROUP MATLAB_USERS user1 user2
 INCLUDE MATLAB GROUP MATLAB_USERS
 INCLUDE SIMULINK GROUP MATLAB_USERS
 
