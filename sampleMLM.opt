@@ -29,6 +29,9 @@ GROUP MATLAB_power_users user1 user2 user3 user4
 
 # Reserve a set of concurrent licenses for the power group of MATLAB users
 RESERVE 3 MATLAB GROUP MATLAB_power_users
+RESERVE 4 "MATLAB asset_info=112233" USER bob
+RESERVE 5 SIMULINK:key=445566 GROUP MATLAB_power_users
+RESERVE 7 "SIMULINK:asset_info=778899" USER ed
 
 #Individual Matlab user and toolboxes
 #This is the format for a single user, called "user1"

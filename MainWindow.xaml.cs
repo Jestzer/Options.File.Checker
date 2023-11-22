@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Options.File.Checker.WPF
 {
@@ -15,12 +16,15 @@ namespace Options.File.Checker.WPF
     public partial class MainWindow : Window
     {
         // INCLUDE dictionary from the options file.
-        Dictionary<int, Tuple<string, string?, string?, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string?, string?, string, string>>();
+        Dictionary<int, Tuple<string, string, string, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
 
-        // INCLUDEALL dictionary from the options file.
+        // INCLUDEALL
         Dictionary<int, Tuple<string, string>> optionsIncludeAllIndex = new Dictionary<int, Tuple<string, string>>();
 
-        // GROUP dictionary from the options file.
+        // RESERVE
+        Dictionary<int, Tuple<int, string, string, string, string, string>> optionsReserveIndex = new Dictionary<int, Tuple<int, string, string, string, string, string>>();
+
+        // GROUP
         Dictionary<int, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<int, Tuple<string, string, int>>();
 
         // License file dictionary.
@@ -178,11 +182,12 @@ namespace Options.File.Checker.WPF
             // Prevent previous entries/modified files from skewing data.
             optionsIncludeIndex.Clear();
             optionsIncludeAllIndex.Clear();
+            optionsReserveIndex.Clear();
             optionsGroupIndex.Clear();
             licenseFileIndex.Clear();
             analysisOfServerAndDaemonLinesFailed = false;
             analysisOfOptionsFileProductsFailed = false;
-            OutputTextBlock.Text = null;
+            OutputTextBlock.Text = string.Empty;
             bool excludeLinesAreUsed = false;
             bool excludeAllLinesAreUsed = false;
             bool hostGroupsAreUsed = false;
@@ -240,13 +245,13 @@ namespace Options.File.Checker.WPF
                 AnalyzeServerAndDaemonLine();
                 if (analysisOfServerAndDaemonLinesFailed)
                 {
-                    OutputTextBlock.Text = null;
+                    OutputTextBlock.Text = string.Empty;
                     return;
                 }
 
                 // Get the things we care about from the license file so that we can go through the options file appropriately.
 
-                string? productName = null;
+                string productName = string.Empty;
                 int seatCount = 0;
 
                 for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
@@ -258,10 +263,11 @@ namespace Options.File.Checker.WPF
                         string[] lineParts = line.Split(' ');
                         productName = lineParts[1];
                         string productKey = lineParts[6];
-                        string? licenseOffering = null;
+                        string licenseOffering = string.Empty;
                         string licenseNumber = "this_is_a_bug";
                         int.TryParse(lineParts[5], out seatCount);
 
+                        // If you're using a PLP license, then we don't care about this product.
                         if (productName == "TMW_Archive")
                         {
                             continue;
@@ -409,8 +415,8 @@ namespace Options.File.Checker.WPF
                 {
                     string line = filteredOptionsFileLines[optionsIncludeLineIndex];
                     string includeProductName = "brokenIncludeProductName";
-                    string? includeLicenseNumber = "brokenIncludeLicenseNumber";
-                    string? includeProductKey = "brokenIncludeProductKey";
+                    string includeLicenseNumber = "brokenIncludeLicenseNumber";
+                    string includeProductKey = "brokenIncludeProductKey";
                     string includeClientType = "brokenIncludeClientType";
                     string includeClientSpecified = "brokenIncludeClientSpecified";
 
@@ -431,7 +437,7 @@ namespace Options.File.Checker.WPF
                                     string unfixedIncludeProductKey = includeProductKey;
                                     string quotedIncludeProductKey = unfixedIncludeProductKey.Replace("key=", "");
                                     includeProductKey = quotedIncludeProductKey.Replace("\"", "");
-                                    includeLicenseNumber = null;
+                                    includeLicenseNumber = string.Empty;
                                 }
                                 // asset_info=
                                 else
@@ -439,7 +445,7 @@ namespace Options.File.Checker.WPF
                                     string unfixedIncludeLicenseNumber = includeLicenseNumber;
                                     string quoteIncludeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
                                     includeLicenseNumber = quoteIncludeLicenseNumber.Replace("\"", "");
-                                    includeProductKey = null;
+                                    includeProductKey = string.Empty;
                                 }
 
                                 includeClientType = lineParts[3];
@@ -460,12 +466,13 @@ namespace Options.File.Checker.WPF
                                 {
                                     string unfixedIncludeProductKey = colonParts[1];
                                     includeProductKey = unfixedIncludeProductKey.Replace("key=", "");
-
+                                    includeLicenseNumber = string.Empty;
                                 }
                                 else
                                 {
                                     string unfixedIncludeLicenseNumber = colonParts[1];
                                     includeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                    includeProductKey = string.Empty;
                                 }
                                 includeClientType = lineParts[2];
                                 includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
@@ -486,12 +493,13 @@ namespace Options.File.Checker.WPF
                             {
                                 string unfixedIncludeProductKey = colonParts[1];
                                 includeProductKey = unfixedIncludeProductKey.Replace("key=", "");
-
+                                includeLicenseNumber = string.Empty;
                             }
                             else
                             {
                                 string unfixedIncludeLicenseNumber = colonParts[1];
                                 includeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                includeProductKey = string.Empty;
                             }
                             includeClientType = lineParts[2];
                             includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
@@ -500,8 +508,8 @@ namespace Options.File.Checker.WPF
                         {
                             includeClientType = lineParts[2];
                             includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            includeLicenseNumber = null;
-                            includeProductKey = null;
+                            includeLicenseNumber = string.Empty;
+                            includeProductKey = string.Empty;
                         }
 
                         OutputTextBlock.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
@@ -510,27 +518,126 @@ namespace Options.File.Checker.WPF
                 }
                 OutputTextBlock.Text += $"Is case sensitivity turned off?: {caseSensitivity}\r\n";
 
-                // RESERVE dictionary.
-                // Test to see if a license or product key can be specified. Then, include it in the seat calculations. # Add some code
-                Dictionary<string, Tuple<string, string, string>> optionsReserveIndex = new Dictionary<string, Tuple<string, string, string>>();
+                // RESERVE dictionary.                
                 for (int optionsReserveLineIndex = 0; optionsReserveLineIndex < filteredOptionsFileLines.Length; optionsReserveLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsReserveLineIndex];
-                    string reserveSeats = "broken-reserveSeats";
+                    string reserveSeatsString = "broken-reserveSeats";
+                    int reserveSeatCount = 0;
                     string reserveProductName = "broken-reserveProductName";
+                    string reserveLicenseNumber = "broken-reserveLicenseNumber";
+                    string reserveProductKey = "broken-reserveProductKey";
                     string reserveClientType = "broken-reserveClientType";
                     string reserveClientSpecified = "broken-reserveClientSpecified";
 
                     if (line.TrimStart().StartsWith("RESERVE "))
                     {
                         string[] lineParts = line.Split(' ');
-                        reserveSeats = lineParts[1];
+                        reserveSeatsString = lineParts[1];
                         reserveProductName = lineParts[2];
-                        reserveClientType = lineParts[3];
-                        reserveClientSpecified = string.Join(" ", lineParts.Skip(4));
 
-                        OutputTextBlock.Text += $"Seats reserved: {reserveSeats}. Product: {reserveProductName}. CT: {reserveClientType}. CS: {reserveClientSpecified}\r\n";
-                        optionsReserveIndex[reserveProductName] = Tuple.Create(reserveSeats, reserveClientType, reserveClientSpecified);
+                        // Convert the seat count from a string to a integer.
+                        if (int.TryParse(reserveSeatsString, out reserveSeatCount))
+                        {
+                            // Parsing was successful.
+                        }
+                        else
+                        {
+                            MessageBox.Show($"You have an incorrectly specified the seat count for one of your RESERVE lines.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+
+                            OutputTextBlock.Text = string.Empty;
+                            return;
+                        }
+
+                        if (reserveProductName.Contains('"'))
+                        {
+                            reserveProductName = reserveProductName.Replace("\"", "");
+                            reserveLicenseNumber = lineParts[3];
+                            if (!reserveProductName.Contains(':'))
+                            {
+                                if (reserveLicenseNumber.Contains("key="))
+                                {
+                                    reserveProductKey = lineParts[3];
+                                    string unfixedReserveProductKey = reserveProductKey;
+                                    string quotedReserveProductKey = unfixedReserveProductKey.Replace("key=", "");
+                                    reserveProductKey = quotedReserveProductKey.Replace("\"", "");
+                                    reserveLicenseNumber = string.Empty;
+                                }
+                                // asset_info=
+                                else
+                                {
+                                    string unfixedReserveLicenseNumber = reserveLicenseNumber;
+                                    string quoteReserveLicenseNumber = unfixedReserveLicenseNumber.Replace("asset_info=", "");
+                                    reserveLicenseNumber = quoteReserveLicenseNumber.Replace("\"", "");
+                                    reserveProductKey = string.Empty;
+                                }
+
+                                reserveClientType = lineParts[4];
+                                reserveClientSpecified = string.Join(" ", lineParts.Skip(5)).TrimEnd();
+                            }
+                            // If you have " and :
+                            else
+                            {
+                                string[] colonParts = reserveProductName.Split(":");
+                                if (colonParts.Length != 2)
+                                {
+                                    MessageBox.Show($"One of your RESERVE lines has a stray colon: {reserveProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+                                reserveProductName = colonParts[0];
+                                if (colonParts[1].Contains("key="))
+                                {
+                                    string unfixedReserveProductKey = colonParts[1];
+                                    reserveProductKey = unfixedReserveProductKey.Replace("key=", "");
+                                    reserveLicenseNumber = string.Empty;
+                                }
+                                else
+                                {
+                                    string unfixedReserveLicenseNumber = colonParts[1];
+                                    reserveLicenseNumber = unfixedReserveLicenseNumber.Replace("asset_info=", "");
+                                    reserveProductKey = string.Empty;
+                                }
+                                reserveClientType = lineParts[3];
+                                reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                            }
+                        }
+                        // In case you decided to use a : instead of ""...
+                        else if (reserveProductName.Contains(':'))
+                        {
+                            string[] colonParts = reserveProductName.Split(":");
+                            if (colonParts.Length != 2)
+                            {
+                                MessageBox.Show($"One of your RESERVE lines has a stray colon: {reserveProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                OutputTextBlock.Text = string.Empty;
+                                return;
+                            }
+                            reserveProductName = colonParts[0];
+                            if (colonParts[1].Contains("key="))
+                            {
+                                string unfixedReserveProductKey = colonParts[1];
+                                reserveProductKey = unfixedReserveProductKey.Replace("key=", "");
+                                reserveLicenseNumber = string.Empty;
+                            }
+                            else
+                            {
+                                string unfixedReserveLicenseNumber = colonParts[1];
+                                reserveLicenseNumber = unfixedReserveLicenseNumber.Replace("asset_info=", "");
+                                reserveProductKey = string.Empty;
+                            }
+                            reserveClientType = lineParts[3];
+                            reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                        }
+                        else
+                        {
+                            reserveClientType = lineParts[3];
+                            reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                            reserveLicenseNumber = string.Empty;
+                            reserveProductKey = string.Empty;
+                        }
+
+                        OutputTextBlock.Text += $"RESERVE SC: {reserveSeatCount} for {reserveProductName}: SN:{reserveLicenseNumber}. PK:{reserveProductKey} CT:{reserveClientType} CS: {reserveClientSpecified}\r\n";
+                        optionsReserveIndex[optionsReserveLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                     }
                 }
 
@@ -558,13 +665,13 @@ namespace Options.File.Checker.WPF
                 }
 
                 // EXCLUDE dictionary.
-                Dictionary<string, Tuple<string?, string?, string, string>> optionsExcludeIndex = new Dictionary<string, Tuple<string?, string?, string, string>>();
+                Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
                 for (int optionsExcludeLineIndex = 0; optionsExcludeLineIndex < filteredOptionsFileLines.Length; optionsExcludeLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsExcludeLineIndex];
                     string excludeProductName = "brokenProductName";
-                    string? excludeLicenseNumber = "brokenLicenseNumber";
-                    string? excludeProductKey = "brokenProductKey";
+                    string excludeLicenseNumber = "brokenLicenseNumber";
+                    string excludeProductKey = "brokenProductKey";
                     string excludeClientType = "brokenClientType";
                     string excludeClientSpecified = "brokenClientSpecified";
                     if (line.TrimStart().StartsWith("EXCLUDE "))
@@ -584,7 +691,7 @@ namespace Options.File.Checker.WPF
                                     string unfixedExcludeProductKey = excludeProductKey;
                                     string quotedExcludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
                                     excludeProductKey = quotedExcludeProductKey.Replace("\"", "");
-                                    excludeLicenseNumber = null;
+                                    excludeLicenseNumber = string.Empty;
                                 }
                                 // asset_info=
                                 else
@@ -592,7 +699,7 @@ namespace Options.File.Checker.WPF
                                     string unfixedExcludeLicenseNumber = excludeLicenseNumber;
                                     string quoteExcludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
                                     excludeLicenseNumber = quoteExcludeLicenseNumber.Replace("\"", "");
-                                    excludeProductKey = null;
+                                    excludeProductKey = string.Empty;
                                 }
 
                                 excludeClientType = lineParts[3];
@@ -613,12 +720,13 @@ namespace Options.File.Checker.WPF
                                 {
                                     string unfixedExcludeProductKey = colonParts[1];
                                     excludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
-
+                                    excludeLicenseNumber = string.Empty;
                                 }
                                 else
                                 {
                                     string unfixedExcludeLicenseNumber = colonParts[1];
                                     excludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                    excludeProductKey = string.Empty;
                                 }
                                 excludeClientType = lineParts[2];
                                 excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
@@ -639,12 +747,13 @@ namespace Options.File.Checker.WPF
                             {
                                 string unfixedExcludeProductKey = colonParts[1];
                                 excludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
-
+                                excludeLicenseNumber = string.Empty;
                             }
                             else
                             {
                                 string unfixedExcludeLicenseNumber = colonParts[1];
                                 excludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                excludeProductKey = string.Empty;
                             }
                             excludeClientType = lineParts[2];
                             excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
@@ -653,12 +762,12 @@ namespace Options.File.Checker.WPF
                         {
                             excludeClientType = lineParts[2];
                             excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            excludeLicenseNumber = null;
-                            excludeProductKey = null;
+                            excludeLicenseNumber = string.Empty;
+                            excludeProductKey = string.Empty;
                         }
 
                         OutputTextBlock.Text += $"{excludeProductName}: SN:{excludeLicenseNumber}. PK:{excludeProductKey} CT:{excludeClientType} CS: {excludeClientSpecified}\r\n";
-                        optionsExcludeIndex[excludeProductName] = Tuple.Create(excludeLicenseNumber, excludeProductKey, excludeClientType, excludeClientSpecified);
+                        optionsExcludeIndex[optionsExcludeLineIndex] = Tuple.Create(excludeProductName, excludeLicenseNumber, excludeProductKey, excludeClientType, excludeClientSpecified);
                     }
                 }
 
@@ -734,7 +843,7 @@ namespace Options.File.Checker.WPF
                 CheckForValidProducts();
                 if (analysisOfOptionsFileProductsFailed)
                 {
-                    OutputTextBlock.Text = null;
+                    OutputTextBlock.Text = string.Empty;
                     return;
                 }
                 CalculateRemainingSeats();
@@ -749,12 +858,12 @@ namespace Options.File.Checker.WPF
             foreach (var optionsIncludeEntry in optionsIncludeIndex)
             {
                 int optionsIncludeLineIndex = optionsIncludeEntry.Key;
-                Tuple<string, string?, string?, string, string> optionsIncludeData = optionsIncludeEntry.Value;
+                Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
 
                 // Load INCLUDE specifications.
                 string includeProductName = optionsIncludeData.Item1;
-                string? includeLicenseNumber = optionsIncludeData.Item2;
-                string? includeProductKey = optionsIncludeData.Item3;
+                string includeLicenseNumber = optionsIncludeData.Item2;
+                string includeProductKey = optionsIncludeData.Item3;
                 string includeClientType = optionsIncludeData.Item4;
                 string includeClientSpecified = optionsIncludeData.Item5;
 
@@ -782,7 +891,7 @@ namespace Options.File.Checker.WPF
                                 if (isEmptyOrWhiteSpace)
                                 {
                                     MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -793,7 +902,7 @@ namespace Options.File.Checker.WPF
                                 if (seatCount < 0)
                                 {
                                     MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -815,7 +924,7 @@ namespace Options.File.Checker.WPF
                                 if (isEmptyOrWhiteSpace)
                                 {
                                     MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -838,7 +947,7 @@ namespace Options.File.Checker.WPF
                                         if (seatCount < 0)
                                         {
                                             MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            OutputTextBlock.Text = null;
+                                            OutputTextBlock.Text = string.Empty;
                                             return;
                                         }
 
@@ -868,12 +977,12 @@ namespace Options.File.Checker.WPF
             {
                 string productName = "brokenProductNamePart2ofCalculateRemainingSeats";
                 int optionsIncludeLineIndex = optionsIncludeEntry.Key;
-                Tuple<string, string?, string?, string, string> optionsIncludeData = optionsIncludeEntry.Value;
+                Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
 
                 // Load INCLUDE specifications.
                 string includeProductName = optionsIncludeData.Item1;
-                string? includeLicenseNumber = optionsIncludeData.Item2;
-                string? includeProductKey = optionsIncludeData.Item3;
+                string includeLicenseNumber = optionsIncludeData.Item2;
+                string includeProductKey = optionsIncludeData.Item3;
                 string includeClientType = optionsIncludeData.Item4;
                 string includeClientSpecified = optionsIncludeData.Item5;
 
@@ -914,7 +1023,7 @@ namespace Options.File.Checker.WPF
                                 if (isEmptyOrWhiteSpace)
                                 {
                                     MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -925,7 +1034,7 @@ namespace Options.File.Checker.WPF
                                 if (seatCount < 0)
                                 {
                                     MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -947,7 +1056,7 @@ namespace Options.File.Checker.WPF
                                 if (isEmptyOrWhiteSpace)
                                 {
                                     MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -970,7 +1079,7 @@ namespace Options.File.Checker.WPF
                                         if (seatCount < 0)
                                         {
                                             MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            OutputTextBlock.Text = null;
+                                            OutputTextBlock.Text = string.Empty;
                                             return;
                                         }
 
@@ -994,7 +1103,7 @@ namespace Options.File.Checker.WPF
                 if (allSeatCountsZero && seatCount == 0)
                 {
                     MessageBox.Show($"You have specified too many users to be able to use {includeProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    OutputTextBlock.Text = null;
+                    OutputTextBlock.Text = string.Empty;
                     return;
                 }
             }
@@ -1027,7 +1136,7 @@ namespace Options.File.Checker.WPF
                         if (seatCount < 0)
                         {
                             MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OutputTextBlock.Text = null;
+                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
@@ -1048,7 +1157,7 @@ namespace Options.File.Checker.WPF
                     if (isEmptyOrWhiteSpace)
                     {
                         MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                        OutputTextBlock.Text = null;
+                        OutputTextBlock.Text = string.Empty;
                         return;
                     }
 
@@ -1081,7 +1190,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget that you are using at least 1 " +
                                         $"INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = null;
+                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -1104,11 +1213,262 @@ namespace Options.File.Checker.WPF
                 else
                 {
                     MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                    OutputTextBlock.Text = null;
+                    OutputTextBlock.Text = string.Empty;
                     return;
                 }
             }
             // RESERVE seat subtraction.
+            foreach (var optionsReserveEntry in optionsReserveIndex)
+            {
+                int optionsReserveLineIndex = optionsReserveEntry.Key;
+                Tuple<int, string, string, string, string, string> optionsReserveData = optionsReserveEntry.Value;
+
+                // Load RESERVE specifications.
+                int reserveSeatCount = optionsReserveData.Item1;
+                string reserveProductName = optionsReserveData.Item2;
+                string reserveLicenseNumber = optionsReserveData.Item3;
+                string reserveProductKey = optionsReserveData.Item4;
+                string reserveClientType = optionsReserveData.Item5;
+                string reserveClientSpecified = optionsReserveData.Item6;
+
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                    string productName = licenseFileData.Item1;
+                    string licenseNumber = licenseFileData.Item5;
+
+                    // Check for a matching reserveProductName and productName.
+                    if (reserveProductName == productName)
+                    {
+                        if (reserveLicenseNumber == licenseNumber)
+                        {
+                            // Putting this here should make the seats counts divided by product and license number.
+                            int seatCount = licenseFileData.Item2;
+
+                            if (reserveClientType == "USER")
+                            {
+                                // Check that a user has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+
+                                // Subtract the specified seats reserved from seatCount, even though you only specified a single user.
+                                seatCount -= reserveSeatCount;
+
+                                // Error out if the seat count is negative.
+                                if (seatCount < 0)
+                                {
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+
+                                // Update the seatCount in the licenseFileData tuple.
+                                licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                // Update the seatCount in the licenseFileIndex dictionary.
+                                licenseFileIndex[lineIndex] = licenseFileData;
+
+                                // Update the OutputTextBlock.Text with the new seatCount value.
+                                OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                            }
+                            if (reserveClientType == "GROUP")
+                            {
+
+                                // Check that a group has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+
+                                foreach (var optionsGroupEntry in optionsGroupIndex)
+                                {
+                                    // Load GROUP specifications.
+                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                    string groupName = optionsGroupData.Item1;
+                                    string groupUsers = optionsGroupData.Item2;
+                                    int groupUserCount = optionsGroupData.Item3;
+
+                                    if (groupName == reserveClientSpecified)
+                                    {
+                                        // Subtract the reserved number of seats.
+                                        seatCount -= reserveSeatCount;
+
+                                        // Error out if the seat count is negative.
+                                        if (seatCount < 0)
+                                        {
+                                            MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                            OutputTextBlock.Text = string.Empty;
+                                            return;
+                                        }
+
+                                        // Update the seatCount in the licenseFileData tuple.
+                                        licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                        // Update the seatCount in the licenseFileIndex dictionary.
+                                        licenseFileIndex[lineIndex] = licenseFileData;
+
+                                        // Update the OutputTextBlock.Text with the new seatCount value.
+                                        OutputTextBlock.Text += $"RESERVE line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                    }
+                                }
+                            }
+                        }
+                        else
+                        {
+                            // We'll get to the uncategorized products later.
+                            OutputTextBlock.Text += $"RESERVE matching product {productName} found, but the license numbers don't match.\r\n";
+                        }
+                    }
+                }
+            }
+
+            // Still RESERVE. Now we have to filter out the stragglers (no license number specified.)
+            foreach (var optionsReserveEntry in optionsReserveIndex)
+            {
+                string productName = "brokenProductNamePart2ofCalculateRemainingSeatsForRESERVE";
+                int optionsReserveLineIndex = optionsReserveEntry.Key;
+                Tuple<int, string, string, string, string, string> optionsReserveData = optionsReserveEntry.Value;
+
+                // Load RESERVE specifications.
+                int reserveSeatCount = optionsReserveData.Item1;
+                string reserveProductName = optionsReserveData.Item2;
+                string reserveLicenseNumber = optionsReserveData.Item3;
+                string reserveProductKey = optionsReserveData.Item4;
+                string reserveClientType = optionsReserveData.Item5;
+                string reserveClientSpecified = optionsReserveData.Item6;
+
+                // Skip RESERVE entries with specified license numbers. We already accounted for them.
+                bool reserveHasNoLicenseNumber = string.IsNullOrWhiteSpace(reserveLicenseNumber);
+
+                if (!reserveHasNoLicenseNumber)
+                {
+                    continue;
+                }
+
+                // Set this up now so that if there are no entries left to subtract the seat(s), we know to stop the for loops.
+                bool allSeatCountsZero = true;
+                int seatCount = 0;
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                    productName = licenseFileData.Item1;
+
+                    // Check for a matching reserveProductName and productName.
+                    if (reserveProductName == productName)
+                    {
+                        seatCount = licenseFileData.Item2;
+                        if (seatCount == 0)
+                        {
+                            // See if we can find another entry with the same product that does not have a seat count of 0.
+                            continue;
+                        }
+                        if (seatCount > 0)
+                        {
+                            if (reserveClientType == "USER")
+                            {
+                                // Check that a user has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+
+                                seatCount -= reserveSeatCount;
+
+                                if (seatCount < 0)
+                                {
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+
+                                // Update the seatCount in the licenseFileData tuple.
+                                licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                // Update the seatCount in the licenseFileIndex dictionary.
+                                licenseFileIndex[lineIndex] = licenseFileData;
+
+                                // Update the OutputTextBlock.Text with the new seatCount value.
+                                OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                            }
+                            if (reserveClientType == "GROUP")
+                            {
+
+                                // Check that a group has actually been specified.
+                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
+
+                                if (isEmptyOrWhiteSpace)
+                                {
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    OutputTextBlock.Text = string.Empty;
+                                    return;
+                                }
+
+                                foreach (var optionsGroupEntry in optionsGroupIndex)
+                                {
+                                    // Load GROUP specifications.
+                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                    string groupName = optionsGroupData.Item1;
+                                    string groupUsers = optionsGroupData.Item2;
+
+                                    if (groupName == reserveClientSpecified)
+                                    {
+                                        // Subtract the appropriate number of seats.
+                                        seatCount -= reserveSeatCount;
+
+                                        // Error out if the seat count is negative.
+                                        if (seatCount < 0)
+                                        {
+                                            MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                            OutputTextBlock.Text = string.Empty;
+                                            return;
+                                        }
+
+                                        // Update the seatCount in the licenseFileData tuple.
+                                        licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+                                        // Update the seatCount in the licenseFileIndex dictionary.
+                                        licenseFileIndex[lineIndex] = licenseFileData;
+
+                                        // Update the OutputTextBlock.Text with the new seatCount value.
+                                        OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                    }
+                                }
+                            }
+
+                            // We still have seats to count from other licenses!
+                            allSeatCountsZero = false;
+                        }
+                    }
+                }
+                if (allSeatCountsZero && seatCount == 0)
+                {
+                    MessageBox.Show($"You have specified too many users to be able to use {reserveProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    OutputTextBlock.Text = string.Empty;
+                    return;
+                }
+            }
         }
 
         private void AnalyzeServerAndDaemonLine()
@@ -1698,7 +2058,7 @@ namespace Options.File.Checker.WPF
             foreach (var optionsIncludeEntry in optionsIncludeIndex)
             {
                 int optionsIncludeLineIndex = optionsIncludeEntry.Key;
-                Tuple<string, string?, string?, string, string> optionsIncludeData = optionsIncludeEntry.Value;
+                Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
 
                 string includeProductName = optionsIncludeData.Item1;
                 string licenseProductName = "brokenProductNameCheckForValidProducts";
