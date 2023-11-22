@@ -6,7 +6,6 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace Options.File.Checker.WPF
 {
@@ -68,7 +67,7 @@ namespace Options.File.Checker.WPF
 
         private void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
         {
-            OpenFileDialog openFileDialog = new OpenFileDialog();
+            OpenFileDialog openFileDialog = new();
             openFileDialog.Title = "Select a License File";
             openFileDialog.Filter = "License Files (*.dat;*.lic)|*.dat;*.lic|All Files (*.*)|*.*";
 
