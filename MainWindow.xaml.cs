@@ -125,9 +125,8 @@ namespace Options.File.Checker.WPF
                 OptionsFileLocationTextBox.Text = selectedFile;
 
                 string fileContent = System.IO.File.ReadAllText(selectedFile);
-                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(fileContent);
 
-                if (isEmptyOrWhiteSpace)
+                if (string.IsNullOrWhiteSpace(fileContent))
                 {
                     MessageBox.Show("The selected file is either empty or only contains white space.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     OptionsFileLocationTextBox.Text = string.Empty;
@@ -203,8 +202,7 @@ namespace Options.File.Checker.WPF
                 string filteredLicenseFileContents = string.Join(Environment.NewLine, filteredLicenseFileLines);
 
                 // Error time again, in case you decided to be sneaky and close the program or manually enter the filepath.
-                bool optionsFilsIsEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(filteredOptionsFileContents);
-                if (optionsFilsIsEmptyOrWhiteSpace)
+                if (string.IsNullOrWhiteSpace(filteredOptionsFileContents))
                 {
                     MessageBox.Show("The selected options file is either empty or only contains white space.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     OptionsFileLocationTextBox.Text = string.Empty;
@@ -237,7 +235,7 @@ namespace Options.File.Checker.WPF
 
                 // Congrats. You passed.
 
-                // Look for issues with your SERVER or DAEMON lines
+                // Look for issues with your SERVER or DAEMON lines.
                 AnalyzeServerAndDaemonLine();
                 if (analysisOfServerAndDaemonLinesFailed)
                 {
@@ -347,8 +345,30 @@ namespace Options.File.Checker.WPF
                                 lineIndex++;
                                 string nextLine = filteredLicenseFileLines[lineIndex + 1];
                                 int startIndex = nextLine.IndexOf("SN=");
-                                string unprocessedLicenseNumber = nextLine.Substring(startIndex + 3, 8); // I imagine someday that 8 will need to be increased.
-                                licenseNumber = Regex.Replace(unprocessedLicenseNumber, "[^0-9]", "");
+
+                                // Ensure "SN=" and 8 characters are present. Otherwise... look elsewhere for the license number.
+                                if (startIndex != -1 && startIndex + 11 <= nextLine.Length)
+                                {
+                                    string unprocessedLicenseNumber = nextLine.Substring(startIndex + 3, 8); // I imagine someday that 8 will need to be increased.
+                                    licenseNumber = Regex.Replace(unprocessedLicenseNumber, "[^0-9]", "");
+                                }
+                                else
+                                {
+                                    string currentLine = filteredLicenseFileLines[lineIndex];
+
+                                    string pattern = @"asset_info=(\d+)";
+                                    // Create a Regex object with the pattern
+                                    Regex regex = new Regex(pattern);
+                                    // Use the Regex object to find a match in the currentLine
+                                    Match match = regex.Match(currentLine);
+
+                                    // If a match is found, extract the digits
+                                    if (match.Success)
+                                    {
+                                        // The digits are in the first capturing group of the regex pattern
+                                        licenseNumber = match.Groups[1].Value;
+                                    }
+                                }
                             }
                             else
                             {
@@ -395,7 +415,33 @@ namespace Options.File.Checker.WPF
                             return;
                         }
 
-                        // #Add some code that errors out if a license number, offering, product key, or name is null, empty, or contains "broken" in it.
+                        // Before proceeding, make sure the values we've collected are valid.
+                        if (string.IsNullOrWhiteSpace(productName))
+                        {
+                            MessageBox.Show("A product name could not be detected correctly in your license file. It is being detected as blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
+                        {
+                            MessageBox.Show($"An invalid license number was detected in your license file for {productName}. " +
+                                $"The invalid license number detected was \"{licenseNumber}\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
+                        {
+                            MessageBox.Show($"A license offering could not be detected in your license file for {productName} " +
+                                $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        if (string.IsNullOrWhiteSpace(productKey))
+                        {
+                            MessageBox.Show($"A product key could not be detected in your license file for {productName} " +
+                                $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
 
                         //OutputTextBlock.Text += $"{productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
                         licenseFileIndex[lineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
@@ -916,9 +962,7 @@ namespace Options.File.Checker.WPF
                             if (includeClientType == "USER")
                             {
                                 // Check that a user has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -949,9 +993,7 @@ namespace Options.File.Checker.WPF
                             {
 
                                 // Check that a group has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1017,9 +1059,7 @@ namespace Options.File.Checker.WPF
                 string includeClientSpecified = optionsIncludeData.Item5;
 
                 // Skip INCLUDE entries with specified license numbers. We already accounted for them.
-                bool includeHasNoLicenseNumber = string.IsNullOrWhiteSpace(includeLicenseNumber);
-
-                if (!includeHasNoLicenseNumber)
+                if (!string.IsNullOrWhiteSpace(includeLicenseNumber))
                 {
                     continue;
                 }
@@ -1048,9 +1088,7 @@ namespace Options.File.Checker.WPF
                             if (includeClientType == "USER")
                             {
                                 // Check that a user has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1081,9 +1119,7 @@ namespace Options.File.Checker.WPF
                             {
 
                                 // Check that a group has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1182,9 +1218,7 @@ namespace Options.File.Checker.WPF
                 }
                 else if (includeAllClientType == "GROUP")
                 {
-                    bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(includeAllClientSpecified);
-
-                    if (isEmptyOrWhiteSpace)
+                    if (string.IsNullOrWhiteSpace(includeAllClientSpecified))
                     {
                         MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         OutputTextBlock.Text = string.Empty;
@@ -1236,9 +1270,9 @@ namespace Options.File.Checker.WPF
                         }
                     }
                 }
-                else if (includeAllClientType == "HOST_GROUP")
+                else if (includeAllClientType == "HOST_GROUP" || includeAllClientType == "HOST" || includeAllClientType == "DISPLAY" || includeAllClientType == "PROJECT" || includeAllClientType == "INTERNET")
                 {
-                    // There is no math that can be done because you've specified an entire hostname to be allowed, which could be any number of users.
+                    // There is no math that can be done because you've specified an client type that can be shared between any number of users.
                 }
                 else
                 {
@@ -1280,9 +1314,7 @@ namespace Options.File.Checker.WPF
                             if (reserveClientType == "USER")
                             {
                                 // Check that a user has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1313,9 +1345,7 @@ namespace Options.File.Checker.WPF
                             {
 
                                 // Check that a group has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1382,9 +1412,7 @@ namespace Options.File.Checker.WPF
                 string reserveClientSpecified = optionsReserveData.Item6;
 
                 // Skip RESERVE entries with specified license numbers. We already accounted for them.
-                bool reserveHasNoLicenseNumber = string.IsNullOrWhiteSpace(reserveLicenseNumber);
-
-                if (!reserveHasNoLicenseNumber)
+                if (!string.IsNullOrWhiteSpace(reserveLicenseNumber))
                 {
                     continue;
                 }
@@ -1413,9 +1441,7 @@ namespace Options.File.Checker.WPF
                             if (reserveClientType == "USER")
                             {
                                 // Check that a user has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1444,9 +1470,7 @@ namespace Options.File.Checker.WPF
                             {
 
                                 // Check that a group has actually been specified.
-                                bool isEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(reserveClientSpecified);
-
-                                if (isEmptyOrWhiteSpace)
+                                if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
@@ -1611,7 +1635,7 @@ namespace Options.File.Checker.WPF
                     {
                         MessageBox.Show("You did not specify the path to options file. If you included the path, but did not use options= to specify it, " +
                             "MATLAB licenses ask that you do so, even if technically works without options=.\r\n\r\n" +
-                            "If you used a \\ to indicate a line break, this program currently does not support this.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            "If you used a \\ to indicate a line break on your DAEMON line, this program currently does not support this.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -1629,9 +1653,8 @@ namespace Options.File.Checker.WPF
 
                     // Checking for the vendor daemon MLM.
                     string daemonVendor = lineParts[1];
-                    bool daemonVendorIsEmptyOrWhiteSpace = string.IsNullOrWhiteSpace(daemonVendor);
 
-                    if (daemonVendorIsEmptyOrWhiteSpace)
+                    if (string.IsNullOrWhiteSpace(daemonVendor))
                     {
                         MessageBox.Show("There are too many spaces between \"DAEMON\" and \"MLM\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
