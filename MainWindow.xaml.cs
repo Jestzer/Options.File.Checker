@@ -262,8 +262,9 @@ namespace Options.File.Checker.WPF
                         string[] lineParts = line.Split(' ');
                         productName = lineParts[1];
                         string productKey = lineParts[6];
-                        string licenseOffering = string.Empty;
-                        string licenseNumber = "this_is_a_bug";
+                        string licenseOffering = "licenseOfferingBug";
+                        string licenseNumber = "licenseNumberBug";
+                        bool trialLicenseIsUsed = false;
                         int.TryParse(lineParts[5], out seatCount);
 
                         // If you're using a PLP license, then we don't care about this product.
@@ -303,9 +304,11 @@ namespace Options.File.Checker.WPF
 
                             if (licenseOffering.Contains("lr="))
                             {
-                                MessageBox.Show($"Trial licenses are currently unsupported. Product in question: {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                LicenseFileLocationTextBox.Text = string.Empty;
-                                return;
+                                trialLicenseIsUsed = true;
+
+                                //MessageBox.Show($"Trial licenses are currently unsupported. Product in question: {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                //LicenseFileLocationTextBox.Text = string.Empty;
+                                //return;
                             }
 
                             if (licenseOffering.Contains("ei="))
@@ -318,11 +321,6 @@ namespace Options.File.Checker.WPF
                             MessageBox.Show("Invalid license file format. License Offering is missing for at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             LicenseFileLocationTextBox.Text = string.Empty;
                             return;
-                        }
-
-                        if (licenseOffering.Contains("NNU"))
-                        {
-                            seatCount /= 2;
                         }
 
                         lineIndex++;
@@ -364,6 +362,33 @@ namespace Options.File.Checker.WPF
                                 LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
+                        }
+
+                        // Figure out what your license offering is, if you're using a trial.
+                        if (trialLicenseIsUsed)
+                        {
+                            bool matchingTrialFound = false;
+                            for (int i = 1; i <= 5; i++)
+                            {
+                                string? trialNumberSpecified = Properties.Settings.Default[$"TrialNumber{i}"].ToString();
+                                if (licenseNumber == trialNumberSpecified)
+                                {
+                                    matchingTrialFound = true;
+
+                                    // Add some code to then set the LO and break this for loop.
+                                }
+                            }
+                            if (!matchingTrialFound)
+                            {
+                                MessageBox.Show("Your license file has at least 1 trial license, but none of the trial numbers you specified in this program's settings match the trial " +
+                                    "license number(s) found in the license. Please enter any trial license numbers you're using on the startup screen.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
+                        }
+
+                        if (licenseOffering.Contains("NNU"))
+                        {
+                            seatCount /= 2;
                         }
 
                         //OutputTextBlock.Text += $"{productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
