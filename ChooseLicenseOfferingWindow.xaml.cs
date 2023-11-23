@@ -4,9 +4,6 @@ using System.Windows.Input;
 
 namespace Options.File.Checker.WPF
 {
-    /// <summary>
-    /// Interaction logic for ChooseLicenseOfferingWindow.xaml
-    /// </summary>
     public partial class ChooseLicenseOfferingWindow : Window
     {
         public ChooseLicenseOfferingWindow()

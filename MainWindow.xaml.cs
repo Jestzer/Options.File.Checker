@@ -9,9 +9,6 @@ using System.Windows.Input;
 
 namespace Options.File.Checker.WPF
 {
-    /// <summary>
-    /// Interaction logic for MainWindow.xaml
-    /// </summary>
     public partial class MainWindow : Window
     {
         // INCLUDE dictionary from the options file.
@@ -262,8 +259,8 @@ namespace Options.File.Checker.WPF
                         string[] lineParts = line.Split(' ');
                         productName = lineParts[1];
                         string productKey = lineParts[6];
-                        string licenseOffering = "licenseOfferingBug";
-                        string licenseNumber = "licenseNumberBug";
+                        string licenseOffering = "licenseOfferingIsBroken";
+                        string licenseNumber = "licenseNumberisBroken";
                         bool trialLicenseIsUsed = false;
                         int.TryParse(lineParts[5], out seatCount);
 
@@ -304,11 +301,8 @@ namespace Options.File.Checker.WPF
 
                             if (licenseOffering.Contains("lr="))
                             {
+                                // We'll deal with the trial once we get the trial license number.
                                 trialLicenseIsUsed = true;
-
-                                //MessageBox.Show($"Trial licenses are currently unsupported. Product in question: {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                //LicenseFileLocationTextBox.Text = string.Empty;
-                                //return;
                             }
 
                             if (licenseOffering.Contains("ei="))
@@ -375,7 +369,9 @@ namespace Options.File.Checker.WPF
                                 {
                                     matchingTrialFound = true;
 
-                                    // Add some code to then set the LO and break this for loop.
+                                    string? trialLicenseOfferingSpecified = Properties.Settings.Default[$"TrialLicenseOffering{i}"].ToString();
+                                    licenseOffering = trialLicenseOfferingSpecified ?? "licenseOfferingIsBroken";
+                                    break;
                                 }
                             }
                             if (!matchingTrialFound)
@@ -390,6 +386,16 @@ namespace Options.File.Checker.WPF
                         {
                             seatCount /= 2;
                         }
+
+                        if (seatCount < 1)
+                        {
+                            MessageBox.Show($"{productName} on license {licenseNumber} is reading with a seat count of zero from just the license file. " +
+                                $"If you're using a trial license, make sure you selecting the correct License Offering. " +
+                                $"Otherwise, your license file is corrupt.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        // #Add some code that errors out if a license number, offering, product key, or name is null, empty, or contains "broken" in it.
 
                         //OutputTextBlock.Text += $"{productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
                         licenseFileIndex[lineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
