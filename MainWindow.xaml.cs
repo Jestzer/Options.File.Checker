@@ -180,6 +180,7 @@ namespace Options.File.Checker.WPF
             // Prevent previous entries/modified files from skewing data.
             optionsIncludeIndex.Clear();
             optionsIncludeAllIndex.Clear();
+            optionsExcludeIndex.Clear();
             optionsReserveIndex.Clear();
             optionsGroupIndex.Clear();
             licenseFileIndex.Clear();
@@ -321,16 +322,36 @@ namespace Options.File.Checker.WPF
                         lineIndex++;
 
                         // Get the license number.
+                        // IMPORTANT NOTE: There is a reason the license number is not being recorded as an integer. That's because sometimes it contains letters.
+                        // Yes, I understand that means it isn't a number. I don't make these rules.
                         if (lineIndex + 1 < filteredLicenseFileLines.Length)
                         {
                             string licenseNumberLine = filteredLicenseFileLines[lineIndex + 1];
                             string[] licenseNumberLineParts = licenseNumberLine.Split(" ");
-                            string unprocessedlicenseNumber = licenseNumberLineParts[1];
-                            licenseNumber = unprocessedlicenseNumber.Replace("asset_info=", "");
+                            string unprocessedLicenseNumber = licenseNumberLineParts[1];
+                            licenseNumber = Regex.Replace(unprocessedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                             if (licenseNumber.Contains("USER_BASED="))
                             {
-                                unprocessedlicenseNumber = licenseNumberLineParts[3];
-                                licenseNumber = unprocessedlicenseNumber.Replace("asset_info=", "");
+                                unprocessedLicenseNumber = licenseNumberLineParts[3];
+
+                                // Make sure you don't have a line break ruining our day.
+                                if (unprocessedLicenseNumber == "\\")
+                                {
+                                    string currentLine = filteredLicenseFileLines[lineIndex + 2];
+                                    string pattern = @"asset_info=(\S+)";
+
+                                    Regex regex = new Regex(pattern);
+                                    Match match = regex.Match(currentLine);
+
+                                    if (match.Success)
+                                    {
+                                        licenseNumber = match.Groups[1].Value;
+                                    }
+                                }
+                                else
+                                {
+                                    licenseNumber = Regex.Replace(unprocessedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                                }
                             }
                         }
                         else
@@ -349,27 +370,41 @@ namespace Options.File.Checker.WPF
                                 string nextLine = filteredLicenseFileLines[lineIndex + 1];
                                 int startIndex = nextLine.IndexOf("SN=");
 
-                                // Ensure "SN=" and 8 characters are present. Otherwise... look elsewhere for the license number.
-                                if (startIndex != -1 && startIndex + 11 <= nextLine.Length)
-                                {
-                                    string unprocessedLicenseNumber = nextLine.Substring(startIndex + 3, 8); // I imagine someday that 8 will need to be increased.
-                                    licenseNumber = Regex.Replace(unprocessedLicenseNumber, "[^0-9]", "");
-                                }
-                                else
+                                // Trials really seem to make getting license numbers even worse.
+                                if (nextLine.Contains("SN=DEMO"))
                                 {
                                     string currentLine = filteredLicenseFileLines[lineIndex];
+                                    string pattern = @"asset_info=(\S+)";
 
-                                    string pattern = @"asset_info=(\d+)";
-                                    // Create a Regex object with the pattern
                                     Regex regex = new Regex(pattern);
-                                    // Use the Regex object to find a match in the currentLine
                                     Match match = regex.Match(currentLine);
 
-                                    // If a match is found, extract the digits
                                     if (match.Success)
                                     {
-                                        // The digits are in the first capturing group of the regex pattern
                                         licenseNumber = match.Groups[1].Value;
+                                    }
+                                }
+                                // If you're not using a trial.
+                                else
+                                {
+                                    // Ensure "SN=" and 8 characters are present. Otherwise... look elsewhere for the license number.
+                                    if (startIndex != -1 && startIndex + 11 <= nextLine.Length)
+                                    {
+                                        string unprocessedLicenseNumber = nextLine.Substring(startIndex + 3, 8); // I imagine someday that 8 will need to be increased.
+                                        licenseNumber = Regex.Replace(unprocessedLicenseNumber, "[^0-9]", "");
+                                    }
+                                    else
+                                    {
+                                        string currentLine = filteredLicenseFileLines[lineIndex];
+                                        string pattern = @"asset_info=(\S+)";
+
+                                        Regex regex = new Regex(pattern);
+                                        Match match = regex.Match(currentLine);
+
+                                        if (match.Success)
+                                        {
+                                            licenseNumber = match.Groups[1].Value;
+                                        }
                                     }
                                 }
                             }
@@ -378,6 +413,21 @@ namespace Options.File.Checker.WPF
                                 MessageBox.Show("Invalid license file format. License Number is missing from at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
+                            }
+                        }
+
+                        // Really would kill us to put this license number in one place, wouldn't it?
+                        if (licenseNumber.Contains("DUP_GROUP="))
+                        {
+                            string currentLine = filteredLicenseFileLines[lineIndex + 1];
+                            string pattern = @"asset_info=(\S+)";
+
+                            Regex regex = new Regex(pattern);
+                            Match match = regex.Match(currentLine);
+
+                            if (match.Success)
+                            {
+                                licenseNumber = match.Groups[1].Value;
                             }
                         }
 
@@ -399,8 +449,9 @@ namespace Options.File.Checker.WPF
                             }
                             if (!matchingTrialFound)
                             {
-                                MessageBox.Show("Your license file has at least 1 trial license, but none of the trial numbers you specified in this program's settings match the trial " +
+                                MessageBox.Show($"Your license file has at least 1 trial license, {licenseNumber}, but none of the trial numbers you specified in this program's settings match the trial " +
                                     "license number(s) found in the license. Please enter any trial license numbers you're using on the startup screen.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                OutputTextBlock.Text = string.Empty;
                                 return;
                             }
                         }
@@ -415,6 +466,7 @@ namespace Options.File.Checker.WPF
                             MessageBox.Show($"{productName} on license {licenseNumber} is reading with a seat count of zero from just the license file. " +
                                 $"If you're using a trial license, make sure you selecting the correct License Offering. " +
                                 $"Otherwise, your license file is corrupt.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
@@ -422,6 +474,7 @@ namespace Options.File.Checker.WPF
                         if (string.IsNullOrWhiteSpace(productName))
                         {
                             MessageBox.Show("A product name could not be detected correctly in your license file. It is being detected as blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
@@ -429,6 +482,7 @@ namespace Options.File.Checker.WPF
                         {
                             MessageBox.Show($"An invalid license number was detected in your license file for {productName}. " +
                                 $"The invalid license number detected was \"{licenseNumber}\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
@@ -436,6 +490,7 @@ namespace Options.File.Checker.WPF
                         {
                             MessageBox.Show($"A license offering could not be detected in your license file for {productName} " +
                                 $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
@@ -443,6 +498,7 @@ namespace Options.File.Checker.WPF
                         {
                             MessageBox.Show($"A product key could not be detected in your license file for {productName} " +
                                 $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
@@ -522,7 +578,7 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     string unfixedIncludeLicenseNumber = includeLicenseNumber;
-                                    string quoteIncludeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                    string quoteIncludeLicenseNumber = Regex.Replace(unfixedIncludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                     includeLicenseNumber = quoteIncludeLicenseNumber.Replace("\"", "");
                                     includeProductKey = string.Empty;
                                 }
@@ -550,7 +606,7 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     string unfixedIncludeLicenseNumber = colonParts[1];
-                                    includeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                    includeLicenseNumber = Regex.Replace(unfixedIncludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                     includeProductKey = string.Empty;
                                 }
                                 includeClientType = lineParts[2];
@@ -577,7 +633,7 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 string unfixedIncludeLicenseNumber = colonParts[1];
-                                includeLicenseNumber = unfixedIncludeLicenseNumber.Replace("asset_info=", "");
+                                includeLicenseNumber = Regex.Replace(unfixedIncludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                 includeProductKey = string.Empty;
                             }
                             includeClientType = lineParts[2];
@@ -646,7 +702,7 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     string unfixedReserveLicenseNumber = reserveLicenseNumber;
-                                    string quoteReserveLicenseNumber = unfixedReserveLicenseNumber.Replace("asset_info=", "");
+                                    string quoteReserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                     reserveLicenseNumber = quoteReserveLicenseNumber.Replace("\"", "");
                                     reserveProductKey = string.Empty;
                                 }
@@ -674,8 +730,7 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     string unfixedReserveLicenseNumber = colonParts[1];
-                                    reserveLicenseNumber = unfixedReserveLicenseNumber.Replace("asset_info=", "");
-                                    reserveProductKey = string.Empty;
+                                    reserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase); reserveProductKey = string.Empty;
                                 }
                                 reserveClientType = lineParts[3];
                                 reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
@@ -701,8 +756,7 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 string unfixedReserveLicenseNumber = colonParts[1];
-                                reserveLicenseNumber = unfixedReserveLicenseNumber.Replace("asset_info=", "");
-                                reserveProductKey = string.Empty;
+                                reserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase); reserveProductKey = string.Empty;
                             }
                             reserveClientType = lineParts[3];
                             reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
@@ -775,7 +829,7 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     string unfixedExcludeLicenseNumber = excludeLicenseNumber;
-                                    string quoteExcludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                    string quoteExcludeLicenseNumber = Regex.Replace(unfixedExcludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                     excludeLicenseNumber = quoteExcludeLicenseNumber.Replace("\"", "");
                                     excludeProductKey = string.Empty;
                                 }
@@ -803,7 +857,7 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     string unfixedExcludeLicenseNumber = colonParts[1];
-                                    excludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                    excludeLicenseNumber = Regex.Replace(unfixedExcludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                     excludeProductKey = string.Empty;
                                 }
                                 excludeClientType = lineParts[2];
@@ -830,7 +884,7 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 string unfixedExcludeLicenseNumber = colonParts[1];
-                                excludeLicenseNumber = unfixedExcludeLicenseNumber.Replace("asset_info=", "");
+                                excludeLicenseNumber = Regex.Replace(unfixedExcludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
                                 excludeProductKey = string.Empty;
                             }
                             excludeClientType = lineParts[2];
