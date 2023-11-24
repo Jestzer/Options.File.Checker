@@ -20,6 +20,9 @@ namespace Options.File.Checker.WPF
         // RESERVE
         Dictionary<int, Tuple<int, string, string, string, string, string>> optionsReserveIndex = new Dictionary<int, Tuple<int, string, string, string, string, string>>();
 
+        // EXCLUDE
+        Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
+
         // GROUP
         Dictionary<int, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<int, Tuple<string, string, int>>();
 
@@ -741,7 +744,6 @@ namespace Options.File.Checker.WPF
                 }
 
                 // EXCLUDE dictionary.
-                Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
                 for (int optionsExcludeLineIndex = 0; optionsExcludeLineIndex < filteredOptionsFileLines.Length; optionsExcludeLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsExcludeLineIndex];
@@ -914,6 +916,14 @@ namespace Options.File.Checker.WPF
                 if (hostGroupsAreUsed)
                 {
                     OutputTextBlock.Text += "\r\nYou are using at least 1 HOST_GROUP line in your options file. ";
+                }
+
+                // Make sure the license numbers you're specifying are part of your license file.
+                CheckForValidLicenseNumbersAndProductKeys();
+                if (analysisOfOptionsFileProductsFailed)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    return;
                 }
 
                 CheckForValidProducts();
@@ -2138,6 +2148,192 @@ namespace Options.File.Checker.WPF
                         $"and must match the product name in the license file, which can be found after the word INCREMENT.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     analysisOfOptionsFileProductsFailed = true;
                     return;
+                }
+            }
+        }
+
+        private void CheckForValidLicenseNumbersAndProductKeys()
+        {
+            // INCLUDE lines.            
+            foreach (var optionsIncludeEntry in optionsIncludeIndex)
+            {
+                bool foundMatchingLicenseNumberOrProductKey = false;
+                Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
+                string includeProductName = optionsIncludeData.Item1;
+                string includeLicenseNumber = optionsIncludeData.Item2;
+                string includeProductKey = optionsIncludeData.Item3;
+
+                // Skip if no license number nor product key is specified.
+                if (string.IsNullOrWhiteSpace(includeLicenseNumber))
+                {
+                    if (string.IsNullOrWhiteSpace(includeProductKey))
+                    {
+                        continue;
+                    }
+                }
+
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+                    string productName = licenseFileData.Item1;
+                    string productKey = licenseFileData.Item3;
+                    string licenseNumber = licenseFileData.Item5;
+
+                    if (includeLicenseNumber == licenseNumber)
+                    {
+                        foundMatchingLicenseNumberOrProductKey = true;
+                        break;
+                    }
+
+                    if (includeProductKey == productKey)
+                    {
+                        if (includeProductName == productName)
+                        {
+                            foundMatchingLicenseNumberOrProductKey = true;
+                            break;
+                        }
+                        else
+                        {
+                            MessageBox.Show($"You have an INCLUDE line that specifies a product key, {includeProductKey}, " +
+                                $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, " +
+                                $"{productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            analysisOfOptionsFileProductsFailed = true;
+                            return;
+                        }
+                    }
+                }
+
+                if (foundMatchingLicenseNumberOrProductKey == false)
+                {
+                    if (string.IsNullOrEmpty(includeProductKey) == true)
+                    {
+                        MessageBox.Show($"You have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
+                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfOptionsFileProductsFailed = true;
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"You have an INCLUDE line that specifies a product key, {includeProductKey}, " +
+                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfOptionsFileProductsFailed = true;
+                        return;
+                    }
+                }
+            }
+
+            // EXCLUDE lines.            
+            foreach (var optionsExcludeEntry in optionsExcludeIndex)
+            {
+                bool foundMatchingLicenseNumberOrProductKey = false;
+                Tuple<string, string, string, string, string> optionsExcludeData = optionsExcludeEntry.Value;
+                string excludeLicenseNumber = optionsExcludeData.Item2;
+                string excludeProductKey = optionsExcludeData.Item3;
+
+                // Skip if no license number nor product key is specified.
+                if (string.IsNullOrWhiteSpace(excludeLicenseNumber))
+                {
+                    if (string.IsNullOrWhiteSpace(excludeProductKey))
+                    {
+                        continue;
+                    }
+                }
+
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+                    string productName = licenseFileData.Item1;
+                    string productKey = licenseFileData.Item3;
+                    string licenseNumber = licenseFileData.Item5;
+
+                    if (excludeLicenseNumber == licenseNumber)
+                    {
+                        foundMatchingLicenseNumberOrProductKey = true;
+                        break;
+                    }
+
+                    if (excludeProductKey == productKey)
+                    {
+                        foundMatchingLicenseNumberOrProductKey = true;
+                        break;
+                    }
+                }
+
+                if (foundMatchingLicenseNumberOrProductKey == false)
+                {
+                    if (string.IsNullOrEmpty(excludeProductKey) == true)
+                    {
+                        MessageBox.Show($"You have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " +
+                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfOptionsFileProductsFailed = true;
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"You have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
+                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfOptionsFileProductsFailed = true;
+                        return;
+                    }
+                }
+            }
+
+            // RESERVE lines.            
+            foreach (var optionsReserveEntry in optionsReserveIndex)
+            {
+                bool foundMatchingLicenseNumberOrProductKey = false;
+                Tuple<int, string, string, string, string, string> optionsReserveData = optionsReserveEntry.Value;
+                string reserveLicenseNumber = optionsReserveData.Item3;
+                string reserveProductKey = optionsReserveData.Item4;
+
+                // Skip if no license number nor product key is specified.
+                if (string.IsNullOrWhiteSpace(reserveLicenseNumber))
+                {
+                    if (string.IsNullOrWhiteSpace(reserveProductKey))
+                    {
+                        continue;
+                    }
+                }
+
+                foreach (var licenseFileEntry in licenseFileIndex)
+                {
+                    int lineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+                    string productName = licenseFileData.Item1;
+                    string productKey = licenseFileData.Item3;
+                    string licenseNumber = licenseFileData.Item5;
+
+                    if (reserveLicenseNumber == licenseNumber)
+                    {
+                        foundMatchingLicenseNumberOrProductKey = true;
+                        break;
+                    }
+
+                    if (reserveProductKey == productKey)
+                    {
+                        foundMatchingLicenseNumberOrProductKey = true;
+                        break;
+                    }
+                }
+
+                if (foundMatchingLicenseNumberOrProductKey == false)
+                {
+                    if (string.IsNullOrEmpty(reserveProductKey) == true)
+                    {
+                        MessageBox.Show($"You have a RESERVE line that specifies a license number, {reserveLicenseNumber}, " +
+                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfOptionsFileProductsFailed = true;
+                        return;
+                    }
+                    else
+                    {
+                        MessageBox.Show($"You have a RESERVE line that specifies a product key, {reserveProductKey}, " +
+                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        analysisOfOptionsFileProductsFailed = true;
+                        return;
+                    }
                 }
             }
         }
