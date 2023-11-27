@@ -77,7 +77,7 @@ namespace Options.File.Checker.WPF
         {
             if (WindowState == WindowState.Maximized)
             {
-                BorderThickness = new Thickness(7);
+                BorderThickness = new Thickness(5);
             }
             else
             {
@@ -487,7 +487,7 @@ namespace Options.File.Checker.WPF
                         }
 
                         // Technically infinite. This should avoid at least 1 unnecessary error report.
-                        if (licenseOffering.Contains("CNU"))
+                        if (licenseOffering.Contains("CNU") && (seatCount == 0))
                         {
                             seatCount = 9999999;
                         }
@@ -1057,11 +1057,12 @@ namespace Options.File.Checker.WPF
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                     string productName = licenseFileData.Item1;
+                    int seatCount = licenseFileData.Item2;
                     string licenseOffering = licenseFileData.Item4;
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU"))
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                     {
                         continue;
                     }
@@ -1071,9 +1072,6 @@ namespace Options.File.Checker.WPF
                     {
                         if (includeLicenseNumber == licenseNumber)
                         {
-                            // Putting this here should make the seats counts divided by product and license number.
-                            int seatCount = licenseFileData.Item2;
-
                             if (includeClientType == "USER")
                             {
                                 // Check that a user has actually been specified.
@@ -1196,6 +1194,14 @@ namespace Options.File.Checker.WPF
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                     productName = licenseFileData.Item1;
+                    seatCount = licenseFileData.Item2;
+                    string licenseOffering = licenseFileData.Item4;
+
+                    // CNU licenses have unlimited seats.
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    {
+                        continue;
+                    }
 
                     // Check for a matching includeProductName and productName.
                     if (includeProductName == productName)
@@ -1322,6 +1328,13 @@ namespace Options.File.Checker.WPF
 
                         string productName = licenseFileData.Item1;
                         int seatCount = licenseFileData.Item2;
+                        string licenseOffering = licenseFileData.Item4;
+
+                        // CNU licenses have unlimited seats.
+                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                        {
+                            continue;
+                        }
 
                         // Subtract 1 from seatCount, since you only specified a single user.
                         seatCount--;
@@ -1363,6 +1376,13 @@ namespace Options.File.Checker.WPF
 
                         string productName = licenseFileData.Item1;
                         int seatCount = licenseFileData.Item2;
+                        string licenseOffering = licenseFileData.Item4;
+
+                        // CNU licenses have unlimited seats.
+                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                        {
+                            continue;
+                        }
 
                         foreach (var optionsGroupEntry in optionsGroupIndex)
                         {
@@ -1409,7 +1429,7 @@ namespace Options.File.Checker.WPF
                 else
                 {
                     OutputTextBlock.Text = string.Empty;
-                    MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show($"You specified an invalid client type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
             }
@@ -1433,16 +1453,21 @@ namespace Options.File.Checker.WPF
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                     string productName = licenseFileData.Item1;
+                    int seatCount =  licenseFileData.Item2;
+                    string licenseOffering = licenseFileData.Item4;
                     string licenseNumber = licenseFileData.Item5;
+
+                    // CNU licenses have unlimited seats.
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    {
+                        continue;
+                    }
 
                     // Check for a matching reserveProductName and productName.
                     if (reserveProductName == productName)
                     {
                         if (reserveLicenseNumber == licenseNumber)
                         {
-                            // Putting this here should make the seats counts divided by product and license number.
-                            int seatCount = licenseFileData.Item2;
-
                             if (reserveClientType == "USER")
                             {
                                 // Check that a user has actually been specified.
@@ -1565,6 +1590,14 @@ namespace Options.File.Checker.WPF
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                     productName = licenseFileData.Item1;
+                    seatCount = licenseFileData.Item2;
+                    string licenseOffering = licenseFileData.Item4;
+
+                    // CNU licenses have unlimited seats.
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    {
+                        continue;
+                    }
 
                     // Check for a matching reserveProductName and productName.
                     if (reserveProductName == productName)
@@ -2540,7 +2573,7 @@ namespace Options.File.Checker.WPF
                 string licenseOffering = licenseFileData.Item4;
                 string licenseNumber = licenseFileData.Item5;
 
-                if (licenseOffering.Contains("CNU"))
+                if (licenseOffering.Contains("CNU") && seatCount == 9999999)
                 {
                     OutputTextBlock.Text += $"The product {productName} has unlimited seats on license {licenseNumber}.\r\n";
                 }
