@@ -1,17 +1,22 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Configuration;
-using System.Data;
 using System.Linq;
-using System.Threading.Tasks;
 using System.Windows;
 
 namespace Options.File.Checker.WPF
 {
-    /// <summary>
-    /// Interaction logic for App.xaml
-    /// </summary>
     public partial class App : Application
     {
+        public bool Debug { get; private set; } = false;
+
+        protected override void OnStartup(StartupEventArgs e)
+        {
+            base.OnStartup(e);
+
+            // Check if debug mode was enabled.
+            if (e.Args.Contains("-debug"))
+            {
+                Debug = true;
+            }
+        }
     }
 }

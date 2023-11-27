@@ -11,6 +11,10 @@ namespace Options.File.Checker.WPF
 {
     public partial class MainWindow : Window
     {
+
+        // Debug stuff.
+        private bool debug;
+
         // INCLUDE dictionary from the options file.
         Dictionary<int, Tuple<string, string, string, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
 
@@ -36,6 +40,7 @@ namespace Options.File.Checker.WPF
         public MainWindow()
         {
             InitializeComponent();
+            debug = ((App)Application.Current).Debug;
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
@@ -501,19 +506,13 @@ namespace Options.File.Checker.WPF
                             OutputTextBlock.Text = string.Empty;
                             return;
                         }
-
-                        //OutputTextBlock.Text += $"{productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"INCREMENT {productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
+                        }
                         licenseFileIndex[lineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
                 }
-
-                // Go through the Options File
-                // Create a dictionary of each group, the number of users specified in them, and their names
-                // With things like HOST_GROUP, IP addresses, and wildcards, give warning messages. Things like exceeding seat counts
-                // will receive errors
-                // Collect the INCLUDE and RESERVE lines
-                // Collect the EXCLUDE and EXCLUDEALL lines. Report them as warnings
-                // If the seat count is negative, report it as an error (unless the product's license offering is CNU).
 
                 // Check for case sensitivity.
                 bool caseSensitivity = false;
@@ -540,7 +539,10 @@ namespace Options.File.Checker.WPF
                         groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
                         groupUserCount = groupUsers.Split(' ').Length;
 
-                        OutputTextBlock.Text += $"{optionsGroupLineIndex}, {groupName}: {groupUsers}. User count: {groupUserCount}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"{optionsGroupLineIndex}, {groupName}: {groupUsers}. User count: {groupUserCount}\r\n";
+                        }
                         optionsGroupIndex[optionsGroupLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                     }
                 }
@@ -646,8 +648,10 @@ namespace Options.File.Checker.WPF
                             includeLicenseNumber = string.Empty;
                             includeProductKey = string.Empty;
                         }
-
-                        OutputTextBlock.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
+                        }
                         optionsIncludeIndex[optionsIncludeLineIndex] = Tuple.Create(includeProductName, includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
                     }
                 }
@@ -768,8 +772,10 @@ namespace Options.File.Checker.WPF
                             reserveLicenseNumber = string.Empty;
                             reserveProductKey = string.Empty;
                         }
-
-                        OutputTextBlock.Text += $"RESERVE SC: {reserveSeatCount} for {reserveProductName}: SN:{reserveLicenseNumber}. PK:{reserveProductKey} CT:{reserveClientType} CS: {reserveClientSpecified}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"RESERVE SC: {reserveSeatCount} for {reserveProductName}: SN:{reserveLicenseNumber}. PK:{reserveProductKey} CT:{reserveClientType} CS: {reserveClientSpecified}\r\n";
+                        }
                         optionsReserveIndex[optionsReserveLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                     }
                 }
@@ -792,7 +798,10 @@ namespace Options.File.Checker.WPF
                         maxClientType = lineParts[3];
                         maxClientSpecified = string.Join(" ", lineParts.Skip(4));
 
-                        OutputTextBlock.Text += $"Max seats: {maxSeats}. Product: {maxProductName}. CT: {maxClientType}. CS: {maxClientSpecified}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"Max seats: {maxSeats}. Product: {maxProductName}. CT: {maxClientType}. CS: {maxClientSpecified}\r\n";
+                        }
                         optionsMaxIndex[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
                     }
                 }
@@ -898,7 +907,10 @@ namespace Options.File.Checker.WPF
                             excludeProductKey = string.Empty;
                         }
 
-                        OutputTextBlock.Text += $"{excludeProductName}: SN:{excludeLicenseNumber}. PK:{excludeProductKey} CT:{excludeClientType} CS: {excludeClientSpecified}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"{excludeProductName}: SN:{excludeLicenseNumber}. PK:{excludeProductKey} CT:{excludeClientType} CS: {excludeClientSpecified}\r\n";
+                        }
                         optionsExcludeIndex[optionsExcludeLineIndex] = Tuple.Create(excludeProductName, excludeLicenseNumber, excludeProductKey, excludeClientType, excludeClientSpecified);
                     }
                 }
@@ -918,7 +930,10 @@ namespace Options.File.Checker.WPF
                         hostGroupName = lineParts[1];
                         hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
 
-                        OutputTextBlock.Text += $"HOST_GROUP Name: {hostGroupName}. Clients: {hostGroupClientSpecified}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"HOST_GROUP Name: {hostGroupName}. Clients: {hostGroupClientSpecified}\r\n";
+                        }
                         optionsHostGroupIndex[optionsHostGroupLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
 
                     }
@@ -948,7 +963,10 @@ namespace Options.File.Checker.WPF
                         includeAllClientType = lineParts[1];
                         includeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
-                        OutputTextBlock.Text += $"INCLUDEALL: {includeAllClientType}. Clients: {includeAllClientSpecified}\r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"INCLUDEALL: {includeAllClientType}. Clients: {includeAllClientSpecified}\r\n";
+                        }
                         optionsIncludeAllIndex[optionsIncludeAllLineIndex] = Tuple.Create(includeAllClientType, includeAllClientSpecified);
                     }
                 }
@@ -969,7 +987,7 @@ namespace Options.File.Checker.WPF
 
                 if (hostGroupsAreUsed)
                 {
-                    OutputTextBlock.Text += "\r\nYou are using at least 1 HOST_GROUP line in your options file. ";
+                    OutputTextBlock.Text += "\r\nYou are using at least 1 HOST_GROUP line in your options file.\r\n";
                 }
 
                 // Make sure the license numbers you're specifying are part of your license file.
@@ -1051,7 +1069,10 @@ namespace Options.File.Checker.WPF
                                 licenseFileIndex[lineIndex] = licenseFileData;
 
                                 // Update the OutputTextBlock.Text with the new seatCount value.
-                                OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                if (debug)
+                                {
+                                    OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                }
                             }
                             if (includeClientType == "GROUP")
                             {
@@ -1093,16 +1114,21 @@ namespace Options.File.Checker.WPF
                                         // Update the seatCount in the licenseFileIndex dictionary.
                                         licenseFileIndex[lineIndex] = licenseFileData;
 
-                                        // Update the OutputTextBlock.Text with the new seatCount value.
-                                        OutputTextBlock.Text += $"Line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                        if (debug)
+                                        {
+                                            OutputTextBlock.Text += $"Line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                        }
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            // We'll get to the uncategorized products later.
-                            OutputTextBlock.Text += $"Matching product {productName} found, but the license numbers don't match.\r\n";
+                            if (debug)
+                            {
+                                // We'll get to the uncategorized products later.
+                                OutputTextBlock.Text += $"Matching product {productName} found, but the license numbers don't match.\r\n";
+                            }
                         }
                     }
                 }
@@ -1177,7 +1203,10 @@ namespace Options.File.Checker.WPF
                                 licenseFileIndex[lineIndex] = licenseFileData;
 
                                 // Update the OutputTextBlock.Text with the new seatCount value.
-                                OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                if (debug)
+                                {
+                                    OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                }
                             }
                             if (includeClientType == "GROUP")
                             {
@@ -1219,8 +1248,10 @@ namespace Options.File.Checker.WPF
                                         // Update the seatCount in the licenseFileIndex dictionary.
                                         licenseFileIndex[lineIndex] = licenseFileData;
 
-                                        // Update the OutputTextBlock.Text with the new seatCount value.
-                                        OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                        if (debug)
+                                        {
+                                            OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                        }
                                     }
                                 }
                             }
@@ -1276,8 +1307,10 @@ namespace Options.File.Checker.WPF
                         // Update the seatCount in the licenseFileIndex dictionary.
                         licenseFileIndex[lineIndex] = licenseFileData;
 
-                        // Update the OutputTextBlock.Text with the new seatCount value.
-                        OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount}. INCLUDEALL. \r\n";
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount}. INCLUDEALL. \r\n";
+                        }
                     }
                 }
                 else if (includeAllClientType == "GROUP")
@@ -1328,8 +1361,10 @@ namespace Options.File.Checker.WPF
                                 // Update the seatCount in the licenseFileIndex dictionary.
                                 licenseFileIndex[lineIndex] = licenseFileData;
 
-                                // Update the OutputTextBlock.Text with the new seatCount value.
-                                OutputTextBlock.Text += $"Line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} INCLUDEALL GROUP.\r\n";
+                                if (debug)
+                                {
+                                    OutputTextBlock.Text += $"Line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} INCLUDEALL GROUP.\r\n";
+                                }
                             }
                         }
                     }
@@ -1402,8 +1437,10 @@ namespace Options.File.Checker.WPF
                                 // Update the seatCount in the licenseFileIndex dictionary.
                                 licenseFileIndex[lineIndex] = licenseFileData;
 
-                                // Update the OutputTextBlock.Text with the new seatCount value.
-                                OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                if (debug)
+                                {
+                                    OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                }
                             }
                             if (reserveClientType == "GROUP")
                             {
@@ -1445,16 +1482,21 @@ namespace Options.File.Checker.WPF
                                         // Update the seatCount in the licenseFileIndex dictionary.
                                         licenseFileIndex[lineIndex] = licenseFileData;
 
-                                        // Update the OutputTextBlock.Text with the new seatCount value.
-                                        OutputTextBlock.Text += $"RESERVE line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                        if (debug)
+                                        {
+                                            OutputTextBlock.Text += $"RESERVE line index: {optionsGroupLineIndex}. Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
+                                        }
                                     }
                                 }
                             }
                         }
                         else
                         {
-                            // We'll get to the uncategorized products later.
-                            OutputTextBlock.Text += $"RESERVE matching product {productName} found, but the license numbers don't match.\r\n";
+                            if (debug)
+                            {
+                                // We'll get to the uncategorized products later.
+                                OutputTextBlock.Text += $"RESERVE matching product {productName} found, but the license numbers don't match.\r\n";
+                            }
                         }
                     }
                 }
@@ -1527,8 +1569,10 @@ namespace Options.File.Checker.WPF
                                 // Update the seatCount in the licenseFileIndex dictionary.
                                 licenseFileIndex[lineIndex] = licenseFileData;
 
-                                // Update the OutputTextBlock.Text with the new seatCount value.
-                                OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                if (debug)
+                                {
+                                    OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                }
                             }
                             if (reserveClientType == "GROUP")
                             {
@@ -1569,8 +1613,10 @@ namespace Options.File.Checker.WPF
                                         // Update the seatCount in the licenseFileIndex dictionary.
                                         licenseFileIndex[lineIndex] = licenseFileData;
 
-                                        // Update the OutputTextBlock.Text with the new seatCount value.
-                                        OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                        if (debug)
+                                        {
+                                            OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                        }
                                     }
                                 }
                             }
@@ -1587,6 +1633,9 @@ namespace Options.File.Checker.WPF
                     return;
                 }
             }
+
+            // Putting this here rather than with the other private voids because it means I don't have to add failing variables in the code above.
+            PrintUsefulInformation();
         }
 
         private void AnalyzeServerAndDaemonLine()
@@ -1629,7 +1678,7 @@ namespace Options.File.Checker.WPF
 
                     if (lineParts.Length == 3)
                     {
-                        OutputTextBlock.Text += unspecifiedServerPortMessage;
+                            OutputTextBlock.Text += unspecifiedServerPortMessage;
                     }
                     else
                     {
@@ -2130,7 +2179,7 @@ namespace Options.File.Checker.WPF
                             }
                         }
                     }
-                    OutputTextBlock.Text += $"Daemon path: {daemonPath}.\r\ndprop1: {daemonProperty1}. dprop2: {daemonProperty2}.\r\n";
+                    OutputTextBlock.Text += $"Daemon path: {daemonPath}.\r\nProperty 1: {daemonProperty1}. Property 2: {daemonProperty2}.\r\n";
                 }
 
                 if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
@@ -2389,6 +2438,21 @@ namespace Options.File.Checker.WPF
                         return;
                     }
                 }
+            }
+        }
+
+        private void PrintUsefulInformation()
+        {
+            OutputTextBlock.Text += "\r\nPlease note: if you did not specify a license for an INCLUDE or RESERVE line, it will subtract the seat from the first " +
+                "license the product appears on. Product names are listed with their FlexLM names.\r\n\r\n";
+            foreach (var licenseFileEntry in licenseFileIndex)
+            {
+                Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                string productName = licenseFileData.Item1;
+                int seatCount = licenseFileData.Item2;            
+                string licenseNumber = licenseFileData.Item5;
+                OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
             }
         }
     }
