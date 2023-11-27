@@ -2,10 +2,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
 
 namespace Options.File.Checker.WPF
 {
@@ -40,7 +43,11 @@ namespace Options.File.Checker.WPF
         public MainWindow()
         {
             InitializeComponent();
+
+            // Check if debug mode is enabled.
             debug = ((App)Application.Current).Debug;
+
+            // Load previously opened files.
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
@@ -63,6 +70,19 @@ namespace Options.File.Checker.WPF
         {
             // Toggle between maximized and not.
             WindowState = WindowState == WindowState.Maximized ? WindowState.Normal : WindowState.Maximized;
+        }
+
+        // Changing the window border size when maximized so that it doesn't go past the screen borders.
+        public void Window_SizeChanged(object sender, SizeChangedEventArgs e)
+        {
+            if (WindowState == WindowState.Maximized)
+            {
+                BorderThickness = new Thickness(7);
+            }
+            else
+            {
+                BorderThickness = new Thickness(0);
+            }
         }
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
@@ -284,7 +304,7 @@ namespace Options.File.Checker.WPF
                             if (lineIndex + 1 < filteredLicenseFileLines.Length)
                             {
                                 string nextLine = filteredLicenseFileLines[lineIndex + 1];
-                                // Parse the next line as needed
+                                // Parse the next line as needed.
                                 string[] nextLineParts = nextLine.Split(' ');
                                 string fixedProductKey = nextLineParts[0];
                                 fixedProductKey = fixedProductKey.Replace("\t", "");
@@ -454,9 +474,9 @@ namespace Options.File.Checker.WPF
                             }
                             if (!matchingTrialFound)
                             {
+                                OutputTextBlock.Text = string.Empty;
                                 MessageBox.Show($"Your license file has at least 1 trial license, {licenseNumber}, but none of the trial numbers you specified in this program's settings match the trial " +
                                     "license number(s) found in the license. Please enter any trial license numbers you're using on the startup screen.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                OutputTextBlock.Text = string.Empty;
                                 return;
                             }
                         }
@@ -466,44 +486,50 @@ namespace Options.File.Checker.WPF
                             seatCount /= 2;
                         }
 
+                        // Technically infinite. This should avoid at least 1 unnecessary error report.
+                        if (licenseOffering.Contains("CNU"))
+                        {
+                            seatCount = 9999999;
+                        }
+
                         if (seatCount < 1)
                         {
+                            OutputTextBlock.Text = string.Empty;
                             MessageBox.Show($"{productName} on license {licenseNumber} is reading with a seat count of zero from just the license file. " +
                                 $"If you're using a trial license, make sure you selecting the correct License Offering. " +
                                 $"Otherwise, your license file is corrupt.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
                         // Before proceeding, make sure the values we've collected are valid.
                         if (string.IsNullOrWhiteSpace(productName))
                         {
-                            MessageBox.Show("A product name could not be detected correctly in your license file. It is being detected as blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             OutputTextBlock.Text = string.Empty;
+                            MessageBox.Show("A product name could not be detected correctly in your license file. It is being detected as blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             return;
                         }
 
                         if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
                         {
+                            OutputTextBlock.Text = string.Empty;
                             MessageBox.Show($"An invalid license number was detected in your license file for {productName}. " +
                                 $"The invalid license number detected was \"{licenseNumber}\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
                         if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
                         {
+                            OutputTextBlock.Text = string.Empty;
                             MessageBox.Show($"A license offering could not be detected in your license file for {productName} " +
                                 $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
 
                         if (string.IsNullOrWhiteSpace(productKey))
                         {
+                            OutputTextBlock.Text = string.Empty;
                             MessageBox.Show($"A product key could not be detected in your license file for {productName} " +
                                 $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            OutputTextBlock.Text = string.Empty;
                             return;
                         }
                         if (debug)
@@ -1031,7 +1057,14 @@ namespace Options.File.Checker.WPF
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                     string productName = licenseFileData.Item1;
+                    string licenseOffering = licenseFileData.Item4;
                     string licenseNumber = licenseFileData.Item5;
+
+                    // CNU licenses have unlimited seats.
+                    if (licenseOffering.Contains("CNU"))
+                    {
+                        continue;
+                    }
 
                     // Check for a matching includeProductName and productName.
                     if (includeProductName == productName)
@@ -1046,8 +1079,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1057,8 +1090,8 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1080,8 +1113,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1103,8 +1136,8 @@ namespace Options.File.Checker.WPF
                                         // Error out if the seat count is negative.
                                         if (seatCount < 0)
                                         {
-                                            MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                             OutputTextBlock.Text = string.Empty;
+                                            MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                             return;
                                         }
 
@@ -1180,8 +1213,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1191,8 +1224,8 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1214,8 +1247,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1263,8 +1296,8 @@ namespace Options.File.Checker.WPF
                 }
                 if (allSeatCountsZero && seatCount == 0)
                 {
-                    MessageBox.Show($"You have specified too many users to be able to use {includeProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     OutputTextBlock.Text = string.Empty;
+                    MessageBox.Show($"You have specified too many users to be able to use {includeProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
             }
@@ -1296,8 +1329,8 @@ namespace Options.File.Checker.WPF
                         // Error out if the seat count is negative.
                         if (seatCount < 0)
                         {
-                            MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             OutputTextBlock.Text = string.Empty;
+                            MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             return;
                         }
 
@@ -1317,8 +1350,8 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrWhiteSpace(includeAllClientSpecified))
                     {
-                        MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         OutputTextBlock.Text = string.Empty;
+                        MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         return;
                     }
 
@@ -1349,9 +1382,9 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
+                                    OutputTextBlock.Text = string.Empty;
                                     MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget that you are using at least 1 " +
                                         $"INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    OutputTextBlock.Text = string.Empty;
                                     return;
                                 }
 
@@ -1375,8 +1408,8 @@ namespace Options.File.Checker.WPF
                 }
                 else
                 {
-                    MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     OutputTextBlock.Text = string.Empty;
+                    MessageBox.Show($"You specified an invalid type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
             }
@@ -1415,8 +1448,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1426,8 +1459,8 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1448,8 +1481,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1549,8 +1582,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1558,8 +1591,8 @@ namespace Options.File.Checker.WPF
 
                                 if (seatCount < 0)
                                 {
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1580,8 +1613,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     return;
                                 }
 
@@ -1602,8 +1635,8 @@ namespace Options.File.Checker.WPF
                                         // Error out if the seat count is negative.
                                         if (seatCount < 0)
                                         {
-                                            MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                             OutputTextBlock.Text = string.Empty;
+                                            MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                             return;
                                         }
 
@@ -1628,8 +1661,8 @@ namespace Options.File.Checker.WPF
                 }
                 if (allSeatCountsZero && seatCount == 0)
                 {
-                    MessageBox.Show($"You have specified too many users to be able to use {reserveProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     OutputTextBlock.Text = string.Empty;
+                    MessageBox.Show($"You have specified too many users to be able to use {reserveProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     return;
                 }
             }
@@ -1660,6 +1693,7 @@ namespace Options.File.Checker.WPF
                     // SERVER lines should come before the product(s).
                     if (productLinesHaveBeenReached)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("Your SERVER line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1674,11 +1708,11 @@ namespace Options.File.Checker.WPF
                     string unspecifiedServerPortMessage = "Warning: You have not specified a port number for the SERVER. " +
                             "This is acceptable if you are defining it with lmadmin or if you're okay with " +
                             "FlexLM picking the port number for you. However, if you did not specify the Host ID and instead put the port number in its place, " +
-                            "the specified port number will not be used.\r\n";
+                            "the specified port number will not be used. The SERVER port number will be randomly choosen each time you restart it.\r\n";
 
                     if (lineParts.Length == 3)
                     {
-                            OutputTextBlock.Text += unspecifiedServerPortMessage;
+                        OutputTextBlock.Text += unspecifiedServerPortMessage;
                     }
                     else
                     {
@@ -1692,6 +1726,7 @@ namespace Options.File.Checker.WPF
                     // There is no situation where you should have more than 3 SERVER lines.
                     if (serverLineCount > 3)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("Your license file has too many SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1704,6 +1739,7 @@ namespace Options.File.Checker.WPF
                     // DAEMON line should come before the product(s).
                     if (productLinesHaveBeenReached)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("Your DAEMON line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1713,6 +1749,7 @@ namespace Options.File.Checker.WPF
                     daemonLineCount++;
                     if (daemonLineCount > 1)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You have too many DAEMON lines in your license file. You only need 1, even if you have 3 SERVER lines.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1725,6 +1762,7 @@ namespace Options.File.Checker.WPF
 
                     if (countCommentedBeginLines > 0)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You have content that is intended to be commented out in your DAEMON line. Please remove it.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1732,6 +1770,7 @@ namespace Options.File.Checker.WPF
 
                     if (countPortEquals > 1)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You have specified more than 1 port number for MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1739,15 +1778,17 @@ namespace Options.File.Checker.WPF
 
                     if (countOptionsEquals > 1)
                     {
-                        MessageBox.Show("You have specified more than 1 options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        OutputTextBlock.Text = string.Empty;
+                        MessageBox.Show("You have specified the path to more than 1 options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
 
                     if (countOptionsEquals == 0)
                     {
-                        MessageBox.Show("You did not specify the path to options file. If you included the path, but did not use options= to specify it, " +
-                            "MATLAB licenses ask that you do so, even if technically works without options=.\r\n\r\n" +
+                        OutputTextBlock.Text = string.Empty;
+                        MessageBox.Show("You did not specify the path to the options file. If you included the path, but did not use options= to specify it, " +
+                            "MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n" +
                             "If you used a \\ to indicate a line break on your DAEMON line, this program currently does not support this.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1759,6 +1800,7 @@ namespace Options.File.Checker.WPF
                     // Just having the word "DAEMON" isn't enough.
                     if (lineParts.Length == 1)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1769,6 +1811,7 @@ namespace Options.File.Checker.WPF
 
                     if (string.IsNullOrWhiteSpace(daemonVendor))
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("There are too many spaces between \"DAEMON\" and \"MLM\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1777,6 +1820,7 @@ namespace Options.File.Checker.WPF
                     // The vendor daemon needs to MLM. Not mlm or anything else.
                     if (daemonVendor != "MLM")
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You have incorrectly specified the vendor daemon MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1785,6 +1829,7 @@ namespace Options.File.Checker.WPF
                     // Just specifying "DAEMON MLM" isn't enough.
                     if (lineParts.Length == 2)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You did not specify the path to the vendor daemon MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1792,7 +1837,8 @@ namespace Options.File.Checker.WPF
 
                     if (lineParts.Length == 3)
                     {
-                        MessageBox.Show("You did not specify the path to options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        OutputTextBlock.Text = string.Empty;
+                        MessageBox.Show("You did not specify the path to the options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -1843,6 +1889,7 @@ namespace Options.File.Checker.WPF
                     // Make sure you're not forgetting a quotation mark, if you used one.
                     if (waitingForNextQuotationMark)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You are missing a quotation mark at the end of the full path to MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1850,6 +1897,7 @@ namespace Options.File.Checker.WPF
 
                     if (daemonPath.EndsWith("\""))
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You are missing a quotation mark at the beginning of the full path to MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
@@ -1870,6 +1918,7 @@ namespace Options.File.Checker.WPF
 
                     if (!isDaemonPathAccepted)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show("You incorrectly specifed the full path to MLM. If there are spaces in the path, " +
                             "please put quotes around the path.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfServerAndDaemonLinesFailed = true;
@@ -1952,6 +2001,7 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
+                                OutputTextBlock.Text = string.Empty;
                                 MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 analysisOfServerAndDaemonLinesFailed = true;
                                 return;
@@ -2023,6 +2073,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
+                                        OutputTextBlock.Text = string.Empty;
                                         MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
@@ -2034,6 +2085,7 @@ namespace Options.File.Checker.WPF
                                 }
                                 else
                                 {
+                                    OutputTextBlock.Text = string.Empty;
                                     MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
@@ -2047,6 +2099,7 @@ namespace Options.File.Checker.WPF
                             {
                                 if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
+                                    OutputTextBlock.Text = string.Empty;
                                     MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
@@ -2130,6 +2183,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     if (optionsFileHasBeenSpecified)
                                     {
+                                        OutputTextBlock.Text = string.Empty;
                                         MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
@@ -2143,6 +2197,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
+                                        OutputTextBlock.Text = string.Empty;
                                         MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
@@ -2154,6 +2209,7 @@ namespace Options.File.Checker.WPF
                                 }
                                 else
                                 {
+                                    OutputTextBlock.Text = string.Empty;
                                     MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
@@ -2167,6 +2223,7 @@ namespace Options.File.Checker.WPF
                             {
                                 if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
+                                    OutputTextBlock.Text = string.Empty;
                                     MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
@@ -2179,7 +2236,29 @@ namespace Options.File.Checker.WPF
                             }
                         }
                     }
-                    OutputTextBlock.Text += $"Daemon path: {daemonPath}.\r\nProperty 1: {daemonProperty1}. Property 2: {daemonProperty2}.\r\n";
+
+                    // Print daemon information appropriately.
+
+                    string daemonProperty1Edited = Regex.Replace(daemonProperty1, "port=", "", RegexOptions.IgnoreCase);
+                    daemonProperty1Edited = Regex.Replace(daemonProperty1Edited, "options=", "", RegexOptions.IgnoreCase);
+                    string daemonProperty2Edited = Regex.Replace(daemonProperty2, "port=", "", RegexOptions.IgnoreCase);
+                    daemonProperty2Edited = Regex.Replace(daemonProperty2Edited, "options=", "", RegexOptions.IgnoreCase);
+
+                    if (daemonProperty1Edited.Contains("options"))
+                    {
+                        if (daemonProperty2Edited.Contains("port"))
+                        {
+                            OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}. DAEMON port: {daemonProperty2Edited}.\r\n";
+                        }
+                        else
+                        {
+                            OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}.\r\n";
+                        }
+                    }
+                    else
+                    {
+                        OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nDAEMON port: {daemonProperty1Edited}. Options path: {daemonProperty2Edited}.\r\n";
+                    }                    
                 }
 
                 if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
@@ -2198,6 +2277,7 @@ namespace Options.File.Checker.WPF
             // We have to do this after the loop so that it doesn't get stuck while counting to 3.
             if (serverLineCount == 2)
             {
+                OutputTextBlock.Text = string.Empty;
                 MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
@@ -2206,7 +2286,8 @@ namespace Options.File.Checker.WPF
             // These have to happen outside the loop to get a proper tally.
             if (daemonLineCount == 0)
             {
-                MessageBox.Show("You have no DAEMON line in your license file. You should not be using VENDOR lines for MATLAB, " +
+                OutputTextBlock.Text = string.Empty;
+                MessageBox.Show("You have no DAEMON line in your license file. You should not be using VENDOR lines for MathWorks licenses, " +
                     "if you are.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
@@ -2214,6 +2295,7 @@ namespace Options.File.Checker.WPF
 
             if ((!daemonProperty1.Contains("options=", StringComparison.OrdinalIgnoreCase)) && (!daemonProperty2.Contains("options=", StringComparison.OrdinalIgnoreCase)))
             {
+                OutputTextBlock.Text = string.Empty;
                 MessageBox.Show("Your license file does not specify an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
@@ -2223,12 +2305,9 @@ namespace Options.File.Checker.WPF
         {
             foreach (var optionsIncludeEntry in optionsIncludeIndex)
             {
-                int optionsIncludeLineIndex = optionsIncludeEntry.Key;
                 Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
 
                 string includeProductName = optionsIncludeData.Item1;
-                string licenseProductName = "brokenProductNameCheckForValidProducts";
-
                 bool foundMatchingProduct = false;
 
                 foreach (var licenseFileEntry in licenseFileIndex)
@@ -2236,7 +2315,7 @@ namespace Options.File.Checker.WPF
                     int lineIndex = licenseFileEntry.Key;
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
-                    licenseProductName = licenseFileData.Item1;
+                    string licenseProductName = licenseFileData.Item1;
 
                     // Check for a matching includeProductName and productName.
                     if (includeProductName == licenseProductName)
@@ -2247,6 +2326,7 @@ namespace Options.File.Checker.WPF
                 }
                 if (!foundMatchingProduct)
                 {
+                    OutputTextBlock.Text = string.Empty;
                     MessageBox.Show($"The following product is not in your license file: \"{includeProductName}\". Product names are case-sensitive " +
                         $"and must match the product name in the license file, which can be found after the word INCREMENT.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     analysisOfOptionsFileProductsFailed = true;
@@ -2298,6 +2378,7 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
+                            OutputTextBlock.Text = string.Empty;
                             MessageBox.Show($"You have an INCLUDE line that specifies a product key, {includeProductKey}, " +
                                 $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, " +
                                 $"{productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -2311,6 +2392,7 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrEmpty(includeProductKey) == true)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show($"You have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
                             $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfOptionsFileProductsFailed = true;
@@ -2318,6 +2400,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show($"You have an INCLUDE line that specifies a product key, {includeProductKey}, " +
                             $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfOptionsFileProductsFailed = true;
@@ -2368,6 +2451,7 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrEmpty(excludeProductKey) == true)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show($"You have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " +
                             $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfOptionsFileProductsFailed = true;
@@ -2375,6 +2459,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show($"You have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
                             $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfOptionsFileProductsFailed = true;
@@ -2425,6 +2510,7 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrEmpty(reserveProductKey) == true)
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show($"You have a RESERVE line that specifies a license number, {reserveLicenseNumber}, " +
                             $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfOptionsFileProductsFailed = true;
@@ -2432,6 +2518,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
+                        OutputTextBlock.Text = string.Empty;
                         MessageBox.Show($"You have a RESERVE line that specifies a product key, {reserveProductKey}, " +
                             $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         analysisOfOptionsFileProductsFailed = true;
@@ -2440,7 +2527,6 @@ namespace Options.File.Checker.WPF
                 }
             }
         }
-
         private void PrintUsefulInformation()
         {
             OutputTextBlock.Text += "\r\nPlease note: if you did not specify a license for an INCLUDE or RESERVE line, it will subtract the seat from the first " +
@@ -2450,9 +2536,18 @@ namespace Options.File.Checker.WPF
                 Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                 string productName = licenseFileData.Item1;
-                int seatCount = licenseFileData.Item2;            
+                int seatCount = licenseFileData.Item2;
+                string licenseOffering = licenseFileData.Item4;
                 string licenseNumber = licenseFileData.Item5;
-                OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
+
+                if (licenseOffering.Contains("CNU"))
+                {
+                    OutputTextBlock.Text += $"The product {productName} has unlimited seats on license {licenseNumber}.\r\n";
+                }
+                else
+                {
+                    OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
+                }                
             }
         }
     }
