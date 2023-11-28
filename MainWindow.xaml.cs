@@ -413,9 +413,23 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                        return;
+                                        currentLine = filteredLicenseFileLines[lineIndex -1];
+                                        pattern = @"ei=([^:]+)";
+
+                                        regex = new Regex(pattern);
+                                        match = regex.Match(currentLine);
+
+                                        if (match.Success)
+                                        {
+                                            licenseNumber = match.Groups[1].Value;
+                                        }
+                                        else
+                                        {
+                                            OutputTextBlock.Text = string.Empty;
+                                            MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                            return;
+                                        }
+
                                     }
                                 }
                                 // If you're not using a trial.
