@@ -292,6 +292,7 @@ namespace Options.File.Checker.WPF
                         string licenseNumber = "licenseNumberisBroken";
                         bool trialLicenseIsUsed = false;
                         int.TryParse(lineParts[5], out seatCount);
+                        string rawSeatCount = lineParts[5];
 
                         // If you're using a PLP license, then we don't care about this product.
                         if (productName == "TMW_Archive")
@@ -410,6 +411,12 @@ namespace Options.File.Checker.WPF
                                     {
                                         licenseNumber = match.Groups[1].Value;
                                     }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        return;
+                                    }
                                 }
                                 // If you're not using a trial.
                                 else
@@ -446,6 +453,7 @@ namespace Options.File.Checker.WPF
                                             }
                                             else
                                             {
+                                                OutputTextBlock.Text = string.Empty;
                                                 MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                                 return;
                                             }
@@ -460,9 +468,8 @@ namespace Options.File.Checker.WPF
                                 return;
                             }
                         }
-
                         // Really would kill us to put this license number in one place, wouldn't it?
-                        if (licenseNumber.Contains("DUP_GROUP="))
+                        else if (licenseNumber.Contains("DUP_GROUP="))
                         {
                             string currentLine = filteredLicenseFileLines[lineIndex + 1];
                             string pattern = @"asset_info=(\S+)";
@@ -476,6 +483,26 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
+                                OutputTextBlock.Text = string.Empty;
+                                MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
+                        }
+                        else if (licenseNumber == "\\")
+                        {
+                            string currentLine = filteredLicenseFileLines[lineIndex + 2];
+                            string pattern = @"SN=(\S+)";
+
+                            Regex regex = new Regex(pattern);
+                            Match match = regex.Match(currentLine);
+
+                            if (match.Success)
+                            {
+                                licenseNumber = match.Groups[1].Value;
+                            }
+                            else
+                            {
+                                OutputTextBlock.Text = string.Empty;
                                 MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 return;
                             }
@@ -512,7 +539,7 @@ namespace Options.File.Checker.WPF
                         }
 
                         // Technically infinite. This should avoid at least 1 unnecessary error report.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 0) || licenseOffering.Contains("CN") && licenseNumber == "220668")
+                        if (licenseOffering.Contains("CNU") && (seatCount == 0))
                         {
                             seatCount = 9999999;
 
@@ -520,6 +547,21 @@ namespace Options.File.Checker.WPF
                             {
                                 cnuIsUsed = true;
                             }
+                        }
+
+                        if (licenseOffering.Contains("CN") && (seatCount == 0) && licenseNumber == "220668")
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            MessageBox.Show($"Your license file contains a Designated Computer license ({licenseNumber}) that is incorrectly labeled as a Concurrent license.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+
+                        if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
+                        {
+                            MessageBox.Show("The file you've selected likely contains an Individual or Designated Computer license, which cannot use " +
+                                $"an options file. The license number is question is {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            LicenseFileLocationTextBox.Text = string.Empty;
+                            return;
                         }
 
                         if (seatCount < 1)
@@ -1092,7 +1134,7 @@ namespace Options.File.Checker.WPF
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                     {
                         continue;
                     }
@@ -1229,7 +1271,7 @@ namespace Options.File.Checker.WPF
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                     {
                         continue;
                     }
@@ -1363,7 +1405,7 @@ namespace Options.File.Checker.WPF
                         string licenseNumber = licenseFileData.Item5;
 
                         // CNU licenses have unlimited seats.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
+                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                         {
                             continue;
                         }
@@ -1412,7 +1454,7 @@ namespace Options.File.Checker.WPF
                         string licenseNumber = licenseFileData.Item5;
 
                         // CNU licenses have unlimited seats.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
+                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                         {
                             continue;
                         }
@@ -1491,7 +1533,7 @@ namespace Options.File.Checker.WPF
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                     {
                         continue;
                     }
@@ -1628,7 +1670,7 @@ namespace Options.File.Checker.WPF
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
                     {
                         continue;
                     }
@@ -2612,7 +2654,7 @@ namespace Options.File.Checker.WPF
                 string licenseOffering = licenseFileData.Item4;
                 string licenseNumber = licenseFileData.Item5;
 
-                if (licenseOffering.Contains("CNU") && seatCount == 9999999 || licenseOffering.Contains("CN") && licenseNumber == "220668")
+                if (licenseOffering.Contains("CNU") && seatCount == 9999999)
                 {
                     OutputTextBlock.Text += $"The product {productName} has unlimited seats on license {licenseNumber}.\r\n";
                 }
