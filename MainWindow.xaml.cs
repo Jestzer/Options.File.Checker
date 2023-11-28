@@ -40,6 +40,8 @@ namespace Options.File.Checker.WPF
         bool analysisOfServerAndDaemonLinesFailed = false;
         bool analysisOfOptionsFileProductsFailed = false;
 
+        bool cnuIsUsed = false;
+
         public MainWindow()
         {
             InitializeComponent();
@@ -442,6 +444,11 @@ namespace Options.File.Checker.WPF
                                             {
                                                 licenseNumber = match.Groups[1].Value;
                                             }
+                                            else
+                                            {
+                                                MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                return;
+                                            }
                                         }
                                     }
                                 }
@@ -466,6 +473,11 @@ namespace Options.File.Checker.WPF
                             if (match.Success)
                             {
                                 licenseNumber = match.Groups[1].Value;
+                            }
+                            else
+                            {
+                                MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
                             }
                         }
 
@@ -503,6 +515,11 @@ namespace Options.File.Checker.WPF
                         if (licenseOffering.Contains("CNU") && (seatCount == 0) || licenseOffering.Contains("CN") && licenseNumber == "220668")
                         {
                             seatCount = 9999999;
+
+                            if (licenseOffering.Contains("CNU"))
+                            {
+                                cnuIsUsed = true;
+                            }
                         }
 
                         if (seatCount < 1)
@@ -2580,7 +2597,12 @@ namespace Options.File.Checker.WPF
         private void PrintUsefulInformation()
         {
             OutputTextBlock.Text += "\r\nPlease note: if you did not specify a license for an INCLUDE or RESERVE line, it will subtract the seat from the first " +
-                "license the product appears on. Product names are listed with their FlexLM names.\r\n\r\n";
+                "license the product appears on. Product names are listed with their FlexLM names.\r\n";
+
+            if (cnuIsUsed)
+            {
+                OutputTextBlock.Text += "\r\nYour license file contains a Counted Named User license. An options file is unnecessary for this license offering.\r\n\r\n";
+            }
             foreach (var licenseFileEntry in licenseFileIndex)
             {
                 Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
