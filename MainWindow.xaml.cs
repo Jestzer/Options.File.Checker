@@ -558,9 +558,9 @@ namespace Options.File.Checker.WPF
 
                         if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
                         {
+                            OutputTextBlock.Text = string.Empty;
                             MessageBox.Show("The file you've selected likely contains an Individual or Designated Computer license, which cannot use " +
                                 $"an options file. The license number is question is {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            LicenseFileLocationTextBox.Text = string.Empty;
                             return;
                         }
 
