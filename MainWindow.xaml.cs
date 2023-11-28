@@ -248,7 +248,7 @@ namespace Options.File.Checker.WPF
 
                 if (filteredLicenseFileContents.Contains("lo=IN") || filteredLicenseFileContents.Contains("lo=DC") || filteredLicenseFileContents.Contains("lo=CIN"))
                 {
-                    MessageBox.Show("The file you've selected is likely an Individual or Designated Computer license (or has been tampered), which cannot use " +
+                    MessageBox.Show("The file you've selected likely contains an Individual or Designated Computer license, which cannot use " +
                         "an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
@@ -430,6 +430,19 @@ namespace Options.File.Checker.WPF
                                         {
                                             licenseNumber = match.Groups[1].Value;
                                         }
+                                        else
+                                        {
+                                            currentLine = filteredLicenseFileLines[lineIndex + 2];
+                                            pattern = @"SN=(\S+)";
+
+                                            regex = new Regex(pattern);
+                                            match = regex.Match(currentLine);
+
+                                            if (match.Success)
+                                            {
+                                                licenseNumber = match.Groups[1].Value;
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -487,7 +500,7 @@ namespace Options.File.Checker.WPF
                         }
 
                         // Technically infinite. This should avoid at least 1 unnecessary error report.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 0))
+                        if (licenseOffering.Contains("CNU") && (seatCount == 0) || licenseOffering.Contains("CN") && licenseNumber == "220668")
                         {
                             seatCount = 9999999;
                         }
@@ -1062,7 +1075,7 @@ namespace Options.File.Checker.WPF
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
                     {
                         continue;
                     }
@@ -1196,9 +1209,10 @@ namespace Options.File.Checker.WPF
                     productName = licenseFileData.Item1;
                     seatCount = licenseFileData.Item2;
                     string licenseOffering = licenseFileData.Item4;
+                    string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
                     {
                         continue;
                     }
@@ -1329,9 +1343,10 @@ namespace Options.File.Checker.WPF
                         string productName = licenseFileData.Item1;
                         int seatCount = licenseFileData.Item2;
                         string licenseOffering = licenseFileData.Item4;
+                        string licenseNumber = licenseFileData.Item5;
 
                         // CNU licenses have unlimited seats.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
                         {
                             continue;
                         }
@@ -1377,9 +1392,10 @@ namespace Options.File.Checker.WPF
                         string productName = licenseFileData.Item1;
                         int seatCount = licenseFileData.Item2;
                         string licenseOffering = licenseFileData.Item4;
+                        string licenseNumber = licenseFileData.Item5;
 
                         // CNU licenses have unlimited seats.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                        if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
                         {
                             continue;
                         }
@@ -1453,12 +1469,12 @@ namespace Options.File.Checker.WPF
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
                     string productName = licenseFileData.Item1;
-                    int seatCount =  licenseFileData.Item2;
+                    int seatCount = licenseFileData.Item2;
                     string licenseOffering = licenseFileData.Item4;
                     string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
                     {
                         continue;
                     }
@@ -1592,9 +1608,10 @@ namespace Options.File.Checker.WPF
                     productName = licenseFileData.Item1;
                     seatCount = licenseFileData.Item2;
                     string licenseOffering = licenseFileData.Item4;
+                    string licenseNumber = licenseFileData.Item5;
 
                     // CNU licenses have unlimited seats.
-                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999))
+                    if (licenseOffering.Contains("CNU") && (seatCount == 9999999) || licenseNumber == "220668")
                     {
                         continue;
                     }
@@ -2277,9 +2294,9 @@ namespace Options.File.Checker.WPF
                     string daemonProperty2Edited = Regex.Replace(daemonProperty2, "port=", "", RegexOptions.IgnoreCase);
                     daemonProperty2Edited = Regex.Replace(daemonProperty2Edited, "options=", "", RegexOptions.IgnoreCase);
 
-                    if (daemonProperty1Edited.Contains("options"))
+                    if (daemonProperty1.Contains("options"))
                     {
-                        if (daemonProperty2Edited.Contains("port"))
+                        if (daemonProperty2.Contains("port"))
                         {
                             OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}. DAEMON port: {daemonProperty2Edited}.\r\n";
                         }
@@ -2291,7 +2308,7 @@ namespace Options.File.Checker.WPF
                     else
                     {
                         OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nDAEMON port: {daemonProperty1Edited}. Options path: {daemonProperty2Edited}.\r\n";
-                    }                    
+                    }
                 }
 
                 if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
@@ -2573,14 +2590,14 @@ namespace Options.File.Checker.WPF
                 string licenseOffering = licenseFileData.Item4;
                 string licenseNumber = licenseFileData.Item5;
 
-                if (licenseOffering.Contains("CNU") && seatCount == 9999999)
+                if (licenseOffering.Contains("CNU") && seatCount == 9999999 || licenseOffering.Contains("CN") && licenseNumber == "220668")
                 {
                     OutputTextBlock.Text += $"The product {productName} has unlimited seats on license {licenseNumber}.\r\n";
                 }
                 else
                 {
                     OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
-                }                
+                }
             }
         }
     }
