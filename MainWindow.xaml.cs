@@ -1,6 +1,7 @@
 ﻿using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -287,6 +288,7 @@ namespace Options.File.Checker.WPF
                     {
                         string[] lineParts = line.Split(' ');
                         productName = lineParts[1];
+                        string productExpirationDate = lineParts[4];
                         string productKey = lineParts[6];
                         string licenseOffering = "licenseOfferingIsBroken";
                         string licenseNumber = "licenseNumberisBroken";
@@ -520,6 +522,27 @@ namespace Options.File.Checker.WPF
                                 MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 return;
                             }
+                        }
+
+                        // Check the product's expiration date.
+                        // Convert/parse the productExpirationDate string to a DateTime object.
+
+                        if (productExpirationDate == "01-jan-0000")
+                        {
+                            productExpirationDate = "01-jan-2999";
+                        }
+
+                        DateTime expirationDate = DateTime.ParseExact(productExpirationDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture);
+
+                        // Get the current system date.
+                        DateTime currentDate = DateTime.Now.Date;
+
+                        if (expirationDate < currentDate)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            MessageBox.Show($"The product {productName} on license number {licenseNumber} expired on {productExpirationDate}. " +
+                                "Please update your license file appropriately before proceeding.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
                         }
 
                         // Figure out what your license offering is, if you're using a trial.
@@ -2657,7 +2680,7 @@ namespace Options.File.Checker.WPF
 
             if (cnuIsUsed)
             {
-                OutputTextBlock.Text += "\r\nYour license file contains a Counted Named User license. An options file is unnecessary for this license offering.\r\n\r\n";
+                OutputTextBlock.Text += "\r\nYour license file contains a Counted Named User license. An options file is likely unnecessary for this license offering.\r\n\r\n";
             }
             foreach (var licenseFileEntry in licenseFileIndex)
             {
