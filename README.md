@@ -7,9 +7,9 @@ Notes for user:
 - I _think_ it's possible in the options file to specify new entries (ex: INCLUDE MATLAB USER rob) without creating a line break. This program does not support this type of formatting and probably never will.
 
 To do:
+- Make icon look nicer
 - Remove case sensitivity for key=
 - Redo logic for getting the license number.
 - Redo logic for DAEMON line to _not_ use lineParts since it's a mess (even if it works.) This will more easily allow for line breaks to be supported.
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
-- Reword warning message for CNU.
