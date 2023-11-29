@@ -13,11 +13,11 @@ using System.Reflection;
 
 [assembly: System.Reflection.AssemblyCompanyAttribute("Options.File.Checker.WPF")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
-[assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+532953f77e8fd43d8ff87fe0980ffbfe214298f5")]
+[assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.1.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.1")]
 [assembly: System.Reflection.AssemblyProductAttribute("Options.File.Checker.WPF")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Options.File.Checker.WPF")]
-[assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
+[assembly: System.Reflection.AssemblyVersionAttribute("0.1.1.0")]
 [assembly: System.Runtime.Versioning.TargetPlatformAttribute("Windows7.0")]
 [assembly: System.Runtime.Versioning.SupportedOSPlatformAttribute("Windows7.0")]
 

@@ -25,7 +25,7 @@ namespace Options.File.Checker.WPF
                 {
                     // Use reflection to get the property value because otherwise, things don't work.
                     var trialLicenseOffering = Properties.Settings.Default.GetType().GetProperty($"TrialLicenseOffering{i}")?.GetValue(Properties.Settings.Default, null);
-                    if (trialLicenseOffering != null && trialLicenseOffering.ToString() == "CN")
+                    if (trialLicenseOffering != null && trialLicenseOffering.ToString() == "lo=CN")
                     {
                         concurrentButton.IsChecked = true;
                     }
@@ -77,7 +77,7 @@ namespace Options.File.Checker.WPF
                     var property = Properties.Settings.Default.GetType().GetProperty($"TrialLicenseOffering{i}");
                     if (property != null)
                     {
-                        property.SetValue(Properties.Settings.Default, trialConcurrentButton.IsChecked == true ? "CN" : "NNU", null);
+                        property.SetValue(Properties.Settings.Default, trialConcurrentButton.IsChecked == true ? "lo=CN" : "lo=NNU", null);
                     }
                 }
             }
