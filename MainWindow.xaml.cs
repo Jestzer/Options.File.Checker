@@ -7,6 +7,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Interop;
 using System.Windows.Media;
@@ -415,7 +416,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        currentLine = filteredLicenseFileLines[lineIndex -1];
+                                        currentLine = filteredLicenseFileLines[lineIndex - 1];
                                         pattern = @"ei=([^:]+)";
 
                                         regex = new Regex(pattern);
@@ -586,7 +587,7 @@ namespace Options.File.Checker.WPF
                             }
                         }
 
-                        if (licenseOffering.Contains("CN") && (seatCount == 0) && licenseNumber == "220668")
+                        if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
                         {
                             OutputTextBlock.Text = string.Empty;
                             MessageBox.Show($"Your license file contains a Designated Computer license ({licenseNumber}) that is incorrectly labeled as a Concurrent license.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
@@ -1197,9 +1198,16 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    return;
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        return;
+                                    }
                                 }
 
                                 // Update the seatCount in the licenseFileData tuple.
@@ -1243,9 +1251,16 @@ namespace Options.File.Checker.WPF
                                         // Error out if the seat count is negative.
                                         if (seatCount < 0)
                                         {
-                                            OutputTextBlock.Text = string.Empty;
-                                            MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            return;
+                                            if (licenseOffering == "lo=CN")
+                                            {
+                                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                            }
+                                            else
+                                            {
+                                                OutputTextBlock.Text = string.Empty;
+                                                MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                return;
+                                            }
                                         }
 
                                         // Update the seatCount in the licenseFileData tuple.
@@ -1340,9 +1355,16 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    return;
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        return;
+                                    }
                                 }
 
                                 // Update the seatCount in the licenseFileData tuple.
@@ -1386,9 +1408,16 @@ namespace Options.File.Checker.WPF
                                         // Error out if the seat count is negative.
                                         if (seatCount < 0)
                                         {
-                                            MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            OutputTextBlock.Text = string.Empty;
-                                            return;
+                                            if (licenseOffering == "lo=CN")
+                                            {
+                                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                OutputTextBlock.Text = string.Empty;
+                                                return;
+                                            }
                                         }
 
                                         // Update the seatCount in the licenseFileData tuple.
@@ -1453,9 +1482,16 @@ namespace Options.File.Checker.WPF
                         // Error out if the seat count is negative.
                         if (seatCount < 0)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                            return;
+                            if (licenseOffering == "lo=CN")
+                            {
+                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                            }
+                            else
+                            {
+                                OutputTextBlock.Text = string.Empty;
+                                MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
                         }
 
                         // Update the seatCount in the licenseFileData tuple.
@@ -1514,10 +1550,17 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget that you are using at least 1 " +
-                                        $"INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    return;
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget that you are using at least 1 " +
+                                            "INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        return;
+                                    }
                                 }
 
                                 // Update the seatCount in the licenseFileData tuple.
@@ -1596,9 +1639,16 @@ namespace Options.File.Checker.WPF
                                 // Error out if the seat count is negative.
                                 if (seatCount < 0)
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    return;
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        return;
+                                    }
                                 }
 
                                 // Update the seatCount in the licenseFileData tuple.
@@ -1641,9 +1691,16 @@ namespace Options.File.Checker.WPF
                                         // Error out if the seat count is negative.
                                         if (seatCount < 0)
                                         {
-                                            MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            OutputTextBlock.Text = string.Empty;
-                                            return;
+                                            if (licenseOffering == "lo=CN")
+                                            {
+                                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                            }
+                                            else
+                                            {
+                                                MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                OutputTextBlock.Text = string.Empty;
+                                                return;
+                                            }
                                         }
 
                                         // Update the seatCount in the licenseFileData tuple.
@@ -1737,9 +1794,16 @@ namespace Options.File.Checker.WPF
 
                                 if (seatCount < 0)
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                    return;
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        return;
+                                    }
                                 }
 
                                 // Update the seatCount in the licenseFileData tuple.
@@ -1781,9 +1845,16 @@ namespace Options.File.Checker.WPF
                                         // Error out if the seat count is negative.
                                         if (seatCount < 0)
                                         {
-                                            OutputTextBlock.Text = string.Empty;
-                                            MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                                            return;
+                                            if (licenseOffering == "lo=CN")
+                                            {
+                                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                            }
+                                            else
+                                            {
+                                                OutputTextBlock.Text = string.Empty;
+                                                MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                return;
+                                            }
                                         }
 
                                         // Update the seatCount in the licenseFileData tuple.
@@ -1851,7 +1922,7 @@ namespace Options.File.Checker.WPF
                     string serverHostID = lineParts[2];
 
                     // Set this now since it'll be used twice.
-                    string unspecifiedServerPortMessage = "Warning: You have not specified a port number for the SERVER. " +
+                    string unspecifiedServerPortMessage = "\r\nWarning: You have not specified a port number for the SERVER. " +
                             "This is acceptable if you are defining it with lmadmin or if you're okay with " +
                             "FlexLM picking the port number for you. However, if you did not specify the Host ID and instead put the port number in its place, " +
                             "the specified port number will not be used. The SERVER port number will be randomly choosen each time you restart it.\r\n";
@@ -2394,16 +2465,16 @@ namespace Options.File.Checker.WPF
                     {
                         if (daemonProperty2.Contains("port"))
                         {
-                            OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}. DAEMON port: {daemonProperty2Edited}.\r\n";
+                            OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}. DAEMON port: {daemonProperty2Edited}.\r\n";
                         }
                         else
                         {
-                            OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}.\r\n";
+                            OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}.\r\n";
                         }
                     }
                     else
                     {
-                        OutputTextBlock.Text += $"DAEMON path: {daemonPath}.\r\nDAEMON port: {daemonProperty1Edited}. Options path: {daemonProperty2Edited}.\r\n";
+                        OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nDAEMON port: {daemonProperty1Edited}. Options path: {daemonProperty2Edited}.\r\n";
                     }
                 }
 
@@ -2682,6 +2753,9 @@ namespace Options.File.Checker.WPF
             {
                 OutputTextBlock.Text += "\r\nYour license file contains a Counted Named User license. An options file is likely unnecessary for this license offering.\r\n\r\n";
             }
+            // Don't need to print out too much information.
+            bool overdraftCNWarningHit = false;
+
             foreach (var licenseFileEntry in licenseFileIndex)
             {
                 Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
@@ -2697,7 +2771,29 @@ namespace Options.File.Checker.WPF
                 }
                 else
                 {
-                    OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
+                    if (overdraftCNWarningHit && licenseOffering == "lo=CN")
+                    {
+                        // No need to repeat information we're about to get.
+                    }
+                    else
+                    {
+                        OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
+                    }
+                }
+              
+                if (licenseOffering == "lo=CN" && seatCount < 0)
+                {
+                    if (!overdraftCNWarningHit)
+                    {
+                        OutputTextBlock.Text += $"\r\nWARNING: You have specified more users on license {licenseNumber} for the product {productName} than you have seats for (counting at {seatCount}.)  " +
+                            $"This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
+                            $"access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE.\r\n";
+                        overdraftCNWarningHit = true;
+                    }
+                    else
+                    {
+                        OutputTextBlock.Text += $"\r\nYou have specified more users on license {licenseNumber} for the product {productName} than you have seats for (counting at {seatCount}.)\r\n";
+                    }
                 }
             }
         }
