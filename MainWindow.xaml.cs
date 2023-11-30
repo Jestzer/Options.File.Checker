@@ -110,7 +110,10 @@ namespace Options.File.Checker.WPF
 
                 if (!containsINCREMENT)
                 {
-                    MessageBox.Show("The selected file is either not a license file or is corrupted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    //MessageBox.Show("The selected file is either not a license file or is corrupted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -127,7 +130,9 @@ namespace Options.File.Checker.WPF
                 bool containsCONTRACT_ID = System.IO.File.ReadAllText(selectedFile).Contains("CONTRACT_ID=");
                 if (containsCONTRACT_ID)
                 {
-                    MessageBox.Show("The selected license file is not a MathWorks license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is not a MathWorks license file.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -833,7 +838,6 @@ namespace Options.File.Checker.WPF
                         else
                         {
                             MessageBox.Show($"You have an incorrectly specified the seat count for one of your RESERVE lines.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-
                             OutputTextBlock.Text = string.Empty;
                             return;
                         }

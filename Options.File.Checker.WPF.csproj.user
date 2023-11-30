@@ -10,9 +10,15 @@
     <Compile Update="ChooseLicenseOfferingWindow.xaml.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Update="ErrorWindow.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Page Update="ChooseLicenseOfferingWindow.xaml">
+      <SubType>Designer</SubType>
+    </Page>
+    <Page Update="ErrorWindow.xaml">
       <SubType>Designer</SubType>
     </Page>
     <Page Update="MainWindow.xaml">
