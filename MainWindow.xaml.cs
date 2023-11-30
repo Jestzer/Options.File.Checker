@@ -697,6 +697,13 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("INCLUDE "))
                     {
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
                         includeProductName = lineParts[1];
                         if (includeProductName.Contains('"'))
                         {
@@ -808,6 +815,13 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("RESERVE "))
                     {
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
                         reserveSeatsString = lineParts[1];
                         reserveProductName = lineParts[2];
 
@@ -955,6 +969,13 @@ namespace Options.File.Checker.WPF
                     {
                         excludeLinesAreUsed = true;
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
                         excludeProductName = lineParts[1];
                         if (excludeProductName.Contains('"'))
                         {
