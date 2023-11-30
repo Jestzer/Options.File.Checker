@@ -10,11 +10,11 @@ none
 false
 TRACE;DEBUG;NET;NET7_0;NETCOREAPP
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\App.xaml
-2-756038155
+3-1833488885
 1-1606303973
-5-615155977
+61374156306
 1981723223080
-ChooseLicenseOfferingWindow.xaml;MainWindow.xaml;
+ChooseLicenseOfferingWindow.xaml;ErrorWindow.xaml;MainWindow.xaml;
 
 False
 

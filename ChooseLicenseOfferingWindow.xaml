@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:Options.File.Checker.WPF"
         mc:Ignorable="d"
         Title="ChooseLicenseOfferingWindow" Height="450" Width="550"
-    WindowStyle="None" AllowsTransparency="True" WindowStartupLocation="CenterScreen">
+    WindowStyle="None" AllowsTransparency="True" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Border BorderBrush="Gray" BorderThickness="1">
     <Grid>
         <Grid.RowDefinitions>
