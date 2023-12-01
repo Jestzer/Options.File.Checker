@@ -6,7 +6,7 @@
   "compilationOptions": {},
   "targets": {
     ".NETCoreApp,Version=v7.0": {
-      "Options.File.Checker.WPF/0.1.1": {
+      "Options.File.Checker.WPF/0.1.2": {
         "runtime": {
           "Options.File.Checker.WPF.dll": {}
         }
@@ -14,7 +14,7 @@
     }
   },
   "libraries": {
-    "Options.File.Checker.WPF/0.1.1": {
+    "Options.File.Checker.WPF/0.1.2": {
       "type": "project",
       "serviceable": false,
       "sha512": ""
