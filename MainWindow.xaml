@@ -106,7 +106,8 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Label x:Name="VersionLabel" Content="v0.1.2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="54" Foreground="White" Height="27"/>
+                <Label x:Name="VLabel" Content="v" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="17" Foreground="White" Height="27" Margin="0,0,0,0"/>
+                <Label x:Name="VersionLabel" Content="{Binding PackageVersion}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="54" Foreground="White" Height="27" Margin="10,0,0,0"/>
             </Grid>
         </Grid>
     </Border>

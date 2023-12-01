@@ -44,12 +44,32 @@ namespace Options.File.Checker.WPF
         {
             InitializeComponent();
 
+            // For printing the version number.
+            DataContext = this;
+
             // Check if debug mode is enabled.
             debug = ((App)Application.Current).Debug;
 
             // Load path to previously opened files.
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
+        }
+
+        public string PackageVersion
+        {
+            get
+            {
+                var assembly = System.Reflection.Assembly.GetExecutingAssembly();
+                if (assembly != null)
+                {
+                    var version = assembly.GetName().Version;
+                    if (version != null)
+                    {
+                        return version.ToString();
+                    }
+                }
+                return "Error getting version number";
+            }
         }
 
         // The efforts one must go through to make this UI not look horrible is truly incredible.
