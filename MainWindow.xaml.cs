@@ -3,14 +3,10 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Interop;
-using System.Windows.Media;
 
 namespace Options.File.Checker.WPF
 {
@@ -51,7 +47,7 @@ namespace Options.File.Checker.WPF
             // Check if debug mode is enabled.
             debug = ((App)Application.Current).Debug;
 
-            // Load previously opened files.
+            // Load path to previously opened files.
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
