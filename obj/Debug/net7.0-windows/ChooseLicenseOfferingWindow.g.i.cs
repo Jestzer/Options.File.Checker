@@ -237,7 +237,7 @@ namespace Options.File.Checker.WPF {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Options.File.Checker.WPF;V0.1.2.0;component/chooselicenseofferingwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Options.File.Checker.WPF;component/chooselicenseofferingwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\ChooseLicenseOfferingWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
