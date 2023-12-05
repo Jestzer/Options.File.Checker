@@ -7,7 +7,6 @@ Notes for user:
 - I _think_ it's possible in the options file to specify new entries (ex: INCLUDE MATLAB USER rob) without creating a line break. This program does not support this type of formatting and probably never will.
 
 To do:
-- Add version number to UI.
 - Make icon look nicer.
 - Remove case sensitivity for key=
 - Redo logic for getting the license number.
