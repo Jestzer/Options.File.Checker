@@ -2375,7 +2375,9 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 OutputTextBlock.Text = string.Empty;
-                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
+                                errorWindow.ShowDialog();
                                 analysisOfServerAndDaemonLinesFailed = true;
                                 return;
                             }
@@ -2393,6 +2395,7 @@ namespace Options.File.Checker.WPF
 
                                     if (optionsFileHasBeenSpecified)
                                     {
+                                        OutputTextBlock.Text = string.Empty;
                                         MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
@@ -2459,7 +2462,9 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
+                                    errorWindow.ShowDialog();
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
                                 }
@@ -2542,7 +2547,10 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                OutputTextBlock.Text = string.Empty;
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
+                                errorWindow.ShowDialog();
                                 analysisOfServerAndDaemonLinesFailed = true;
                                 return;
                             }
@@ -2583,7 +2591,9 @@ namespace Options.File.Checker.WPF
                                 else
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show(generalDaemonOrPortErrorMessage, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
+                                    errorWindow.ShowDialog();
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
                                 }
@@ -2597,7 +2607,9 @@ namespace Options.File.Checker.WPF
                                 if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
+                                    errorWindow.ShowDialog();
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
 
