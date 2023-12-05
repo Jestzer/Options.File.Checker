@@ -270,7 +270,7 @@ namespace Options.File.Checker.WPF
                 }
 
                 // Make sure you actually picked an options file.
-                if (!filteredOptionsFileContents.Contains("INCLUDE") && !filteredOptionsFileContents.Contains("EXCLUDE") && !filteredOptionsFileContents.Contains("RESERVE") 
+                if (!filteredOptionsFileContents.Contains("INCLUDE") && !filteredOptionsFileContents.Contains("EXCLUDE") && !filteredOptionsFileContents.Contains("RESERVE")
                     && !filteredOptionsFileContents.Contains("MAX") && !filteredOptionsFileContents.Contains("LINGER") && !filteredOptionsFileContents.Contains("LOG") &&
                     !filteredOptionsFileContents.Contains("TIMEOUT"))
                 {
@@ -2613,14 +2613,16 @@ namespace Options.File.Checker.WPF
                     // Print daemon information appropriately.
                     string daemonProperty1Edited = Regex.Replace(daemonProperty1, "port=", "", RegexOptions.IgnoreCase);
                     daemonProperty1Edited = Regex.Replace(daemonProperty1Edited, "options=", "", RegexOptions.IgnoreCase);
+                    daemonProperty1Edited = Regex.Replace(daemonProperty1Edited, "\"", "", RegexOptions.IgnoreCase);
                     string daemonProperty2Edited = Regex.Replace(daemonProperty2, "port=", "", RegexOptions.IgnoreCase);
                     daemonProperty2Edited = Regex.Replace(daemonProperty2Edited, "options=", "", RegexOptions.IgnoreCase);
+                    daemonProperty2Edited = Regex.Replace(daemonProperty2Edited, "\"", "", RegexOptions.IgnoreCase);
 
-                    if (daemonProperty1.Contains("options"))
+                    if (daemonProperty1.IndexOf("options", StringComparison.OrdinalIgnoreCase) >= 0)
                     {
-                        if (daemonProperty2.Contains("port"))
+                        if (daemonProperty2.IndexOf("port", StringComparison.OrdinalIgnoreCase) >= 0)
                         {
-                            OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}. DAEMON port: {daemonProperty2Edited}.\r\n";
+                            OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}.\r\nDAEMON port: {daemonProperty2Edited}.\r\n";
                         }
                         else
                         {
