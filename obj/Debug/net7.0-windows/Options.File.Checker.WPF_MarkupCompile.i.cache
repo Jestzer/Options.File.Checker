@@ -4,17 +4,17 @@
 winexe
 C#
 .cs
-C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\
+C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\
 Options.File.Checker.WPF
 none
 false
 TRACE;DEBUG;NET;NET7_0;NETCOREAPP
-C:\Users\jbuonopa\My Programs\options.file.checker.c\App.xaml
+C:\Users\toaja\My_Programs_Local\options.file.checker.c\App.xaml
 3-1833488885
 1-1606303973
 8-281531726
 1981723223080
 ChooseLicenseOfferingWindow.xaml;ErrorWindow.xaml;MainWindow.xaml;
 
-True
+False
 
