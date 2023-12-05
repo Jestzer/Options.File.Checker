@@ -2624,8 +2624,10 @@ namespace Options.File.Checker.WPF
 
                 if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
                 {
-                    MessageBox.Show("You have USE_SERVER in your license file. This should be in the end user's network.lic file, " +
-                        "not the Network License Manager's license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it uses \"USE_SERVER\". " +
+                        "This should be in the end user's network.lic file, not the Network License Manager's license file.";
+                    errorWindow.ShowDialog();
                     analysisOfServerAndDaemonLinesFailed = true;
                     return;
                 }
@@ -2639,7 +2641,9 @@ namespace Options.File.Checker.WPF
             if (serverLineCount == 2)
             {
                 OutputTextBlock.Text = string.Empty;
-                MessageBox.Show("Your license file has an invalid number of SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorWindow errorWindow = new();
+                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it has an invalid number of SERVER lines. Only 1 or 3 are accepted.";
+                errorWindow.ShowDialog();
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
             }
@@ -2657,7 +2661,9 @@ namespace Options.File.Checker.WPF
             if ((!daemonProperty1.Contains("options=", StringComparison.OrdinalIgnoreCase)) && (!daemonProperty2.Contains("options=", StringComparison.OrdinalIgnoreCase)))
             {
                 OutputTextBlock.Text = string.Empty;
-                MessageBox.Show("Your license file does not specify an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorWindow errorWindow = new();
+                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it does not specify an options file.";
+                errorWindow.ShowDialog();
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
             }
@@ -2688,8 +2694,10 @@ namespace Options.File.Checker.WPF
                 if (!foundMatchingProduct)
                 {
                     OutputTextBlock.Text = string.Empty;
-                    MessageBox.Show($"The following product is not in your license file: \"{includeProductName}\". Product names are case-sensitive " +
-                        $"and must match the product name in the license file, which can be found after the word INCREMENT.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a product, {includeProductName}, but this product is not in your license file. " +
+                        $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.";
+                    errorWindow.ShowDialog();
                     analysisOfOptionsFileProductsFailed = true;
                     return;
                 }
@@ -2740,9 +2748,10 @@ namespace Options.File.Checker.WPF
                         else
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"You have an INCLUDE line that specifies a product key, {includeProductKey}, " +
-                                $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, " +
-                                $"{productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
+                                $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, {productName}.";
+                            errorWindow.ShowDialog();
                             analysisOfOptionsFileProductsFailed = true;
                             return;
                         }
@@ -2764,8 +2773,10 @@ namespace Options.File.Checker.WPF
                     else
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have an INCLUDE line that specifies a product key, {includeProductKey}, " +
-                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
+                            "that does not exist in the specified license file.";
+                        errorWindow.ShowDialog();
                         analysisOfOptionsFileProductsFailed = true;
                         return;
                     }
