@@ -618,7 +618,7 @@ namespace Options.File.Checker.WPF
                             }
                             if (!matchingTrialFound)
                             {
-                                OutputTextBlock.Text = string.Empty;                     
+                                OutputTextBlock.Text = string.Empty;
                                 ErrorWindow errorWindow = new();
                                 errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it has at least 1 trial license, {licenseNumber}, but none of the " +
                                     $"trial numbers you specified in this program's settings match {licenseNumber}. Please enter any trial license numbers you're using on the startup screen.";
@@ -666,9 +666,10 @@ namespace Options.File.Checker.WPF
                         if (seatCount < 1)
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"{productName} on license {licenseNumber} is reading with a seat count of zero from just the license file. " +
-                                $"If you're using a trial license, make sure you selecting the correct License Offering. " +
-                                $"Otherwise, your license file is corrupt.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero. " +
+                                "If you're using a trial license, make sure you selecting the correct License Offering. Otherwise, your license file is corrupt.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
@@ -676,31 +677,39 @@ namespace Options.File.Checker.WPF
                         if (string.IsNullOrWhiteSpace(productName))
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show("A product name could not be detected correctly in your license file. It is being detected as blank.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product name is being detected as blank on {licenseNumber}.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
                         if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"An invalid license number was detected in your license file for {productName}. " +
-                                $"The invalid license number detected was \"{licenseNumber}\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: An invalid license number, {licenseNumber}, " +
+                                $"is detected for {productName}.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
                         if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"A license offering could not be detected in your license file for {productName} " +
-                                $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A license offering could not be detected for {productName} " +
+                                $"on license number {licenseNumber}.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
                         if (string.IsNullOrWhiteSpace(productKey))
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"A product key could not be detected in your license file for {productName} " +
-                                $"on license number {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product key could not be detected for {productName} " +
+                                $"on license number {licenseNumber}.";
+                            errorWindow.ShowDialog();
                             return;
                         }
                         if (debug)
@@ -798,8 +807,10 @@ namespace Options.File.Checker.WPF
                                 string[] colonParts = includeProductName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    MessageBox.Show($"One of your INCLUDE lines has a stray colon: {includeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your INCLUDE lines has a stray colon for {includeProductName}.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
                                 includeProductName = colonParts[0];
@@ -825,8 +836,10 @@ namespace Options.File.Checker.WPF
                             string[] colonParts = includeProductName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                MessageBox.Show($"One of your INCLUDE lines has a stray colon: {includeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 OutputTextBlock.Text = string.Empty;
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your INCLUDE lines has a stray colon for {includeProductName}.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                             includeProductName = colonParts[0];
@@ -893,8 +906,10 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            MessageBox.Show($"You have an incorrectly specified the seat count for one of your RESERVE lines.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                             OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly specified the seat count for one of your RESERVE lines.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
@@ -930,8 +945,10 @@ namespace Options.File.Checker.WPF
                                 string[] colonParts = reserveProductName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    MessageBox.Show($"One of your RESERVE lines has a stray colon: {reserveProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your RESERVE lines has a stray colon for {reserveProductName}.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
                                 reserveProductName = colonParts[0];
@@ -956,8 +973,10 @@ namespace Options.File.Checker.WPF
                             string[] colonParts = reserveProductName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                MessageBox.Show($"One of your RESERVE lines has a stray colon: {reserveProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 OutputTextBlock.Text = string.Empty;
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your RESERVE lines has a stray colon for {reserveProductName}.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                             reserveProductName = colonParts[0];
@@ -1069,8 +1088,10 @@ namespace Options.File.Checker.WPF
                                 string[] colonParts = excludeProductName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    MessageBox.Show($"One of your EXCLUDE lines has a stray colon: {excludeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                     OutputTextBlock.Text = string.Empty;
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your EXCLUDE lines has a stray colon for {excludeProductName}.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
                                 excludeProductName = colonParts[0];
@@ -1096,8 +1117,10 @@ namespace Options.File.Checker.WPF
                             string[] colonParts = excludeProductName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                MessageBox.Show($"One of your EXCLUDE lines has a stray colon: {excludeProductName}...", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                 OutputTextBlock.Text = string.Empty;
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your EXCLUDE lines has a stray colon for {excludeProductName}.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                             excludeProductName = colonParts[0];
@@ -1224,7 +1247,12 @@ namespace Options.File.Checker.WPF
                 CalculateRemainingSeats();
             }
             catch (Exception ex)
-            { MessageBox.Show("An error occurred: " + ex.Message, "Error", MessageBoxButton.OK, MessageBoxImage.Error); }
+            {
+                OutputTextBlock.Text = string.Empty;
+                ErrorWindow errorWindow = new();
+                errorWindow.ErrorTextBlock.Text = "Boo hoo, you broke something. Here's the program's automated error message: " + ex.Message;
+                errorWindow.ShowDialog();
+            }
             return;
         }
 
@@ -1269,7 +1297,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified a USER to be able to use {productName} " +
+                                        $"for license {licenseNumber}, but you did not define the USER.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -1286,7 +1317,10 @@ namespace Options.File.Checker.WPF
                                     else
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                            $"for license {licenseNumber}.";
+                                        errorWindow.ShowDialog();
                                         return;
                                     }
                                 }
@@ -1310,7 +1344,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
+                                        $"for license {licenseNumber}, but you did not specify which GROUP.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -1339,7 +1376,10 @@ namespace Options.File.Checker.WPF
                                             else
                                             {
                                                 OutputTextBlock.Text = string.Empty;
-                                                MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                ErrorWindow errorWindow = new();
+                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                                    $"for license {licenseNumber}.";
+                                                errorWindow.ShowDialog();
                                                 return;
                                             }
                                         }
@@ -1443,7 +1483,9 @@ namespace Options.File.Checker.WPF
                                     else
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.";
+                                        errorWindow.ShowDialog();
                                         return;
                                     }
                                 }
@@ -1495,8 +1537,10 @@ namespace Options.File.Checker.WPF
                                             }
                                             else
                                             {
-                                                MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                                 OutputTextBlock.Text = string.Empty;
+                                                ErrorWindow errorWindow = new();
+                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.";
+                                                errorWindow.ShowDialog();
                                                 return;
                                             }
                                         }
@@ -1523,7 +1567,9 @@ namespace Options.File.Checker.WPF
                 if (allSeatCountsZero && seatCount == 0)
                 {
                     OutputTextBlock.Text = string.Empty;
-                    MessageBox.Show($"You have specified too many users to be able to use {includeProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {includeProductName}.";
+                    errorWindow.ShowDialog();
                     return;
                 }
             }
@@ -1570,7 +1616,10 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 OutputTextBlock.Text = string.Empty;
-                                MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget about your INCLUDEALL line(s).", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}. " +
+                                    $"Don't forget that you are using at least one INCLUDEALL line.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                         }
@@ -1660,12 +1709,14 @@ namespace Options.File.Checker.WPF
                 }
                 else if (includeAllClientType == "HOST_GROUP" || includeAllClientType == "HOST" || includeAllClientType == "DISPLAY" || includeAllClientType == "PROJECT" || includeAllClientType == "INTERNET")
                 {
-                    // There is no math that can be done because you've specified an client type that can be shared between any number of users.
+                    // There is no math that can be done because you've specified a client type that can be shared between any number of users.
                 }
                 else
                 {
                     OutputTextBlock.Text = string.Empty;
-                    MessageBox.Show($"You specified an invalid client type for an INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you specified an invalid client type for an INCLUDEALL line.";
+                    errorWindow.ShowDialog();
                     return;
                 }
             }
@@ -1710,7 +1761,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName} for license {licenseNumber}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName} " +
+                                        $"for license {licenseNumber}, but you did not define the USER.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -1727,7 +1781,10 @@ namespace Options.File.Checker.WPF
                                     else
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                            $"for license {licenseNumber}.";
+                                        errorWindow.ShowDialog();
                                         return;
                                     }
                                 }
@@ -1750,7 +1807,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName} for license {licenseNumber}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName} " +
+                                        $"for license {licenseNumber}, but you did not specify which GROUP.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -1778,8 +1838,11 @@ namespace Options.File.Checker.WPF
                                             }
                                             else
                                             {
-                                                MessageBox.Show($"You have specified too many users to be able to use {productName} for license {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                                                 OutputTextBlock.Text = string.Empty;
+                                                ErrorWindow errorWindow = new();
+                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                                    $"for license {licenseNumber}.";
+                                                errorWindow.ShowDialog();
                                                 return;
                                             }
                                         }
@@ -2691,8 +2754,10 @@ namespace Options.File.Checker.WPF
                     if (string.IsNullOrEmpty(includeProductKey) == true)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
-                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
+                            "that does not exist in the specified license file.";
+                        errorWindow.ShowDialog();
                         analysisOfOptionsFileProductsFailed = true;
                         return;
                     }
@@ -2809,16 +2874,20 @@ namespace Options.File.Checker.WPF
                     if (string.IsNullOrEmpty(reserveProductKey) == true)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have a RESERVE line that specifies a license number, {reserveLicenseNumber}, " +
-                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have a RESERVE line that specifies a license number, {reserveLicenseNumber}, " +
+                            "that does not exist in the specified license file.";
+                        errorWindow.ShowDialog();
                         analysisOfOptionsFileProductsFailed = true;
                         return;
                     }
                     else
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have a RESERVE line that specifies a product key, {reserveProductKey}, " +
-                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have a RESERVE line that specifies a product key, {reserveProductKey}, " +
+                            "that does not exist in the specified license file.";
+                        errorWindow.ShowDialog();
                         analysisOfOptionsFileProductsFailed = true;
                         return;
                     }
