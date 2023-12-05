@@ -269,6 +269,18 @@ namespace Options.File.Checker.WPF
                     return;
                 }
 
+                // Make sure you actually picked an options file.
+                if (!filteredOptionsFileContents.Contains("INCLUDE") && !filteredOptionsFileContents.Contains("EXCLUDE") && !filteredOptionsFileContents.Contains("RESERVE") 
+                    && !filteredOptionsFileContents.Contains("MAX") && !filteredOptionsFileContents.Contains("LINGER") && !filteredOptionsFileContents.Contains("LOG") &&
+                    !filteredOptionsFileContents.Contains("TIMEOUT"))
+                {
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: It is likely not an options file.";
+                    errorWindow.ShowDialog();
+                    OptionsFileLocationTextBox.Text = string.Empty;
+                    return;
+                }
+
                 bool containsINCREMENT = System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("INCREMENT");
                 if (!containsINCREMENT)
                 {
@@ -2599,7 +2611,6 @@ namespace Options.File.Checker.WPF
                     }
 
                     // Print daemon information appropriately.
-
                     string daemonProperty1Edited = Regex.Replace(daemonProperty1, "port=", "", RegexOptions.IgnoreCase);
                     daemonProperty1Edited = Regex.Replace(daemonProperty1Edited, "options=", "", RegexOptions.IgnoreCase);
                     string daemonProperty2Edited = Regex.Replace(daemonProperty2, "port=", "", RegexOptions.IgnoreCase);
