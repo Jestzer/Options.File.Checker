@@ -126,7 +126,6 @@ namespace Options.File.Checker.WPF
 
                 if (!containsINCREMENT)
                 {
-                    //MessageBox.Show("The selected file is either not a license file or is corrupted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
                     ErrorWindow errorWindow = new();
                     errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
                     errorWindow.ShowDialog();
@@ -137,8 +136,10 @@ namespace Options.File.Checker.WPF
                 string fileContents = System.IO.File.ReadAllText(selectedFile);
                 if (fileContents.Contains("lo=IN") || fileContents.Contains("lo=DC") || fileContents.Contains("lo=CIN"))
                 {
-                    MessageBox.Show("The file you've selected contains an Individual or Designated Computer license. " +
-                        "These License Offerings cannot use an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                        "which cannot use an options file.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -157,7 +158,9 @@ namespace Options.File.Checker.WPF
                 bool missingDaemon = System.IO.File.ReadAllText(selectedFile).Contains("DAEMON");
                 if (!missingDaemon && !missingServer)
                 {
-                    MessageBox.Show("The selected license file is missing the SERVER and/or DAEMON line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is missing the SERVER and/or DAEMON line.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -181,7 +184,9 @@ namespace Options.File.Checker.WPF
 
                 if (string.IsNullOrWhiteSpace(fileContent))
                 {
-                    MessageBox.Show("The selected file is either empty or only contains white space.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either empty or only contains white space.";
+                    errorWindow.ShowDialog();
                     OptionsFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -219,7 +224,6 @@ namespace Options.File.Checker.WPF
                 System.IO.File.WriteAllText(filePath, OutputTextBlock.Text);
             }
         }
-
         private void TrialWindowButton_Click(object sender, RoutedEventArgs e)
         {
             ChooseLicenseOfferingWindow chooseLicenseOfferingWindow = new ChooseLicenseOfferingWindow();
@@ -258,7 +262,9 @@ namespace Options.File.Checker.WPF
                 // Error time again, in case you decided to be sneaky and close the program or manually enter the filepath.
                 if (string.IsNullOrWhiteSpace(filteredOptionsFileContents))
                 {
-                    MessageBox.Show("The selected options file is either empty or only contains white space.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either empty or only contains white space.";
+                    errorWindow.ShowDialog();
                     OptionsFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -266,15 +272,19 @@ namespace Options.File.Checker.WPF
                 bool containsINCREMENT = System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("INCREMENT");
                 if (!containsINCREMENT)
                 {
-                    MessageBox.Show("The selected file is either not a license file or is corrupted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
                 if (filteredLicenseFileContents.Contains("lo=IN") || filteredLicenseFileContents.Contains("lo=DC") || filteredLicenseFileContents.Contains("lo=CIN"))
                 {
-                    MessageBox.Show("The file you've selected likely contains an Individual or Designated Computer license, which cannot use " +
-                        "an options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                        "which cannot use an options file.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -282,7 +292,9 @@ namespace Options.File.Checker.WPF
                 bool containsCONTRACT_ID = System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("CONTRACT_ID=");
                 if (containsCONTRACT_ID)
                 {
-                    MessageBox.Show("The selected license file is not a MathWorks license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is not a MathWorks license file.";
+                    errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -298,7 +310,6 @@ namespace Options.File.Checker.WPF
                 }
 
                 // Get the things we care about from the license file so that we can go through the options file appropriately.
-
                 string productName = string.Empty;
                 int seatCount = 0;
 
@@ -340,7 +351,9 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                MessageBox.Show("Invalid license file format. Product key is missing for at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product key is missing from {productName}.";
+                                errorWindow.ShowDialog();
                                 LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
@@ -366,7 +379,9 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            MessageBox.Show("Invalid license file format. License Offering is missing for at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The License Offering is missing for {productName}.";
+                            errorWindow.ShowDialog();
                             LicenseFileLocationTextBox.Text = string.Empty;
                             return;
                         }
@@ -408,7 +423,9 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            MessageBox.Show("Invalid license file format. License Number is missing from at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The License Number is missing from {productName}.";
+                            errorWindow.ShowDialog();
                             LicenseFileLocationTextBox.Text = string.Empty;
                             return;
                         }
@@ -450,10 +467,12 @@ namespace Options.File.Checker.WPF
                                         else
                                         {
                                             OutputTextBlock.Text = string.Empty;
-                                            MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                            ErrorWindow errorWindow = new();
+                                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
+                                                $"It is be read as {licenseNumber} for the product {productName}.";
+                                            errorWindow.ShowDialog();
                                             return;
                                         }
-
                                     }
                                 }
                                 // If you're not using a trial.
@@ -492,7 +511,10 @@ namespace Options.File.Checker.WPF
                                             else
                                             {
                                                 OutputTextBlock.Text = string.Empty;
-                                                MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                ErrorWindow errorWindow = new();
+                                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
+                                                    $"It is be read as {licenseNumber} for the product {productName}.";
+                                                errorWindow.ShowDialog();
                                                 return;
                                             }
                                         }
@@ -501,7 +523,10 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                MessageBox.Show("Invalid license file format. License Number is missing from at least 1 product.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
+                                    $"It is be read as {licenseNumber} for the product {productName}.";
+                                errorWindow.ShowDialog();
                                 LicenseFileLocationTextBox.Text = string.Empty;
                                 return;
                             }
@@ -522,7 +547,10 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 OutputTextBlock.Text = string.Empty;
-                                MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
+                                    $"It is be read as {licenseNumber} for the product {productName}.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                         }
@@ -541,7 +569,10 @@ namespace Options.File.Checker.WPF
                             else
                             {
                                 OutputTextBlock.Text = string.Empty;
-                                MessageBox.Show($"Your license number could not be correctly processed. It is be read as {licenseNumber} for the product {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
+                                    $"It is be read as {licenseNumber} for the product {productName}.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                         }
@@ -562,8 +593,10 @@ namespace Options.File.Checker.WPF
                         if (expirationDate < currentDate)
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"The product {productName} on license number {licenseNumber} expired on {productExpirationDate}. " +
-                                "Please update your license file appropriately before proceeding.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product {productName} on license number " +
+                                $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
@@ -585,9 +618,11 @@ namespace Options.File.Checker.WPF
                             }
                             if (!matchingTrialFound)
                             {
-                                OutputTextBlock.Text = string.Empty;
-                                MessageBox.Show($"Your license file has at least 1 trial license, {licenseNumber}, but none of the trial numbers you specified in this program's settings match the trial " +
-                                    "license number(s) found in the license. Please enter any trial license numbers you're using on the startup screen.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                OutputTextBlock.Text = string.Empty;                     
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it has at least 1 trial license, {licenseNumber}, but none of the " +
+                                    $"trial numbers you specified in this program's settings match {licenseNumber}. Please enter any trial license numbers you're using on the startup screen.";
+                                errorWindow.ShowDialog();
                                 return;
                             }
                         }
@@ -611,15 +646,20 @@ namespace Options.File.Checker.WPF
                         if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show($"Your license file contains a Designated Computer license ({licenseNumber}) that is incorrectly labeled as a Concurrent license.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
+                                "that is incorrectly labeled as a Concurrent license.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
                         if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
                         {
                             OutputTextBlock.Text = string.Empty;
-                            MessageBox.Show("The file you've selected likely contains an Individual or Designated Computer license, which cannot use " +
-                                $"an options file. The license number is question is {licenseNumber}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                                $"which cannot use an options file. The license number is question is {licenseNumber}.";
+                            errorWindow.ShowDialog();
                             return;
                         }
 
@@ -2821,7 +2861,7 @@ namespace Options.File.Checker.WPF
                         OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
                     }
                 }
-              
+
                 if (licenseOffering == "lo=CN" && seatCount < 0)
                 {
                     if (!overdraftCNWarningHit)
