@@ -8,82 +8,88 @@
         Title="ChooseLicenseOfferingWindow" Height="450" Width="550"
     WindowStyle="None" AllowsTransparency="True" WindowStartupLocation="CenterScreen" ResizeMode="NoResize">
     <Border BorderBrush="Gray" BorderThickness="1">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="30"/>
-            <RowDefinition Height="*"/>
-        </Grid.RowDefinitions>
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="30"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
 
-        <!-- Custom title bar -->
-        <Border Background="Gray" MouseLeftButtonDown="Border_MouseLeftButtonDown">
-            <DockPanel>
-                <Button Content="✕" DockPanel.Dock="Right" Click="CloseButton_Click" Width="45" Background="#FFD80000" Foreground="White" FontWeight="Bold" FontFamily="Cascadia Mono" />
-                <Button Content="⃞" DockPanel.Dock="Right" Click="MaximizeButton_Click" Width="45" Background="Gray" Foreground="White" FontFamily="Arial" IsEnabled="False" />
-                <Button Content="—" DockPanel.Dock="Right" Click="MinimizeButton_Click" Width="45" Background="Gray" Foreground="White" FontFamily="Arial" FontWeight="Bold" FontSize="10" />
-                <Label Content="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=Title}" Foreground="White" VerticalAlignment="Center" />
-            </DockPanel>
-        </Border>
-        <Grid Background="#FF2D2B2B" Grid.Row="1">
-            <Button x:Name="TrialSaveButton" Content="Save" HorizontalAlignment="Left" Margin="146,375,0,0" VerticalAlignment="Top" Click="TrialSaveButton_Click" Width="61" Foreground="White">
-                <Button.Template>
-                    <ControlTemplate TargetType="{x:Type Button}">
-                        <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="Gray" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-            <Label x:Name="TrialNumbersLabel" Content="Trial License Number(s)" HorizontalAlignment="Left" Margin="16,12,0,0" VerticalAlignment="Top" Width="135" Foreground="White"/>
-            <Button x:Name="TrialCancelButton" Content="Cancel" HorizontalAlignment="Left" Margin="335,375,0,0" VerticalAlignment="Top" Click="TrialCancelButton_Click" Width="60" Foreground="White">
-                <Button.Template>
-                    <ControlTemplate TargetType="{x:Type Button}">
-                        <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
-                            <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                        </Border>
-                        <ControlTemplate.Triggers>
-                            <Trigger Property="IsMouseOver" Value="True">
-                                <Setter TargetName="border" Property="Background" Value="Gray" />
-                            </Trigger>
-                        </ControlTemplate.Triggers>
-                    </ControlTemplate>
-                </Button.Template>
-            </Button>
-            <GroupBox x:Name="TrialGroupBox1" Header="1" Margin="16,43,30,318" Foreground="White"/>
-            <StackPanel>
-                <TextBox x:Name="TrialNumberTextBox1" HorizontalAlignment="Left" Margin="24,69,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-                <RadioButton x:Name="TrialConcurrentButton1" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton1" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
-            </StackPanel>
-            <GroupBox x:Name="TrialGroupBox2" Header="2" Margin="16,103,30,258" Foreground="White"/>
-            <StackPanel>
-                <TextBox x:Name="TrialNumberTextBox2" HorizontalAlignment="Left" Margin="24,129,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-                <RadioButton x:Name="TrialConcurrentButton2" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton2" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
-            </StackPanel>
-            <GroupBox x:Name="TrialGroupBox3" Header="3" Margin="16,163,30,198" Foreground="White"/>
-            <StackPanel>
-                <TextBox x:Name="TrialNumberTextBox3" HorizontalAlignment="Left" Margin="24,189,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-                <RadioButton x:Name="TrialConcurrentButton3" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton3" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
-            </StackPanel>
-            <GroupBox x:Name="TrialGroupBox4" Header="4" Margin="16,223,30,138" Foreground="White"/>
-            <StackPanel>
-                <TextBox x:Name="TrialNumberTextBox4" HorizontalAlignment="Left" Margin="24,249,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-                <RadioButton x:Name="TrialConcurrentButton4" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton4" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
-            </StackPanel>
-            <GroupBox x:Name="TrialGroupBox5" Header="5" Margin="16,283,30,78" Foreground="White"/>
-            <StackPanel>
-                <TextBox x:Name="TrialNumberTextBox5" HorizontalAlignment="Left" Margin="24,309,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
-                <RadioButton x:Name="TrialConcurrentButton5" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
-                <RadioButton x:Name="TrialNNUButton5" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
-            </StackPanel>
+            <!-- Custom title bar -->
+            <Border Background="Gray" MouseLeftButtonDown="Border_MouseLeftButtonDown">
+                <DockPanel>
+                    <Button Content="✕" DockPanel.Dock="Right" Click="CloseButton_Click" Width="45" Background="#FFD80000" Foreground="White" FontWeight="Bold" FontFamily="Cascadia Mono" />
+                    <Button Content="⃞" DockPanel.Dock="Right" Click="MaximizeButton_Click" Width="45" Background="Gray" Foreground="White" FontFamily="Arial" IsEnabled="False" />
+                    <Button Content="—" DockPanel.Dock="Right" Click="MinimizeButton_Click" Width="45" Background="Gray" Foreground="White" FontFamily="Arial" FontWeight="Bold" FontSize="10" />
+                    <Label Content="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}, Path=Title}" Foreground="White" VerticalAlignment="Center" />
+                </DockPanel>
+            </Border>
+            <Grid Background="#FF2D2B2B" Grid.Row="1">
+                <Button x:Name="TrialSaveButton" Content="Save" HorizontalAlignment="Left" Margin="146,375,0,0" VerticalAlignment="Top" Click="TrialSaveButton_Click" Width="61" Foreground="White">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="Gray" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#FFCECECE" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <Label x:Name="TrialNumbersLabel" Content="Trial License Number(s)" HorizontalAlignment="Left" Margin="16,12,0,0" VerticalAlignment="Top" Width="135" Foreground="White"/>
+                <Button x:Name="TrialCancelButton" Content="Cancel" HorizontalAlignment="Left" Margin="335,375,0,0" VerticalAlignment="Top" Click="TrialCancelButton_Click" Width="60" Foreground="White">
+                    <Button.Template>
+                        <ControlTemplate TargetType="{x:Type Button}">
+                            <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
+                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
+                            </Border>
+                            <ControlTemplate.Triggers>
+                                <Trigger Property="IsMouseOver" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="Gray" />
+                                </Trigger>
+                                <Trigger Property="IsPressed" Value="True">
+                                    <Setter TargetName="border" Property="Background" Value="#FFCECECE" />
+                                </Trigger>
+                            </ControlTemplate.Triggers>
+                        </ControlTemplate>
+                    </Button.Template>
+                </Button>
+                <GroupBox x:Name="TrialGroupBox1" Header="1" Margin="16,43,30,318" Foreground="White"/>
+                <StackPanel>
+                    <TextBox x:Name="TrialNumberTextBox1" HorizontalAlignment="Left" Margin="24,69,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                    <RadioButton x:Name="TrialConcurrentButton1" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
+                    <RadioButton x:Name="TrialNNUButton1" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
+                </StackPanel>
+                <GroupBox x:Name="TrialGroupBox2" Header="2" Margin="16,103,30,258" Foreground="White"/>
+                <StackPanel>
+                    <TextBox x:Name="TrialNumberTextBox2" HorizontalAlignment="Left" Margin="24,129,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                    <RadioButton x:Name="TrialConcurrentButton2" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
+                    <RadioButton x:Name="TrialNNUButton2" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
+                </StackPanel>
+                <GroupBox x:Name="TrialGroupBox3" Header="3" Margin="16,163,30,198" Foreground="White"/>
+                <StackPanel>
+                    <TextBox x:Name="TrialNumberTextBox3" HorizontalAlignment="Left" Margin="24,189,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                    <RadioButton x:Name="TrialConcurrentButton3" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
+                    <RadioButton x:Name="TrialNNUButton3" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
+                </StackPanel>
+                <GroupBox x:Name="TrialGroupBox4" Header="4" Margin="16,223,30,138" Foreground="White"/>
+                <StackPanel>
+                    <TextBox x:Name="TrialNumberTextBox4" HorizontalAlignment="Left" Margin="24,249,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                    <RadioButton x:Name="TrialConcurrentButton4" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
+                    <RadioButton x:Name="TrialNNUButton4" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
+                </StackPanel>
+                <GroupBox x:Name="TrialGroupBox5" Header="5" Margin="16,283,30,78" Foreground="White"/>
+                <StackPanel>
+                    <TextBox x:Name="TrialNumberTextBox5" HorizontalAlignment="Left" Margin="24,309,0,0" Text="" VerticalAlignment="Top" Width="330" Background="#FF464646" Foreground="White"/>
+                    <RadioButton x:Name="TrialConcurrentButton5" Content="Concurrent" HorizontalAlignment="Left" Margin="370,-25,0,0" VerticalAlignment="Top" Foreground="White"/>
+                    <RadioButton x:Name="TrialNNUButton5" Content="Network Named User" HorizontalAlignment="Left" Margin="370,-10,0,0" VerticalAlignment="Top" Foreground="White"/>
+                </StackPanel>
+            </Grid>
         </Grid>
-    </Grid>
     </Border>
 </Window>
