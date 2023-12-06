@@ -8,8 +8,6 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 
 To do:
-- Finish new error message UI appearing for all error messages.
-- Remove trial license specification and add logic to figure it out itself using USER_BASED.
 - If a GROUP or HOST_GROUP is used with something such as an INCLUDE line, then check to make sure the GROUP actually exists.
 - Make icon look nicer.
 - Remove case sensitivity for key=
