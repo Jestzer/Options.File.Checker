@@ -344,7 +344,7 @@ namespace Options.File.Checker.WPF
                     return;
                 }
 
-                // Congrats. You passed.
+                // Congrats. You passed. For now.
 
                 // Look for issues with your SERVER or DAEMON lines.
                 AnalyzeServerAndDaemonLine();
@@ -370,7 +370,6 @@ namespace Options.File.Checker.WPF
                         string productKey = lineParts[6];
                         string licenseOffering = "licenseOfferingIsBroken";
                         string licenseNumber = "licenseNumberisBroken";
-                        bool trialLicenseIsUsed = false;
                         int.TryParse(lineParts[5], out seatCount);
                         string rawSeatCount = lineParts[5];
 
@@ -411,10 +410,20 @@ namespace Options.File.Checker.WPF
                             string[] vendorLineParts = vendorLine.Split(':');
                             licenseOffering = vendorLineParts[4];
 
+                            // Uh oh, somebody's using a trial!
                             if (licenseOffering.Contains("lr="))
                             {
-                                // We'll deal with the trial once we get the trial license number.
-                                trialLicenseIsUsed = true;
+                                string possibleUSERGROUPline = filteredLicenseFileLines[lineIndex + 2];
+
+                                if (possibleUSERGROUPline.Contains("USER_BASED="))
+                                {
+                                    licenseOffering = "NNU";
+                                }
+                                else
+                                {
+                                    licenseOffering = "lo=CN";
+                                }
+
                             }
 
                             if (licenseOffering.Contains("ei="))
@@ -623,13 +632,13 @@ namespace Options.File.Checker.WPF
                         }
 
                         // Check the product's expiration date.
-                        // Convert/parse the productExpirationDate string to a DateTime object.
-
+                        // Year 0000 means perpetual.
                         if (productExpirationDate == "01-jan-0000")
                         {
                             productExpirationDate = "01-jan-2999";
                         }
 
+                        // Convert/parse the productExpirationDate string to a DateTime object.
                         DateTime expirationDate = DateTime.ParseExact(productExpirationDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture);
 
                         // Get the current system date.
@@ -643,33 +652,6 @@ namespace Options.File.Checker.WPF
                                 $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
                             errorWindow.ShowDialog();
                             return;
-                        }
-
-                        // Figure out what your license offering is, if you're using a trial.
-                        if (trialLicenseIsUsed)
-                        {
-                            bool matchingTrialFound = false;
-                            for (int i = 1; i <= 5; i++)
-                            {
-                                string? trialNumberSpecified = Properties.Settings.Default[$"TrialNumber{i}"].ToString();
-                                if (licenseNumber == trialNumberSpecified)
-                                {
-                                    matchingTrialFound = true;
-
-                                    string? trialLicenseOfferingSpecified = Properties.Settings.Default[$"TrialLicenseOffering{i}"].ToString();
-                                    licenseOffering = trialLicenseOfferingSpecified ?? "licenseOfferingIsBroken";
-                                    break;
-                                }
-                            }
-                            if (!matchingTrialFound)
-                            {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it has at least 1 trial license, {licenseNumber}, but none of the " +
-                                    $"trial numbers you specified in this program's settings match {licenseNumber}. Please enter any trial license numbers you're using on the startup screen.";
-                                errorWindow.ShowDialog();
-                                return;
-                            }
                         }
 
                         if (licenseOffering.Contains("NNU"))
@@ -1533,7 +1515,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
+                                    "but you did not define the USER.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -1551,7 +1536,7 @@ namespace Options.File.Checker.WPF
                                     {
                                         OutputTextBlock.Text = string.Empty;
                                         ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.";
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
                                         errorWindow.ShowDialog();
                                         return;
                                     }
@@ -1576,7 +1561,9 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -1684,7 +1671,7 @@ namespace Options.File.Checker.WPF
                             {
                                 OutputTextBlock.Text = string.Empty;
                                 ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}. " +
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " +
                                     $"Don't forget that you are using at least one INCLUDEALL line.";
                                 errorWindow.ShowDialog();
                                 return;
@@ -1708,7 +1695,9 @@ namespace Options.File.Checker.WPF
                     if (string.IsNullOrWhiteSpace(includeAllClientSpecified))
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
+                        errorWindow.ShowDialog();
                         return;
                     }
 
@@ -1754,8 +1743,10 @@ namespace Options.File.Checker.WPF
                                     else
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show($"You have specified too many users to be able to use {productName}. Don't forget that you are using at least 1 " +
-                                            "INCLUDEALL line.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " +
+                                            "Don't forget that you are using at least 1 INCLUDEALL line.";
+                                        errorWindow.ShowDialog();
                                         return;
                                     }
                                 }
@@ -1997,7 +1988,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a USER to be able to use {productName}, but you did not define the USER.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: " +
+                                        $"you have specified a USER to be able to use {productName}, but you did not define the USER.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -2012,7 +2006,9 @@ namespace Options.File.Checker.WPF
                                     else
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                        errorWindow.ShowDialog();
                                         return;
                                     }
                                 }
@@ -2035,7 +2031,10 @@ namespace Options.File.Checker.WPF
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show($"You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName}, " +
+                                        $"but you did not specify which GROUP.";
+                                    errorWindow.ShowDialog();
                                     return;
                                 }
 
@@ -2063,7 +2062,9 @@ namespace Options.File.Checker.WPF
                                             else
                                             {
                                                 OutputTextBlock.Text = string.Empty;
-                                                MessageBox.Show($"You have specified too many users to be able to use {productName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                                ErrorWindow errorWindow = new();
+                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                                errorWindow.ShowDialog();
                                                 return;
                                             }
                                         }
@@ -2090,7 +2091,9 @@ namespace Options.File.Checker.WPF
                 if (allSeatCountsZero && seatCount == 0)
                 {
                     OutputTextBlock.Text = string.Empty;
-                    MessageBox.Show($"You have specified too many users to be able to use {reserveProductName}.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {reserveProductName}.";
+                    errorWindow.ShowDialog();
                     return;
                 }
             }
@@ -2122,7 +2125,9 @@ namespace Options.File.Checker.WPF
                     if (productLinesHaveBeenReached)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("Your SERVER line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: your SERVER line(s) are listed after a product.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2155,7 +2160,9 @@ namespace Options.File.Checker.WPF
                     if (serverLineCount > 3)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("Your license file has too many SERVER lines. Only 1 or 3 are accepted.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2168,7 +2175,9 @@ namespace Options.File.Checker.WPF
                     if (productLinesHaveBeenReached)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("Your DAEMON line(s) need to come before your products are listed in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: your DAEMON line is listed after a product.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2178,7 +2187,9 @@ namespace Options.File.Checker.WPF
                     if (daemonLineCount > 1)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You have too many DAEMON lines in your license file. You only need 1, even if you have 3 SERVER lines.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have more than 1 DAEMON line.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2191,7 +2202,9 @@ namespace Options.File.Checker.WPF
                     if (countCommentedBeginLines > 0)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You have content that is intended to be commented out in your DAEMON line. Please remove it.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has content that is intended to be commented out in your DAEMON line.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2199,7 +2212,9 @@ namespace Options.File.Checker.WPF
                     if (countPortEquals > 1)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You have specified more than 1 port number for MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified more than 1 port number for MLM.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2207,7 +2222,9 @@ namespace Options.File.Checker.WPF
                     if (countOptionsEquals > 1)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You have specified the path to more than 1 options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified the path to more than 1 options file.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2215,9 +2232,11 @@ namespace Options.File.Checker.WPF
                     if (countOptionsEquals == 0)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You did not specify the path to the options file. If you included the path, but did not use options= to specify it, " +
-                            "MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n" +
-                            "If you used a \\ to indicate a line break on your DAEMON line, this program currently does not support this.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the options file. " +
+                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n" +
+                            "If you used a \\ to indicate a line break on your DAEMON line, this program currently does not support this.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2229,7 +2248,10 @@ namespace Options.File.Checker.WPF
                     if (lineParts.Length == 1)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have a DAEMON line, " +
+                            "but did not specify the daemon to be used (MLM) nor the path to it.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
