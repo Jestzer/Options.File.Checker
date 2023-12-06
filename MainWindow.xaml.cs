@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -30,6 +31,9 @@ namespace Options.File.Checker.WPF
 
         // GROUP
         Dictionary<int, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<int, Tuple<string, string, int>>();
+
+        // MAX
+        Dictionary<string, Tuple<string, string, string>> optionsMaxIndex = new Dictionary<string, Tuple<string, string, string>>();
 
         // License file dictionary.
         Dictionary<int, Tuple<string, int, string, string, string>> licenseFileIndex = new Dictionary<int, Tuple<string, int, string, string, string>>();
@@ -121,6 +125,20 @@ namespace Options.File.Checker.WPF
                 string selectedFile = openFileDialog.FileName;
                 LicenseFileLocationTextBox.Text = selectedFile;
 
+                // This massive file is hopefully not a license file...
+                FileInfo fileInfo = new FileInfo(selectedFile);
+                long fileSizeInBytes = fileInfo.Length;
+                const long FiftyMegabytes = 50L * 1024L * 1024L;
+
+                if (fileSizeInBytes > FiftyMegabytes)
+                {
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is over 50 MB and therefore, likely (hopefully) not a license file.";
+                    errorWindow.ShowDialog();
+                    LicenseFileLocationTextBox.Text = string.Empty;
+                    return;
+                }
+
                 // I probably should put in more checks than this, but I imagine this'll take care of 99.9% of invalid files.
                 bool containsINCREMENT = System.IO.File.ReadAllText(selectedFile).Contains("INCREMENT");
 
@@ -180,6 +198,20 @@ namespace Options.File.Checker.WPF
                 string selectedFile = openFileDialog.FileName;
                 OptionsFileLocationTextBox.Text = selectedFile;
 
+                // This massive file is hopefully not an options file...
+                FileInfo fileInfo = new FileInfo(selectedFile);
+                long fileSizeInBytes = fileInfo.Length;
+                const long FiftyMegabytes = 50L * 1024L * 1024L;
+
+                if (fileSizeInBytes > FiftyMegabytes)
+                {
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: it is over 50 MB and therefore, likely (hopefully) not an options file.";
+                    errorWindow.ShowDialog();
+                    LicenseFileLocationTextBox.Text = string.Empty;
+                    return;
+                }
+
                 string fileContent = System.IO.File.ReadAllText(selectedFile);
 
                 if (string.IsNullOrWhiteSpace(fileContent))
@@ -237,6 +269,7 @@ namespace Options.File.Checker.WPF
             optionsExcludeIndex.Clear();
             optionsReserveIndex.Clear();
             optionsGroupIndex.Clear();
+            optionsMaxIndex.Clear();
             licenseFileIndex.Clear();
             analysisOfServerAndDaemonLinesFailed = false;
             analysisOfOptionsFileProductsFailed = false;
@@ -275,7 +308,7 @@ namespace Options.File.Checker.WPF
                     !filteredOptionsFileContents.Contains("TIMEOUT"))
                 {
                     ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: It is likely not an options file.";
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: it is likely not an options file or contains no usable content.";
                     errorWindow.ShowDialog();
                     OptionsFileLocationTextBox.Text = string.Empty;
                     return;
@@ -1022,7 +1055,6 @@ namespace Options.File.Checker.WPF
                 }
 
                 // MAX dictionary.
-                Dictionary<string, Tuple<string, string, string>> optionsMaxIndex = new Dictionary<string, Tuple<string, string, string>>();
                 for (int optionsMaxLineIndex = 0; optionsMaxLineIndex < filteredOptionsFileLines.Length; optionsMaxLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsMaxLineIndex];
@@ -1223,6 +1255,18 @@ namespace Options.File.Checker.WPF
                     }
                 }
 
+                // LINGER, TIMEOUT, TIMEOUTALL, NOLOG, REPORTLOG, MAX_OVERDRAFT
+                bool uncommonOptionUsed = false;
+                for (int optionsIncludeAllLineIndex = 0; optionsIncludeAllLineIndex < filteredOptionsFileLines.Length; optionsIncludeAllLineIndex++)
+                {
+                    string line = filteredOptionsFileLines[optionsIncludeAllLineIndex];
+                    if (line.TrimStart().StartsWith("LINGER") || line.TrimStart().StartsWith("TIMEOUT") || line.TrimStart().StartsWith("NOLOG") ||
+                        line.TrimStart().StartsWith("REPORTLOG") || line.TrimStart().StartsWith("MAX"))
+                    {
+                        uncommonOptionUsed = true;
+                        break;
+                    }
+                }
 
                 // Output some warning messages, if needed.
                 if (excludeLinesAreUsed)
@@ -1240,6 +1284,17 @@ namespace Options.File.Checker.WPF
                 if (hostGroupsAreUsed)
                 {
                     OutputTextBlock.Text += "\r\nYou are using at least 1 HOST_GROUP line in your options file.\r\n";
+                }
+
+                // Make sure the options file you used... is an options file.
+                if (!optionsIncludeIndex.Any() && !optionsIncludeAllIndex.Any() && !optionsReserveIndex.Any() && !optionsExcludeIndex.Any() && !optionsMaxIndex.Any() &&
+                    uncommonOptionUsed == false)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: it is either not an options file or contains no usable content.";
+                    errorWindow.ShowDialog();
+                    return;
                 }
 
                 // Make sure the license numbers you're specifying are part of your license file.
@@ -2081,7 +2136,7 @@ namespace Options.File.Checker.WPF
                     string unspecifiedServerPortMessage = "\r\nWarning: You have not specified a port number for the SERVER. " +
                             "This is acceptable if you are defining it with lmadmin or if you're okay with " +
                             "FlexLM picking the port number for you. However, if you did not specify the Host ID and instead put the port number in its place, " +
-                            "the specified port number will not be used. The SERVER port number will be randomly choosen each time you restart it.\r\n";
+                            "the specified port number will not be used. The SERVER port number will be randomly chosen instead.\r\n";
 
                     if (lineParts.Length == 3)
                     {
@@ -2638,12 +2693,12 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}.\r\n";
+                            OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nOptions path: {daemonProperty1Edited}.\r\nDAEMON port: unspecified, will be randomly chosen.\r\n";
                         }
                     }
                     else
                     {
-                        OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nDAEMON port: {daemonProperty1Edited}. Options path: {daemonProperty2Edited}.\r\n";
+                        OutputTextBlock.Text += $"\r\nDAEMON path: {daemonPath}.\r\nDAEMON port: {daemonProperty1Edited}.\r\nOptions path: {daemonProperty2Edited}.\r\n";
                     }
                 }
 
@@ -2963,7 +3018,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
-                        OutputTextBlock.Text += $"The product {productName} has {seatCount} seats remaining on license {licenseNumber}.\r\n";
+                        OutputTextBlock.Text += $"The product {productName} has {seatCount} unassigned seats on license {licenseNumber}.\r\n";
                     }
                 }
 
