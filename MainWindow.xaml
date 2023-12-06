@@ -87,7 +87,7 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="SaveOutputButton" Content="Save Output" HorizontalAlignment="Left" Margin="620,158,0,0" VerticalAlignment="Top" Width="92" Click="SaveOutputButton_Click" Foreground="White">
+                <Button x:Name="SaveOutputButton" Content="Save Output" HorizontalAlignment="Left" Margin="619,127,0,0" VerticalAlignment="Top" Width="92" Click="SaveOutputButton_Click" Foreground="White">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
                             <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
@@ -99,28 +99,6 @@
                                 </Trigger>
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="border" Property="Background" Value="#FFCECECE" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
-                <Button x:Name="TrialWindowButton" Content="Specify Trial(s)" HorizontalAlignment="Left" Margin="620,95,0,0" VerticalAlignment="Top" Width="92" Click="TrialWindowButton_Click" Foreground="White"
-                        IsEnabled="False">
-                    <Button.Template>
-                        <ControlTemplate TargetType="{x:Type Button}">
-                            <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
-                                <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="Gray" />
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="#FFCECECE" />
-                                </Trigger>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter TargetName="border" Property="Background" Value="#FF858585" />
-                                    <Setter TargetName="border" Property="BorderBrush" Value="#FF858585" />
                                 </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
