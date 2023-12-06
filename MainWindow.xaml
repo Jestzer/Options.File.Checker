@@ -104,7 +104,8 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="TrialWindowButton" Content="Specify Trial(s)" HorizontalAlignment="Left" Margin="620,95,0,0" VerticalAlignment="Top" Width="92" Click="TrialWindowButton_Click" Foreground="White">
+                <Button x:Name="TrialWindowButton" Content="Specify Trial(s)" HorizontalAlignment="Left" Margin="620,95,0,0" VerticalAlignment="Top" Width="92" Click="TrialWindowButton_Click" Foreground="White"
+                        IsEnabled="False">
                     <Button.Template>
                         <ControlTemplate TargetType="{x:Type Button}">
                             <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
@@ -117,12 +118,16 @@
                                 <Trigger Property="IsPressed" Value="True">
                                     <Setter TargetName="border" Property="Background" Value="#FFCECECE" />
                                 </Trigger>
+                                <Trigger Property="IsEnabled" Value="False">
+                                    <Setter TargetName="border" Property="Background" Value="#FF858585" />
+                                    <Setter TargetName="border" Property="BorderBrush" Value="#FF858585" />
+                                </Trigger>
                             </ControlTemplate.Triggers>
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
                 <Label x:Name="VLabel" Content="v" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="17" Foreground="White" Height="27" Margin="0,0,0,0"/>
-                <Label x:Name="VersionLabel" Content="{Binding PackageVersion}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="54" Foreground="White" Height="27" Margin="10,0,0,0"/>
+                <Label x:Name="VersionLabel" Content="{Binding PackageVersion}" HorizontalAlignment="Left" VerticalAlignment="Bottom" Width="54" Foreground="White" Height="27" Margin="9,0,0,0"/>
             </Grid>
         </Grid>
     </Border>
