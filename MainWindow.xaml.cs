@@ -2240,7 +2240,9 @@ namespace Options.File.Checker.WPF
                     if (string.IsNullOrWhiteSpace(daemonVendor))
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("There are too many spaces between \"DAEMON\" and \"MLM\".", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: there are too many spaces between \"DAEMON\" and \"MLM\".";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2249,7 +2251,9 @@ namespace Options.File.Checker.WPF
                     if (daemonVendor != "MLM")
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You have incorrectly specified the vendor daemon MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have incorrectly specified the vendor daemon MLM.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2258,7 +2262,9 @@ namespace Options.File.Checker.WPF
                     if (lineParts.Length == 2)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You did not specify the path to the vendor daemon MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the vendor daemon MLM.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2266,7 +2272,9 @@ namespace Options.File.Checker.WPF
                     if (lineParts.Length == 3)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You did not specify the path to the options file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the options file.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2318,7 +2326,9 @@ namespace Options.File.Checker.WPF
                     if (waitingForNextQuotationMark)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You are missing a quotation mark at the end of the full path to MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you are missing a quotation mark at the end of the full path to MLM.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2326,7 +2336,9 @@ namespace Options.File.Checker.WPF
                     if (daemonPath.EndsWith("\""))
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You are missing a quotation mark at the beginning of the full path to MLM.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you are missing a quotation mark at the beginning of the full path to MLM.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2347,8 +2359,10 @@ namespace Options.File.Checker.WPF
                     if (!isDaemonPathAccepted)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show("You incorrectly specifed the full path to MLM. If there are spaces in the path, " +
-                            "please put quotes around the path.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you incorrectly specifed the full path to MLM. If there are spaces in the path, " +
+                            "please put quotes around the path.";
+                        errorWindow.ShowDialog();
                         analysisOfServerAndDaemonLinesFailed = true;
                         return;
                     }
@@ -2451,7 +2465,9 @@ namespace Options.File.Checker.WPF
                                     if (optionsFileHasBeenSpecified)
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
+                                        errorWindow.ShowDialog();
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
                                     }
@@ -2505,7 +2521,9 @@ namespace Options.File.Checker.WPF
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 port numbers for MLM.";
+                                        errorWindow.ShowDialog();
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
                                     }
@@ -2533,7 +2551,9 @@ namespace Options.File.Checker.WPF
                                 if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
                                     OutputTextBlock.Text = string.Empty;
-                                    MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                    ErrorWindow errorWindow = new();
+                                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
+                                    errorWindow.ShowDialog();
                                     analysisOfServerAndDaemonLinesFailed = true;
                                     return;
 
@@ -2620,7 +2640,9 @@ namespace Options.File.Checker.WPF
                                     if (optionsFileHasBeenSpecified)
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show("You have specified 2 options files in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
+                                        errorWindow.ShowDialog();
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
                                     }
@@ -2634,7 +2656,9 @@ namespace Options.File.Checker.WPF
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
                                         OutputTextBlock.Text = string.Empty;
-                                        MessageBox.Show("You have specified 2 port numbers for MLM in your license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 port numbers for MLM.";
+                                        errorWindow.ShowDialog();
                                         analysisOfServerAndDaemonLinesFailed = true;
                                         return;
                                     }
@@ -2722,7 +2746,7 @@ namespace Options.File.Checker.WPF
             {
                 OutputTextBlock.Text = string.Empty;
                 ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it has an invalid number of SERVER lines. Only 1 or 3 are accepted.";
+                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has an invalid number of SERVER lines. Only 1 or 3 are accepted.";
                 errorWindow.ShowDialog();
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
@@ -2732,8 +2756,10 @@ namespace Options.File.Checker.WPF
             if (daemonLineCount == 0)
             {
                 OutputTextBlock.Text = string.Empty;
-                MessageBox.Show("You have no DAEMON line in your license file. You should not be using VENDOR lines for MathWorks licenses, " +
-                    "if you are.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ErrorWindow errorWindow = new();
+                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have no DAEMON line in your license file. You should not " +
+                    "be using VENDOR lines for MathWorks licenses, if you are.";
+                errorWindow.ShowDialog();
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
             }
@@ -2742,7 +2768,7 @@ namespace Options.File.Checker.WPF
             {
                 OutputTextBlock.Text = string.Empty;
                 ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it does not specify an options file.";
+                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it does not specify an options file.";
                 errorWindow.ShowDialog();
                 analysisOfServerAndDaemonLinesFailed = true;
                 return;
@@ -2906,16 +2932,20 @@ namespace Options.File.Checker.WPF
                     if (string.IsNullOrEmpty(excludeProductKey) == true)
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " +
-                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " +
+                            "that does not exist in the specified license file.";
+                        errorWindow.ShowDialog();
                         analysisOfOptionsFileProductsFailed = true;
                         return;
                     }
                     else
                     {
                         OutputTextBlock.Text = string.Empty;
-                        MessageBox.Show($"You have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
-                            $"that does not exist in the specified license file.", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
+                            "that does not exist in the specified license file.";
+                        errorWindow.ShowDialog();
                         analysisOfOptionsFileProductsFailed = true;
                         return;
                     }
