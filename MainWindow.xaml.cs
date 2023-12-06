@@ -53,10 +53,6 @@ namespace Options.File.Checker.WPF
 
             // Check if debug mode is enabled.
             debug = ((App)Application.Current).Debug;
-
-            // Load path to previously opened files.
-            LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
-            OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
 
         public string PackageVersion
@@ -255,11 +251,6 @@ namespace Options.File.Checker.WPF
                 // Save the text to the selected file
                 System.IO.File.WriteAllText(filePath, OutputTextBlock.Text);
             }
-        }
-        private void TrialWindowButton_Click(object sender, RoutedEventArgs e)
-        {
-            ChooseLicenseOfferingWindow chooseLicenseOfferingWindow = new ChooseLicenseOfferingWindow();
-            chooseLicenseOfferingWindow.Show();
         }
         private void AnalyzerButton_Click(object sender, RoutedEventArgs e)
         {
