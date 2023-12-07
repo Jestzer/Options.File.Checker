@@ -53,6 +53,9 @@ namespace Options.File.Checker.WPF
 
             // Check if debug mode is enabled.
             debug = ((App)Application.Current).Debug;
+
+            LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
+            OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
 
         public string PackageVersion
@@ -3031,7 +3034,7 @@ namespace Options.File.Checker.WPF
         private void PrintUsefulInformation()
         {
             OutputTextBlock.Text += "\r\nPlease note: if you did not specify a license for an INCLUDE or RESERVE line, it will subtract the seat from the first " +
-                "license the product appears on. Product names are listed with their FlexLM names.\r\n";
+                "license the product appears on. Product names are listed with their FlexLM names.\r\n\r\n";
 
             if (cnuIsUsed)
             {
