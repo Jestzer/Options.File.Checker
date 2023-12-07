@@ -3030,6 +3030,8 @@ namespace Options.File.Checker.WPF
                     }
                 }
             }
+
+            // Add some code to make sure the groups you've specified in your INCLUDE, EXCLUDE, etc. lines actually exist.
         }
         private void PrintUsefulInformation()
         {
