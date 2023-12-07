@@ -1,3 +1,3 @@
-#GROUP Friends jimmy carl sean
-#INCLUDE MATLAB GROUP Friends
-INCLUDE MATLAB_5G_Toolbox USER james
+GROUP Friends jimmy carl sean
+INCLUDE MATLAB GROUP FakeFriends
+#INCLUDE MATLAB_5G_Toolbox USER james
