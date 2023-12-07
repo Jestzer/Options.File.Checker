@@ -61,8 +61,6 @@ C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\re
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.pdb
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.genruntimeconfig.cache
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\ref\Options.File.Checker.WPF.dll
-C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\ChooseLicenseOfferingWindow.g.cs
-C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\ChooseLicenseOfferingWindow.baml
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.sourcelink.json
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.sourcelink.json
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF_Content.g.cs

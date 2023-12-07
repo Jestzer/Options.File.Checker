@@ -16,3 +16,5 @@ To do:
 - Print a warning when non-capital letters are used for PORT and OPTIONS for CNU licenses.
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
+- Make an options file creator/editor
+- Create the ability to check for updates
