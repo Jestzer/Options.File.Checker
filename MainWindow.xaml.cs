@@ -74,7 +74,7 @@ namespace Options.File.Checker.WPF
                         return version.ToString();
                     }
                 }
-                return "Error getting version number";
+                return "Error getting version number.";
             }
         }
 
