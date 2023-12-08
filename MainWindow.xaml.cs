@@ -29,6 +29,9 @@ namespace Options.File.Checker.WPF
         // EXCLUDE
         Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
 
+        // HOST_GROUP
+        Dictionary<int, Tuple<string, string>> optionsHostGroupIndex = new Dictionary<int, Tuple<string, string>>();
+
         // GROUP
         Dictionary<int, Tuple<string, string, int>> optionsGroupIndex = new Dictionary<int, Tuple<string, string, int>>();
 
@@ -39,7 +42,7 @@ namespace Options.File.Checker.WPF
         Dictionary<int, Tuple<string, int, string, string, string>> licenseFileIndex = new Dictionary<int, Tuple<string, int, string, string, string>>();
 
         // End operations if needed.
-        bool analysisOfServerAndDaemonLinesFailed = false;
+        bool analysisFailed = false;
         bool analysisOfOptionsFileProductsFailed = false;
 
         bool cnuIsUsed = false;
@@ -262,10 +265,11 @@ namespace Options.File.Checker.WPF
             optionsIncludeAllIndex.Clear();
             optionsExcludeIndex.Clear();
             optionsReserveIndex.Clear();
+            optionsHostGroupIndex.Clear();
             optionsGroupIndex.Clear();
             optionsMaxIndex.Clear();
             licenseFileIndex.Clear();
-            analysisOfServerAndDaemonLinesFailed = false;
+            analysisFailed = false;
             analysisOfOptionsFileProductsFailed = false;
             OutputTextBlock.Text = string.Empty;
             bool excludeLinesAreUsed = false;
@@ -342,7 +346,7 @@ namespace Options.File.Checker.WPF
 
                 // Look for issues with your SERVER or DAEMON lines.
                 AnalyzeServerAndDaemonLine();
-                if (analysisOfServerAndDaemonLinesFailed)
+                if (analysisFailed)
                 {
                     OutputTextBlock.Text = string.Empty;
                     return;
@@ -1176,7 +1180,6 @@ namespace Options.File.Checker.WPF
                 }
 
                 // HOST_GROUP dictionary.
-                Dictionary<int, Tuple<string, string>> optionsHostGroupIndex = new Dictionary<int, Tuple<string, string>>();
                 for (int optionsHostGroupLineIndex = 0; optionsHostGroupLineIndex < filteredOptionsFileLines.Length; optionsHostGroupLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsHostGroupLineIndex];
@@ -2092,10 +2095,16 @@ namespace Options.File.Checker.WPF
                 }
             }
 
+            ValidateGroups();
+            if (analysisFailed)
+            {
+                OutputTextBlock.Text = string.Empty;
+                return;
+            }
+
             // Putting this here rather than with the other private voids because it means I don't have to add failing variables in the code above.
             PrintUsefulInformation();
         }
-
         private void AnalyzeServerAndDaemonLine()
         {
             string[] licenseFileContentsLines = System.IO.File.ReadAllLines(LicenseFileLocationTextBox.Text);
@@ -2122,7 +2131,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: your SERVER line(s) are listed after a product.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
                     serverLineCount++;
@@ -2157,7 +2166,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
                 }
@@ -2172,7 +2181,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: your DAEMON line is listed after a product.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2184,7 +2193,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have more than 1 DAEMON line.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2199,7 +2208,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has content that is intended to be commented out in your DAEMON line.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2209,7 +2218,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified more than 1 port number for MLM.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2219,7 +2228,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified the path to more than 1 options file.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2231,7 +2240,7 @@ namespace Options.File.Checker.WPF
                             "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n" +
                             "If you used a \\ to indicate a line break on your DAEMON line, this program currently does not support this.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2246,7 +2255,7 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have a DAEMON line, " +
                             "but did not specify the daemon to be used (MLM) nor the path to it.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2259,7 +2268,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: there are too many spaces between \"DAEMON\" and \"MLM\".";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2270,7 +2279,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have incorrectly specified the vendor daemon MLM.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2281,7 +2290,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the vendor daemon MLM.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2291,7 +2300,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the options file.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2345,7 +2354,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you are missing a quotation mark at the end of the full path to MLM.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2355,7 +2364,7 @@ namespace Options.File.Checker.WPF
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you are missing a quotation mark at the beginning of the full path to MLM.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2379,7 +2388,7 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you incorrectly specifed the full path to MLM. If there are spaces in the path, " +
                             "please put quotes around the path.";
                         errorWindow.ShowDialog();
-                        analysisOfServerAndDaemonLinesFailed = true;
+                        analysisFailed = true;
                         return;
                     }
 
@@ -2463,7 +2472,7 @@ namespace Options.File.Checker.WPF
                                 ErrorWindow errorWindow = new();
                                 errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
                                 errorWindow.ShowDialog();
-                                analysisOfServerAndDaemonLinesFailed = true;
+                                analysisFailed = true;
                                 return;
                             }
                         }
@@ -2484,7 +2493,7 @@ namespace Options.File.Checker.WPF
                                         ErrorWindow errorWindow = new();
                                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
                                         errorWindow.ShowDialog();
-                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        analysisFailed = true;
                                         return;
                                     }
                                     else
@@ -2540,7 +2549,7 @@ namespace Options.File.Checker.WPF
                                         ErrorWindow errorWindow = new();
                                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 port numbers for MLM.";
                                         errorWindow.ShowDialog();
-                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        analysisFailed = true;
                                         return;
                                     }
                                     else
@@ -2554,7 +2563,7 @@ namespace Options.File.Checker.WPF
                                     ErrorWindow errorWindow = new();
                                     errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
                                     errorWindow.ShowDialog();
-                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    analysisFailed = true;
                                     return;
                                 }
                             }
@@ -2570,7 +2579,7 @@ namespace Options.File.Checker.WPF
                                     ErrorWindow errorWindow = new();
                                     errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
                                     errorWindow.ShowDialog();
-                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    analysisFailed = true;
                                     return;
 
                                 }
@@ -2642,7 +2651,7 @@ namespace Options.File.Checker.WPF
                                 ErrorWindow errorWindow = new();
                                 errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
                                 errorWindow.ShowDialog();
-                                analysisOfServerAndDaemonLinesFailed = true;
+                                analysisFailed = true;
                                 return;
                             }
                         }
@@ -2659,7 +2668,7 @@ namespace Options.File.Checker.WPF
                                         ErrorWindow errorWindow = new();
                                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
                                         errorWindow.ShowDialog();
-                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        analysisFailed = true;
                                         return;
                                     }
                                     else
@@ -2675,7 +2684,7 @@ namespace Options.File.Checker.WPF
                                         ErrorWindow errorWindow = new();
                                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 port numbers for MLM.";
                                         errorWindow.ShowDialog();
-                                        analysisOfServerAndDaemonLinesFailed = true;
+                                        analysisFailed = true;
                                         return;
                                     }
                                     else
@@ -2689,7 +2698,7 @@ namespace Options.File.Checker.WPF
                                     ErrorWindow errorWindow = new();
                                     errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
                                     errorWindow.ShowDialog();
-                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    analysisFailed = true;
                                     return;
                                 }
                             }
@@ -2705,7 +2714,7 @@ namespace Options.File.Checker.WPF
                                     ErrorWindow errorWindow = new();
                                     errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
                                     errorWindow.ShowDialog();
-                                    analysisOfServerAndDaemonLinesFailed = true;
+                                    analysisFailed = true;
                                     return;
 
                                 }
@@ -2748,7 +2757,7 @@ namespace Options.File.Checker.WPF
                     errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it uses \"USE_SERVER\". " +
                         "This should be in the end user's network.lic file, not the Network License Manager's license file.";
                     errorWindow.ShowDialog();
-                    analysisOfServerAndDaemonLinesFailed = true;
+                    analysisFailed = true;
                     return;
                 }
                 if (line.TrimStart().StartsWith("INCREMENT"))
@@ -2764,7 +2773,7 @@ namespace Options.File.Checker.WPF
                 ErrorWindow errorWindow = new();
                 errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has an invalid number of SERVER lines. Only 1 or 3 are accepted.";
                 errorWindow.ShowDialog();
-                analysisOfServerAndDaemonLinesFailed = true;
+                analysisFailed = true;
                 return;
             }
 
@@ -2776,7 +2785,7 @@ namespace Options.File.Checker.WPF
                 errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have no DAEMON line in your license file. You should not " +
                     "be using VENDOR lines for MathWorks licenses, if you are.";
                 errorWindow.ShowDialog();
-                analysisOfServerAndDaemonLinesFailed = true;
+                analysisFailed = true;
                 return;
             }
 
@@ -2786,7 +2795,7 @@ namespace Options.File.Checker.WPF
                 ErrorWindow errorWindow = new();
                 errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it does not specify an options file.";
                 errorWindow.ShowDialog();
-                analysisOfServerAndDaemonLinesFailed = true;
+                analysisFailed = true;
                 return;
             }
         }
@@ -3030,8 +3039,70 @@ namespace Options.File.Checker.WPF
                     }
                 }
             }
+        }
 
-            // Add some code to make sure the groups you've specified in your INCLUDE, EXCLUDE, etc. lines actually exist.
+        private void ValidateGroups()
+        {
+            // INCLUDE lines.            
+            foreach (var optionsIncludeEntry in optionsIncludeIndex)
+            {
+                Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
+                string includeClientType = optionsIncludeData.Item4;
+                string includeClientSpecified = optionsIncludeData.Item5;
+
+                if (includeClientType == "GROUP")
+                {
+                    bool matchingGroupFound = false;
+                    foreach (var optionsGroupEntry in optionsGroupIndex)
+                    {
+                        Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+                        string groupName = optionsGroupData.Item1;
+
+                        if (groupName == includeClientSpecified)
+                        {
+                            matchingGroupFound = true;
+                            break;
+                        }
+                    }
+
+                    if (!matchingGroupFound)
+                    {
+                        analysisFailed = true;
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a GROUP on an INCLUDE line named \"{includeClientSpecified}\", " +
+                            $"but this GROUP does not exist in your options file. Please check your GROUPs for any typos.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+                }
+                else if (includeClientType == "HOST_GROUP")
+                {
+                    bool matchingGroupFound = false;
+                    foreach (var optionsHostGroupEntry in optionsHostGroupIndex)
+                    {
+                        Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
+                        string hostGroupName = optionsHostGroupData.Item1;
+
+                        if (hostGroupName == includeClientSpecified)
+                        {
+                            matchingGroupFound = true;
+                            break;
+                        }
+                    }
+
+                    if (!matchingGroupFound)
+                    {
+                        analysisFailed = true;
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a HOST_GROUP on an INCLUDE line named \"{includeClientSpecified}\", " +
+                            $"but this HOST_GROUP does not exist in your options file. Please check your HOST_GROUPs for any typos.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+                }
+            }
         }
         private void PrintUsefulInformation()
         {
