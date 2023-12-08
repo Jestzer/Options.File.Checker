@@ -1,3 +1,4 @@
-GROUP Friends jimmy carl sean
-INCLUDE MATLAB GROUP FakeFriends
+HOST_GROUP Friends jimmy carl sean
+INCLUDE MATLAB HOST_GROUP Friends
+#INCLUDE MATLAB HOST_GROUP Friends4
 #INCLUDE MATLAB_5G_Toolbox USER james
