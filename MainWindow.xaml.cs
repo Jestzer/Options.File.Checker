@@ -3041,66 +3041,86 @@ namespace Options.File.Checker.WPF
             }
         }
 
+        private bool PerformGroupCheck(Dictionary<int, Tuple<string, string, string, string, string>> optionsIndex,
+                               Dictionary<int, Tuple<string, string, int>> groupIndex,
+                               Dictionary<int, Tuple<string, string>> hostGroupIndex,
+                               string type, string specified, string lineType)
+        {
+            if (type == "GROUP")
+            {
+                foreach (var optionsGroupEntry in groupIndex)
+                {
+                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+                    string groupName = optionsGroupData.Item1;
+
+                    if (groupName == specified)
+                    {
+                        return true; // Matching group found
+                    }
+                }
+            }
+            else if (type == "HOST_GROUP")
+            {
+                foreach (var optionsHostGroupEntry in hostGroupIndex)
+                {
+                    Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
+                    string hostGroupName = optionsHostGroupData.Item1;
+
+                    if (hostGroupName == specified)
+                    {
+                        return true; // Matching host group found
+                    }
+                }
+            }
+
+            // No matching group found
+            analysisFailed = true;
+            OutputTextBlock.Text = string.Empty;
+            ErrorWindow errorWindow = new();
+            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a {type} on an {lineType} line named \"{specified}\", " +
+                $"but this {type} does not exist in your options file. Please check your {type}s for any typos.";
+            errorWindow.ShowDialog();
+            return false;
+        }
+
         private void ValidateGroups()
         {
-            // INCLUDE lines.            
+            // PerformGroupCheck for INCLUDE lines.
             foreach (var optionsIncludeEntry in optionsIncludeIndex)
             {
                 Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
                 string includeClientType = optionsIncludeData.Item4;
                 string includeClientSpecified = optionsIncludeData.Item5;
 
-                if (includeClientType == "GROUP")
+                if (!PerformGroupCheck(optionsIncludeIndex, optionsGroupIndex, optionsHostGroupIndex, includeClientType, includeClientSpecified, "INCLUDE"))
                 {
-                    bool matchingGroupFound = false;
-                    foreach (var optionsGroupEntry in optionsGroupIndex)
-                    {
-                        Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-                        string groupName = optionsGroupData.Item1;
-
-                        if (groupName == includeClientSpecified)
-                        {
-                            matchingGroupFound = true;
-                            break;
-                        }
-                    }
-
-                    if (!matchingGroupFound)
-                    {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a GROUP on an INCLUDE line named \"{includeClientSpecified}\", " +
-                            $"but this GROUP does not exist in your options file. Please check your GROUPs for any typos.";
-                        errorWindow.ShowDialog();
-                        return;
-                    }
+                    return;
                 }
-                else if (includeClientType == "HOST_GROUP")
+            }
+
+            // PerformGroupCheck for EXCLUDE lines.
+            foreach (var optionsExcludeEntry in optionsExcludeIndex)
+            {
+                Tuple<string, string, string, string, string> optionsExcludeData = optionsExcludeEntry.Value;
+                string excludeClientType = optionsExcludeData.Item4;
+                string excludeClientSpecified = optionsExcludeData.Item5;
+
+                if (!PerformGroupCheck(optionsExcludeIndex, optionsGroupIndex, optionsHostGroupIndex, excludeClientType, excludeClientSpecified, "EXCLUDE"))
                 {
-                    bool matchingGroupFound = false;
-                    foreach (var optionsHostGroupEntry in optionsHostGroupIndex)
-                    {
-                        Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
-                        string hostGroupName = optionsHostGroupData.Item1;
+                    return;
+                }
+            }
 
-                        if (hostGroupName == includeClientSpecified)
-                        {
-                            matchingGroupFound = true;
-                            break;
-                        }
-                    }
+            // PerformGroupCheck for RESERVE lines.
+            foreach (var optionsReserveEntry in optionsReserveIndex)
+            {
+                Tuple<int, string, string, string, string, string> optionsReserveData = optionsReserveEntry.Value;
+                string reserveClientType = optionsReserveData.Item5;
+                string reserveClientSpecified = optionsReserveData.Item6;
 
-                    if (!matchingGroupFound)
-                    {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a HOST_GROUP on an INCLUDE line named \"{includeClientSpecified}\", " +
-                            $"but this HOST_GROUP does not exist in your options file. Please check your HOST_GROUPs for any typos.";
-                        errorWindow.ShowDialog();
-                        return;
-                    }
+                if (!PerformGroupCheck(optionsExcludeIndex, optionsGroupIndex, optionsHostGroupIndex, reserveClientType, reserveClientSpecified, "RESERVE"))
+                {
+                    return;
                 }
             }
         }

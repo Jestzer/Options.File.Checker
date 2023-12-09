@@ -69,7 +69,7 @@ namespace Options.File.Checker.WPF {
                 return;
             }
             _contentLoaded = true;
-            System.Uri resourceLocater = new System.Uri("/Options.File.Checker.WPF;V0.1.3.0;component/errorwindow.xaml", System.UriKind.Relative);
+            System.Uri resourceLocater = new System.Uri("/Options.File.Checker.WPF;component/errorwindow.xaml", System.UriKind.Relative);
             
             #line 1 "..\..\..\ErrorWindow.xaml"
             System.Windows.Application.LoadComponent(this, resourceLocater);
