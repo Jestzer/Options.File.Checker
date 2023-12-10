@@ -29,6 +29,9 @@ namespace Options.File.Checker.WPF
         // EXCLUDE
         Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
 
+        // EXCLUDEALL
+        Dictionary<int, Tuple<string, string>> optionsExcludeAllIndex = new Dictionary<int, Tuple<string, string>>();
+
         // HOST_GROUP
         Dictionary<int, Tuple<string, string>> optionsHostGroupIndex = new Dictionary<int, Tuple<string, string>>();
 
@@ -264,6 +267,7 @@ namespace Options.File.Checker.WPF
             optionsIncludeIndex.Clear();
             optionsIncludeAllIndex.Clear();
             optionsExcludeIndex.Clear();
+            optionsExcludeAllIndex.Clear();
             optionsReserveIndex.Clear();
             optionsHostGroupIndex.Clear();
             optionsGroupIndex.Clear();
@@ -933,7 +937,17 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text = string.Empty;
                             ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly specified the seat count for one of your RESERVE lines.";
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
+                                "You either chose an invalid number or specified something other than a number.";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
+                        if (reserveSeatCount <= 0)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you specified a RESERVE line with a seat count of 0 or less... why?";
                             errorWindow.ShowDialog();
                             return;
                         }
@@ -1206,11 +1220,21 @@ namespace Options.File.Checker.WPF
                 for (int optionsExcludeAllLineIndex = 0; optionsExcludeAllLineIndex < filteredOptionsFileLines.Length; optionsExcludeAllLineIndex++)
                 {
                     string line = filteredOptionsFileLines[optionsExcludeAllLineIndex];
+                    string excludeAllClientType = "broken-excludeAllClientType";
+                    string excludeAllClientSpecified = "broken-excludeAllClientSpecified";
 
                     if (line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
                         excludeAllLinesAreUsed = true;
-                        return;
+                        string[] lineParts = line.Split(' ');
+                        excludeAllClientType = lineParts[1];
+                        excludeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
+
+                        if (debug)
+                        {
+                            OutputTextBlock.Text += $"EXCLUDEALL: {excludeAllClientType}. Clients: {excludeAllClientSpecified}\r\n";
+                        }
+                        optionsExcludeAllIndex[optionsExcludeAllLineIndex] = Tuple.Create(excludeAllClientType, excludeAllClientSpecified);
                     }
                 }
                 // INCLUDEALL                
@@ -1266,7 +1290,7 @@ namespace Options.File.Checker.WPF
                 }
 
                 // Make sure the options file you used... is an options file.
-                if (!optionsIncludeIndex.Any() && !optionsIncludeAllIndex.Any() && !optionsReserveIndex.Any() && !optionsExcludeIndex.Any() && !optionsMaxIndex.Any() &&
+                if (!optionsIncludeIndex.Any() && !optionsIncludeAllIndex.Any() && !optionsReserveIndex.Any() && !optionsExcludeIndex.Any() && !optionsExcludeAllIndex.Any() && !optionsMaxIndex.Any() &&
                     uncommonOptionUsed == false)
                 {
                     OutputTextBlock.Text = string.Empty;
@@ -1290,6 +1314,14 @@ namespace Options.File.Checker.WPF
                     OutputTextBlock.Text = string.Empty;
                     return;
                 }
+
+                ValidateGroups();
+                if (analysisFailed)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    return;
+                }
+
                 CalculateRemainingSeats();
             }
             catch (Exception ex)
@@ -1855,7 +1887,7 @@ namespace Options.File.Checker.WPF
                                     OutputTextBlock.Text += $"Remaining seat count for {productName} is now {seatCount} on license {licenseNumber}\r\n";
                                 }
                             }
-                            if (reserveClientType == "GROUP")
+                            else if (reserveClientType == "GROUP")
                             {
 
                                 // Check that a group has actually been specified.
@@ -1915,12 +1947,33 @@ namespace Options.File.Checker.WPF
                                     }
                                 }
                             }
+                            // We gotta subtract whatever you've got for RESERVE lines.
+                            else
+                            {
+                                seatCount -= reserveSeatCount;
+
+                                if (seatCount < 0)
+                                {
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                        errorWindow.ShowDialog();
+                                        return;
+                                    }
+                                }
+                            }
                         }
                         else
                         {
                             if (debug)
                             {
-                                // We'll get to the uncategorized products later.
+                                // We'll get to the RESERVE lines with no license number specified later.
                                 OutputTextBlock.Text += $"RESERVE matching product {productName} found, but the license numbers don't match.\r\n";
                             }
                         }
@@ -2021,7 +2074,8 @@ namespace Options.File.Checker.WPF
                                     OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
                                 }
                             }
-                            if (reserveClientType == "GROUP")
+                            // HOST_GROUPs need to also be included because RESERVE lines just care about their own reserve count.
+                            else if (reserveClientType == "GROUP" || reserveClientType == "HOST_GROUP")
                             {
 
                                 // Check that a group has actually been specified.
@@ -2029,53 +2083,62 @@ namespace Options.File.Checker.WPF
                                 {
                                     OutputTextBlock.Text = string.Empty;
                                     ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName}, " +
-                                        $"but you did not specify which GROUP.";
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a {reserveClientType} to be able to use {productName}, " +
+                                        $"but you did not specify which {reserveClientType}.";
                                     errorWindow.ShowDialog();
                                     return;
                                 }
 
+                                // For GROUP.
                                 foreach (var optionsGroupEntry in optionsGroupIndex)
                                 {
-                                    // Load GROUP specifications.
-                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
                                     Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-
                                     string groupName = optionsGroupData.Item1;
-                                    string groupUsers = optionsGroupData.Item2;
 
                                     if (groupName == reserveClientSpecified)
                                     {
-                                        // Subtract the appropriate number of seats.
-                                        seatCount -= reserveSeatCount;
-
-                                        // Error out if the seat count is negative.
-                                        if (seatCount < 0)
+                                        ProcessReserveGroupNoLicense(groupName, reserveSeatCount, licenseOffering, productName, ref seatCount, ref licenseFileData, licenseFileIndex, lineIndex, debug);
+                                        if (analysisFailed)
                                         {
-                                            if (licenseOffering == "lo=CN")
-                                            {
-                                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                                            }
-                                            else
-                                            {
-                                                OutputTextBlock.Text = string.Empty;
-                                                ErrorWindow errorWindow = new();
-                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
-                                                errorWindow.ShowDialog();
-                                                return;
-                                            }
+                                            return;
                                         }
+                                    }
+                                }
 
-                                        // Update the seatCount in the licenseFileData tuple.
-                                        licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                                // For HOST_GROUP.
+                                foreach (var optionsHostGroupEntry in optionsHostGroupIndex)
+                                {
+                                    Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
+                                    string hostGroupName = optionsHostGroupData.Item1;
 
-                                        // Update the seatCount in the licenseFileIndex dictionary.
-                                        licenseFileIndex[lineIndex] = licenseFileData;
-
-                                        if (debug)
+                                    if (hostGroupName == reserveClientSpecified)
+                                    {
+                                        ProcessReserveGroupNoLicense(hostGroupName, reserveSeatCount, licenseOffering, productName, ref seatCount, ref licenseFileData, licenseFileIndex, lineIndex, debug);
+                                        if (analysisFailed)
                                         {
-                                            OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+                                            return;
                                         }
+                                    }
+                                }
+                            }
+                            // Lazy seat count subtraction implementation for other lineTypes, since everything should be included for RESERVE.
+                            else
+                            {
+                                seatCount -= reserveSeatCount;
+
+                                if (seatCount < 0)
+                                {
+                                    if (licenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        OutputTextBlock.Text = string.Empty;
+                                        ErrorWindow errorWindow = new();
+                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                        errorWindow.ShowDialog();
+                                        return;
                                     }
                                 }
                             }
@@ -2095,15 +2158,45 @@ namespace Options.File.Checker.WPF
                 }
             }
 
-            ValidateGroups();
-            if (analysisFailed)
-            {
-                OutputTextBlock.Text = string.Empty;
-                return;
-            }
-
             // Putting this here rather than with the other private voids because it means I don't have to add failing variables in the code above.
             PrintUsefulInformation();
+        }
+
+        private void ProcessReserveGroupNoLicense(string specified, int reserveSeatCount, string licenseOffering,
+                          string productName, ref int seatCount, ref Tuple<string, int, string, string, string> licenseFileData,
+                          Dictionary<int, Tuple<string, int, string, string, string>> licenseFileIndex, int lineIndex, bool debug)
+        {
+            // Subtract the appropriate number of seats.
+            seatCount -= reserveSeatCount;
+
+            // Error out if the seat count is negative.
+            if (seatCount < 0)
+            {
+                if (licenseOffering == "lo=CN")
+                {
+                    // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                }
+                else
+                {
+                    analysisFailed = true;
+                    OutputTextBlock.Text = string.Empty;
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                    errorWindow.ShowDialog();
+                    return;
+                }
+            }
+
+            // Update the seatCount in the licenseFileData tuple.
+            licenseFileData = Tuple.Create(productName, seatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+
+            // Update the seatCount in the licenseFileIndex dictionary.
+            licenseFileIndex[lineIndex] = licenseFileData;
+
+            if (debug)
+            {
+                OutputTextBlock.Text += $"RESERVE remaining seat count for {productName} is now {seatCount} for no specific license.\r\n";
+            }
         }
         private void AnalyzeServerAndDaemonLine()
         {
@@ -3041,46 +3134,69 @@ namespace Options.File.Checker.WPF
             }
         }
 
-        private bool PerformGroupCheck(Dictionary<int, Tuple<string, string, string, string, string>> optionsIndex,
-                               Dictionary<int, Tuple<string, string, int>> groupIndex,
-                               Dictionary<int, Tuple<string, string>> hostGroupIndex,
-                               string type, string specified, string lineType)
+        // Define a delegate that takes a tuple and returns the groupType and specified strings
+        public delegate (string groupType, string specified) TupleExtractor<in TTuple>(TTuple tuple);
+
+        private bool PerformGroupCheck<TKey, TTuple>(Dictionary<TKey, TTuple> optionsIndex,
+                                                     Dictionary<TKey, Tuple<string, string, int>> groupIndex,
+                                                     Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
+                                                     TupleExtractor<TTuple> extractor,
+                                                     string lineType) where TKey : notnull
         {
-            if (type == "GROUP")
+            foreach (var entry in optionsIndex)
             {
-                foreach (var optionsGroupEntry in groupIndex)
-                {
-                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-                    string groupName = optionsGroupData.Item1;
+                TTuple tuple = entry.Value;
 
-                    if (groupName == specified)
+                // Use the extractor to get the groupType and specified strings.
+                (string groupType, string specified) = extractor(tuple);
+                if (groupType == "GROUP")
+                {
+                    foreach (var optionsGroupEntry in groupIndex)
                     {
-                        return true; // Matching group found
+                        Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+                        string groupName = optionsGroupData.Item1;
+
+                        if (groupName == specified)
+                        {
+                            return true; // Matching GROUP found.
+                        }
                     }
                 }
-            }
-            else if (type == "HOST_GROUP")
-            {
-                foreach (var optionsHostGroupEntry in hostGroupIndex)
+                else if (groupType == "HOST_GROUP")
                 {
-                    Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
-                    string hostGroupName = optionsHostGroupData.Item1;
-
-                    if (hostGroupName == specified)
+                    foreach (var optionsHostGroupEntry in hostGroupIndex)
                     {
-                        return true; // Matching host group found
+                        Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
+                        string hostGroupName = optionsHostGroupData.Item1;
+
+                        if (hostGroupName == specified)
+                        {
+                            return true; // Matching HOST_GROUP found.
+                        }
                     }
                 }
-            }
 
-            // No matching group found
-            analysisFailed = true;
-            OutputTextBlock.Text = string.Empty;
-            ErrorWindow errorWindow = new();
-            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a {type} on an {lineType} line named \"{specified}\", " +
-                $"but this {type} does not exist in your options file. Please check your {type}s for any typos.";
-            errorWindow.ShowDialog();
-            return false;
+                // No matching group found.
+                string aOrAn;
+
+                if (lineType == "RESERVE")
+                {
+                    aOrAn = "a";
+                }
+                else
+                {
+                    aOrAn = "an";
+                }
+
+                analysisFailed = true;
+                OutputTextBlock.Text = string.Empty;
+                ErrorWindow errorWindow = new();
+                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                    $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                errorWindow.ShowDialog();
+                return false;
+            }
+            return true;
         }
 
         private void ValidateGroups()
@@ -3088,37 +3204,46 @@ namespace Options.File.Checker.WPF
             // PerformGroupCheck for INCLUDE lines.
             foreach (var optionsIncludeEntry in optionsIncludeIndex)
             {
-                Tuple<string, string, string, string, string> optionsIncludeData = optionsIncludeEntry.Value;
-                string includeClientType = optionsIncludeData.Item4;
-                string includeClientSpecified = optionsIncludeData.Item5;
-
-                if (!PerformGroupCheck(optionsIncludeIndex, optionsGroupIndex, optionsHostGroupIndex, includeClientType, includeClientSpecified, "INCLUDE"))
+                if (!PerformGroupCheck(optionsIncludeIndex, optionsGroupIndex, optionsHostGroupIndex,
+                                       tuple => (tuple.Item4, tuple.Item5), "INCLUDE"))
                 {
                     return;
                 }
             }
 
-            // PerformGroupCheck for EXCLUDE lines.
+            // EXCLUDE lines.
             foreach (var optionsExcludeEntry in optionsExcludeIndex)
             {
-                Tuple<string, string, string, string, string> optionsExcludeData = optionsExcludeEntry.Value;
-                string excludeClientType = optionsExcludeData.Item4;
-                string excludeClientSpecified = optionsExcludeData.Item5;
-
-                if (!PerformGroupCheck(optionsExcludeIndex, optionsGroupIndex, optionsHostGroupIndex, excludeClientType, excludeClientSpecified, "EXCLUDE"))
+                if (!PerformGroupCheck(optionsExcludeIndex, optionsGroupIndex, optionsHostGroupIndex,
+                                       tuple => (tuple.Item4, tuple.Item5), "EXCLUDE"))
                 {
                     return;
                 }
             }
 
-            // PerformGroupCheck for RESERVE lines.
+            // RESERVE lines.
             foreach (var optionsReserveEntry in optionsReserveIndex)
             {
-                Tuple<int, string, string, string, string, string> optionsReserveData = optionsReserveEntry.Value;
-                string reserveClientType = optionsReserveData.Item5;
-                string reserveClientSpecified = optionsReserveData.Item6;
-
-                if (!PerformGroupCheck(optionsExcludeIndex, optionsGroupIndex, optionsHostGroupIndex, reserveClientType, reserveClientSpecified, "RESERVE"))
+                if (!PerformGroupCheck(optionsReserveIndex, optionsGroupIndex, optionsHostGroupIndex,
+                                       tuple => (tuple.Item5, tuple.Item6), "RESERVE"))
+                {
+                    return;
+                }
+            }
+            // INCLUDEALL lines. Probably broken # Add some code.
+            foreach (var optionsIncludeAllEntry in optionsIncludeAllIndex)
+            {
+                if (!PerformGroupCheck(optionsIncludeAllIndex, optionsGroupIndex, optionsHostGroupIndex,
+                                       tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL"))
+                {
+                    return;
+                }
+            }
+            // EXCLUDEALL lines. # Broken. # Add some code.
+            foreach (var optionsExcludeAllEntry in optionsExcludeAllIndex)
+            {
+                if (!PerformGroupCheck(optionsExcludeAllIndex, optionsGroupIndex, optionsHostGroupIndex,
+                                       tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL"))
                 {
                     return;
                 }
