@@ -1230,6 +1230,17 @@ namespace Options.File.Checker.WPF
                         excludeAllClientType = lineParts[1];
                         excludeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
+                        if (excludeAllClientType != "GROUP" && excludeAllClientType != "HOST" && excludeAllClientType != "HOST_GROUP" && excludeAllClientType != "DISPLAY" &&
+                            excludeAllClientType != "PROJECT" && excludeAllClientType != "INTERNET")
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " +
+                                $"line as \"{excludeAllClientType}\". Please reformat this EXCLUDEALL line.";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         if (debug)
                         {
                             OutputTextBlock.Text += $"EXCLUDEALL: {excludeAllClientType}. Clients: {excludeAllClientSpecified}\r\n";
@@ -1250,6 +1261,17 @@ namespace Options.File.Checker.WPF
                         includeAllClientType = lineParts[1];
                         includeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
+                        if (includeAllClientType != "GROUP" && includeAllClientType != "HOST" && includeAllClientType != "HOST_GROUP" && includeAllClientType != "DISPLAY" &&
+                            includeAllClientType != "PROJECT" && includeAllClientType != "INTERNET")
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have incorrectly specified the client type on an INCLUDEALL " +
+                                $"line as \"{includeAllClientType}\". Please reformat this INCLUDEALL line.";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         if (debug)
                         {
                             OutputTextBlock.Text += $"INCLUDEALL: {includeAllClientType}. Clients: {includeAllClientSpecified}\r\n";
@@ -1264,7 +1286,7 @@ namespace Options.File.Checker.WPF
                 {
                     string line = filteredOptionsFileLines[optionsIncludeAllLineIndex];
                     if (line.TrimStart().StartsWith("LINGER") || line.TrimStart().StartsWith("TIMEOUT") || line.TrimStart().StartsWith("NOLOG") ||
-                        line.TrimStart().StartsWith("REPORTLOG") || line.TrimStart().StartsWith("MAX"))
+                        line.TrimStart().StartsWith("REPORTLOG") || line == "MAX_OVERDRAFT")
                     {
                         uncommonOptionUsed = true;
                         break;
@@ -3211,7 +3233,7 @@ namespace Options.File.Checker.WPF
                 }
             }
 
-            // EXCLUDE lines.
+            // EXCLUDE
             foreach (var optionsExcludeEntry in optionsExcludeIndex)
             {
                 if (!PerformGroupCheck(optionsExcludeIndex, optionsGroupIndex, optionsHostGroupIndex,
@@ -3221,7 +3243,7 @@ namespace Options.File.Checker.WPF
                 }
             }
 
-            // RESERVE lines.
+            // RESERVE
             foreach (var optionsReserveEntry in optionsReserveIndex)
             {
                 if (!PerformGroupCheck(optionsReserveIndex, optionsGroupIndex, optionsHostGroupIndex,
@@ -3230,7 +3252,7 @@ namespace Options.File.Checker.WPF
                     return;
                 }
             }
-            // INCLUDEALL lines. Probably broken # Add some code.
+            // INCLUDEALL
             foreach (var optionsIncludeAllEntry in optionsIncludeAllIndex)
             {
                 if (!PerformGroupCheck(optionsIncludeAllIndex, optionsGroupIndex, optionsHostGroupIndex,
@@ -3239,7 +3261,7 @@ namespace Options.File.Checker.WPF
                     return;
                 }
             }
-            // EXCLUDEALL lines. # Broken. # Add some code.
+            // EXCLUDEALL
             foreach (var optionsExcludeAllEntry in optionsExcludeAllIndex)
             {
                 if (!PerformGroupCheck(optionsExcludeAllIndex, optionsGroupIndex, optionsHostGroupIndex,
