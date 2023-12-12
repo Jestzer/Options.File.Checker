@@ -63,8 +63,7 @@ namespace Options.File.Checker.WPF
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
-
-        public string PackageVersion
+        public static string PackageVersion
         {
             get
             {
@@ -118,7 +117,10 @@ namespace Options.File.Checker.WPF
         {
             WindowState = WindowState.Minimized;
         }
-
+        private void CheckforUpdateButton_Click(object sender, RoutedEventArgs e)
+        {
+            // Nothing to see here folks, just some code waiting to be written.
+        }
         private void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
         {
             OpenFileDialog openFileDialog = new();
@@ -144,13 +146,13 @@ namespace Options.File.Checker.WPF
                     return;
                 }
 
-                // I probably should put in more checks than this, but I imagine this'll take care of 99.9% of invalid files.
+                // The first of a handful of checks.
                 bool containsINCREMENT = System.IO.File.ReadAllText(selectedFile).Contains("INCREMENT");
 
                 if (!containsINCREMENT)
                 {
                     ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
+                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or it is corrupted.";
                     errorWindow.ShowDialog();
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
@@ -372,7 +374,7 @@ namespace Options.File.Checker.WPF
                         string productKey = lineParts[6];
                         string licenseOffering = "licenseOfferingIsBroken";
                         string licenseNumber = "licenseNumberisBroken";
-                        int.TryParse(lineParts[5], out seatCount);
+                        _ = int.TryParse(lineParts[5], out seatCount);
                         string rawSeatCount = lineParts[5];
 
                         // If you're using a PLP license, then we don't care about this product.
