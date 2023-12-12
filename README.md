@@ -8,7 +8,6 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 
 To do:
-- If a GROUP or HOST_GROUP is used with something such as an INCLUDE line, then check to make sure the GROUP actually exists.
 - Make icon look nicer.
 - Remove case sensitivity for key=
 - Redo logic for getting the license number.
