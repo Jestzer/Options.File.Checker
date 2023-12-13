@@ -1,8 +1,10 @@
 {
   "version": 2,
-  "dgSpecHash": "hgEyqU4Q4j/7ORUvlszszrV+3u4FbXoUJpB8W3mIQvxM73Ik1mXYWu6YNa7GgUqU31SqEvAIQJuabXilQF/XrA==",
+  "dgSpecHash": "sWacar4o1OvJQJyajLyKgpI/nCpeXNBCv5bHCFQ7z1Hx1l/y9pNUta4lF0lzgKPuWp3lIdirBb0GhQRFX09pQg==",
   "success": true,
   "projectFilePath": "C:\\Users\\toaja\\My_Programs_Local\\options.file.checker.c\\Options.File.Checker.WPF.csproj",
-  "expectedPackageFiles": [],
+  "expectedPackageFiles": [
+    "C:\\Users\\toaja\\.nuget\\packages\\newtonsoft.json\\13.0.3\\newtonsoft.json.13.0.3.nupkg.sha512"
+  ],
   "logs": []
 }

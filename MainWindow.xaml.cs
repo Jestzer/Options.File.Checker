@@ -4,10 +4,12 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
+using Newtonsoft.Json;
 
 namespace Options.File.Checker.WPF
 {
@@ -63,6 +65,7 @@ namespace Options.File.Checker.WPF
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
+
         public static string PackageVersion
         {
             get
@@ -117,9 +120,70 @@ namespace Options.File.Checker.WPF
         {
             WindowState = WindowState.Minimized;
         }
-        private void CheckforUpdateButton_Click(object sender, RoutedEventArgs e)
+        private async void CheckforUpdateButton_Click(object sender, EventArgs e)
         {
-            // Nothing to see here folks, just some code waiting to be written.
+            Version currentVersion = new Version(PackageVersion);
+
+            // GitHub API URL for the latest release.
+            string latestReleaseUrl = "https://api.github.com/repos/Jestzer/options.file.checker.c/releases/latest";
+
+            // Use HttpClient to fetch the latest release data.
+            using (HttpClient client = new HttpClient())
+            {
+                // GitHub API requires a user-agent. I'm adding the extra headers to reduce HTTP error 403s.
+                client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("options.file.checker.c", PackageVersion));
+                client.DefaultRequestHeaders.Accept.Add(new System.Net.Http.Headers.MediaTypeWithQualityHeaderValue("application/json"));
+
+                try
+                {
+                    try
+                    {
+                        // Make the latest release a JSON string.
+                        string jsonString = await client.GetStringAsync(latestReleaseUrl);
+
+                        // Parse the JSON to get the tag_name (version number).
+                        dynamic json = JsonConvert.DeserializeObject(jsonString)!;
+                        string latestVersionString = json.tag_name!.ToString();
+
+                        // Remove 'v' prefix if present in the tag name.
+                        latestVersionString = latestVersionString.TrimStart('v');
+
+                        // Parse the version string.
+                        Version latestVersion = new Version(latestVersionString);
+
+                        // Compare the current version with the latest version.
+                        if (currentVersion.CompareTo(latestVersion) < 0)
+                        {
+                            // A newer version is available!
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "";
+                            errorWindow.URLTextBlock.Visibility = Visibility.Visible;
+                            errorWindow.ShowDialog();
+                        }
+                        else
+                        {
+                            // The current version is up-to-date.
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "You are using the latest release available.";
+                            errorWindow.ShowDialog();
+                        }
+                    }
+                    catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    {
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "HTTP error 403: GitHub is saying you're sending them too many requests, so... slow down, I guess? " +
+                            "Here's the automatic error message: \"" + ex.Message + "\"";
+                        errorWindow.ShowDialog();
+                    }                    
+                }
+                catch (Exception ex)
+                {
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "Oh dear, it looks this program had a hard time making the needed connection to GitHub. Make sure you're connected to the internet " +
+                        "and your lousy firewall/VPN isn't blocking the connection. Here's the automated error message: \"" + ex.Message + "\"";
+                    errorWindow.ShowDialog();
+                }
+            }
         }
         private void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
         {
@@ -809,7 +873,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text = string.Empty;
                             ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDE line. " +
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDE line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             errorWindow.ShowDialog();
                             return;
@@ -906,6 +970,17 @@ namespace Options.File.Checker.WPF
                             includeLicenseNumber = string.Empty;
                             includeProductKey = string.Empty;
                         }
+
+                        if (includeClientType != "GROUP" && includeClientType != "HOST_GROUP" && includeClientType != "USER" && includeClientType != "HOST" && includeClientType != "DISPLAY" && includeClientType != "INTERNET" && includeClientType != "PROJECT")
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified an invalid client type, \"{includeClientType}\" on an INCLUDE line. " +
+                                $"The line in question reads as \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         if (debug)
                         {
                             OutputTextBlock.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
@@ -941,7 +1016,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text = string.Empty;
                             ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. " +
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             errorWindow.ShowDialog();
                             return;
@@ -1119,7 +1194,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text = string.Empty;
                             ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDE line. " +
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDE line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             errorWindow.ShowDialog();
                             return;
@@ -1264,7 +1339,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text = string.Empty;
                             ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. " +
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             errorWindow.ShowDialog();
                             return;
@@ -1306,7 +1381,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text = string.Empty;
                             ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. " +
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             errorWindow.ShowDialog();
                             return;
@@ -1404,7 +1479,7 @@ namespace Options.File.Checker.WPF
             {
                 OutputTextBlock.Text = string.Empty;
                 ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = "Boo hoo, you broke something. Here's the program's automated error message: " + ex.Message;
+                errorWindow.ErrorTextBlock.Text = "Boo hoo, you broke something. Here's the program's automated error message: \"" + ex.Message + "\"";
                 errorWindow.ShowDialog();
             }
             return;
@@ -3250,6 +3325,10 @@ namespace Options.File.Checker.WPF
                             return true; // Matching HOST_GROUP found.
                         }
                     }
+                }
+                else
+                {
+                    return true; // No need to do this for other client types.
                 }
 
                 // No matching group found.

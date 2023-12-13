@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Input;
+using System.Windows.Navigation;
 
 
 namespace Options.File.Checker.WPF
@@ -21,6 +22,18 @@ namespace Options.File.Checker.WPF
         private void CloseButton_Click(object sender, RoutedEventArgs e)
         {
             Close();
+        }
+        private void Hyperlink_RequestNavigate(object sender, RequestNavigateEventArgs e)
+        {
+            // Open the URL in the default browser.
+            System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo
+            {
+                FileName = e.Uri.AbsoluteUri,
+                UseShellExecute = true
+            });
+
+            // Prevent the navigation from happening within the app.
+            e.Handled = true;
         }
     }
 }
