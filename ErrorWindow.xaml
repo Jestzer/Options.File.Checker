@@ -23,6 +23,12 @@
             </Border>
             <Grid Background="#FF2D2B2B" Grid.Row="1">
                 <TextBlock x:Name="ErrorTextBlock" TextWrapping="Wrap" Text="Errors will appear in this pop-up window." Foreground="White" Margin="32,31,45,32" FontSize="14"/>
+                <TextBlock x:Name="URLTextBlock" TextWrapping="Wrap" Foreground="White" Margin="32,31,45,32" FontSize="14" Visibility="Hidden"> 
+                       A newer version is available! Please download it from 
+                    <Hyperlink NavigateUri="https://github.com/Jestzer/options.file.checker.c/releases/latest" RequestNavigate="Hyperlink_RequestNavigate">
+                        GitHub
+                    </Hyperlink>.
+                </TextBlock>
                 <Button x:Name="OKButton" Content="OK" HorizontalAlignment="Left" Margin="142,160,0,0" VerticalAlignment="Top" Click="CloseButton_Click" Width="152" Foreground="White" Height="42">
                     <Button.Template>
                         <ControlTemplate TargetType="Button">
