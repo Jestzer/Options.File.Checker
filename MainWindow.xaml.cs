@@ -805,6 +805,16 @@ namespace Options.File.Checker.WPF
                             lineParts = lineParts.Skip(1).ToArray();
                         }
 
+                        if (lineParts.Length < 4)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDE line. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         includeProductName = lineParts[1];
                         if (includeProductName.Contains('"'))
                         {
@@ -840,7 +850,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     OutputTextBlock.Text = string.Empty;
                                     ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your INCLUDE lines has a stray colon for {includeProductName}.";
+                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your INCLUDE lines has a stray colon for {includeProductName}.";
                                     errorWindow.ShowDialog();
                                     return;
                                 }
@@ -925,6 +935,16 @@ namespace Options.File.Checker.WPF
                         while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
                         {
                             lineParts = lineParts.Skip(1).ToArray();
+                        }
+
+                        if (lineParts.Length < 5)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
                         }
 
                         reserveSeatsString = lineParts[1];
@@ -1093,6 +1113,16 @@ namespace Options.File.Checker.WPF
                         while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
                         {
                             lineParts = lineParts.Skip(1).ToArray();
+                        }
+
+                        if (lineParts.Length < 4)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDE line. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
                         }
 
                         excludeProductName = lineParts[1];
