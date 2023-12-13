@@ -1259,6 +1259,17 @@ namespace Options.File.Checker.WPF
                     {
                         excludeAllLinesAreUsed = true;
                         string[] lineParts = line.Split(' ');
+
+                        if (lineParts.Length < 3)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         excludeAllClientType = lineParts[1];
                         excludeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
@@ -1290,6 +1301,17 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("INCLUDEALL "))
                     {
                         string[] lineParts = line.Split(' ');
+
+                        if (lineParts.Length < 3)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         includeAllClientType = lineParts[1];
                         includeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
