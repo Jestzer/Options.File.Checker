@@ -122,13 +122,13 @@ namespace Options.File.Checker.WPF
         }
         private async void CheckforUpdateButton_Click(object sender, EventArgs e)
         {
-            Version currentVersion = new Version(PackageVersion);
+            Version currentVersion = new(PackageVersion);
 
             // GitHub API URL for the latest release.
             string latestReleaseUrl = "https://api.github.com/repos/Jestzer/options.file.checker.c/releases/latest";
 
             // Use HttpClient to fetch the latest release data.
-            using (HttpClient client = new HttpClient())
+            using (HttpClient client = new())
             {
                 // GitHub API requires a user-agent. I'm adding the extra headers to reduce HTTP error 403s.
                 client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("options.file.checker.c", PackageVersion));

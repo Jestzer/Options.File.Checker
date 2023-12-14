@@ -72,3 +72,6 @@ C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Er
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\bin\Debug\net7.0-windows\Newtonsoft.Json.dll
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.csproj.AssemblyReference.cache
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.csproj.CopyComplete
+C:\Users\jbuonopa\My Programs\options.file.checker.c\bin\Debug\net7.0-windows\Newtonsoft.Json.dll
+C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.csproj.AssemblyReference.cache
+C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.csproj.CopyComplete
