@@ -158,12 +158,14 @@ namespace Options.File.Checker.WPF
                             ErrorWindow errorWindow = new();
                             errorWindow.ErrorTextBlock.Text = "";
                             errorWindow.URLTextBlock.Visibility = Visibility.Visible;
+                            errorWindow.Title = "Check for updates";
                             errorWindow.ShowDialog();
                         }
                         else
                         {
                             // The current version is up-to-date.
                             ErrorWindow errorWindow = new();
+                            errorWindow.Title = "Check for updates";
                             errorWindow.ErrorTextBlock.Text = "You are using the latest release available.";
                             errorWindow.ShowDialog();
                         }
@@ -171,6 +173,7 @@ namespace Options.File.Checker.WPF
                     catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
                     {
                         ErrorWindow errorWindow = new();
+                        errorWindow.Title = "Check for updates";
                         errorWindow.ErrorTextBlock.Text = "HTTP error 403: GitHub is saying you're sending them too many requests, so... slow down, I guess? " +
                             "Here's the automatic error message: \"" + ex.Message + "\"";
                         errorWindow.ShowDialog();
@@ -179,6 +182,7 @@ namespace Options.File.Checker.WPF
                 catch (Exception ex)
                 {
                     ErrorWindow errorWindow = new();
+                    errorWindow.Title = "Check for updates";
                     errorWindow.ErrorTextBlock.Text = "Oh dear, it looks this program had a hard time making the needed connection to GitHub. Make sure you're connected to the internet " +
                         "and your lousy firewall/VPN isn't blocking the connection. Here's the automated error message: \"" + ex.Message + "\"";
                     errorWindow.ShowDialog();
@@ -836,6 +840,23 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("GROUP "))
                     {
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
+                        if (lineParts.Length < 3)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         groupName = lineParts[1];
                         groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
                         groupUserCount = groupUsers.Split(' ').Length;
@@ -1157,6 +1178,23 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("MAX "))
                     {
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
+                        if (lineParts.Length < 5)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted MAX line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         maxSeats = lineParts[1];
                         maxProductName = lineParts[2];
                         maxClientType = lineParts[3];
@@ -1311,6 +1349,23 @@ namespace Options.File.Checker.WPF
                     {
                         hostGroupsAreUsed = true;
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
+                        if (lineParts.Length < 3)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted HOST_GROUP line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
+
                         hostGroupName = lineParts[1];
                         hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
 
@@ -1334,6 +1389,22 @@ namespace Options.File.Checker.WPF
                     {
                         excludeAllLinesAreUsed = true;
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
+
+                        if (lineParts.Length < 3)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".";
+                            errorWindow.ShowDialog();
+                            return;
+                        }
 
                         if (lineParts.Length < 3)
                         {
@@ -1366,6 +1437,7 @@ namespace Options.File.Checker.WPF
                         optionsExcludeAllIndex[optionsExcludeAllLineIndex] = Tuple.Create(excludeAllClientType, excludeAllClientSpecified);
                     }
                 }
+
                 // INCLUDEALL                
                 for (int optionsIncludeAllLineIndex = 0; optionsIncludeAllLineIndex < filteredOptionsFileLines.Length; optionsIncludeAllLineIndex++)
                 {
