@@ -970,6 +970,19 @@ namespace Options.File.Checker.WPF
                             return;
                         }
 
+                        // Check for stray quotation marks.
+                        int quoteCount = productName.Count(c => c == '"');
+                        if (quoteCount % 2 != 0)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your RESERVE lines has a stray quotation mark. " +
+                                $"The line in question reads as this: {line}";
+                            errorWindow.ShowDialog();
+                            analysisFailed = true;
+                            return;
+                        }
+
                         reserveSeatsString = lineParts[1];
                         reserveProductName = lineParts[2];
 
