@@ -9,7 +9,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
-using Newtonsoft.Json;
+using System.Text.Json;
 
 namespace Options.File.Checker.WPF
 {
@@ -22,6 +22,9 @@ namespace Options.File.Checker.WPF
         // INCLUDE dictionary from the options file.
         Dictionary<int, Tuple<string, string, string, string, string>> optionsIncludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
 
+        // INCLUDE_BORROW 
+        Dictionary<int, Tuple<string, string, string, string, string>> optionsIncludeBorrowIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
+
         // INCLUDEALL
         Dictionary<int, Tuple<string, string>> optionsIncludeAllIndex = new Dictionary<int, Tuple<string, string>>();
 
@@ -30,6 +33,9 @@ namespace Options.File.Checker.WPF
 
         // EXCLUDE
         Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
+
+        // EXCLUDE_BORROW
+        Dictionary<int, Tuple<string, string, string, string, string>> optionsExcludeBorrowIndex = new Dictionary<int, Tuple<string, string, string, string, string>>();
 
         // EXCLUDEALL
         Dictionary<int, Tuple<string, string>> optionsExcludeAllIndex = new Dictionary<int, Tuple<string, string>>();
@@ -50,7 +56,9 @@ namespace Options.File.Checker.WPF
         bool analysisFailed = false;
         bool analysisOfOptionsFileProductsFailed = false;
 
+        // Other goodies.
         bool cnuIsUsed = false;
+        bool excludeLinesAreUsed = false;
 
         public MainWindow()
         {
@@ -142,8 +150,9 @@ namespace Options.File.Checker.WPF
                         string jsonString = await client.GetStringAsync(latestReleaseUrl);
 
                         // Parse the JSON to get the tag_name (version number).
-                        dynamic json = JsonConvert.DeserializeObject(jsonString)!;
-                        string latestVersionString = json.tag_name!.ToString();
+                        using JsonDocument doc = JsonDocument.Parse(jsonString);
+                        JsonElement root = doc.RootElement;
+                        string latestVersionString = root.GetProperty("tag_name").GetString()!;
 
                         // Remove 'v' prefix if present in the tag name.
                         latestVersionString = latestVersionString.TrimStart('v');
@@ -170,6 +179,13 @@ namespace Options.File.Checker.WPF
                             errorWindow.ShowDialog();
                         }
                     }
+                    catch (JsonException ex)
+                    {
+                        ErrorWindow errorWindow = new();
+                        errorWindow.Title = "Check for updates";
+                        errorWindow.ErrorTextBlock.Text = "The Json code in this program didn't work. Here's the automatic error message it made: \"" + ex.Message + "\"";
+                        errorWindow.ShowDialog();
+                    }
                     catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
                     {
                         ErrorWindow errorWindow = new();
@@ -177,7 +193,14 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = "HTTP error 403: GitHub is saying you're sending them too many requests, so... slow down, I guess? " +
                             "Here's the automatic error message: \"" + ex.Message + "\"";
                         errorWindow.ShowDialog();
-                    }                    
+                    }
+                    catch (HttpRequestException ex)
+                    {
+                        ErrorWindow errorWindow = new();
+                        errorWindow.Title = "Check for updates";
+                        errorWindow.ErrorTextBlock.Text = "HTTP error. Here's the automatic error message: \"" + ex.Message + "\"";
+                        errorWindow.ShowDialog();
+                    }
                 }
                 catch (Exception ex)
                 {
@@ -346,8 +369,7 @@ namespace Options.File.Checker.WPF
             analysisFailed = false;
             analysisOfOptionsFileProductsFailed = false;
             OutputTextBlock.Text = string.Empty;
-            bool excludeLinesAreUsed = false;
-            bool excludeAllLinesAreUsed = false;
+            excludeLinesAreUsed = false;
             bool hostGroupsAreUsed = false;
 
             try
@@ -703,8 +725,7 @@ namespace Options.File.Checker.WPF
                             }
                         }
 
-                        // Check the product's expiration date.
-                        // Year 0000 means perpetual.
+                        // Check the product's expiration date. Year 0000 means perpetual.
                         if (productExpirationDate == "01-jan-0000")
                         {
                             productExpirationDate = "01-jan-2999";
@@ -830,6 +851,8 @@ namespace Options.File.Checker.WPF
                     }
                 }
 
+                OutputTextBlock.Text += $"Is case sensitivity turned off?: {caseSensitivity}\r\n";
+
                 // GROUP dictionary.                
                 for (int optionsGroupLineIndex = 0; optionsGroupLineIndex < filteredOptionsFileLines.Length; optionsGroupLineIndex++)
                 {
@@ -869,147 +892,51 @@ namespace Options.File.Checker.WPF
                     }
                 }
 
-                // INCLUDE dictionary.
-                for (int optionsIncludeLineIndex = 0; optionsIncludeLineIndex < filteredOptionsFileLines.Length; optionsIncludeLineIndex++)
+                // INCLUDE dictionary setup.
+                ProcessIncludeAndExcludeLines(filteredOptionsFileLines, "INCLUDE", (index, productName, licenseNumber, productKey, clientType, clientSpecified) =>
                 {
-                    string line = filteredOptionsFileLines[optionsIncludeLineIndex];
-                    string includeProductName = "brokenIncludeProductName";
-                    string includeLicenseNumber = "brokenIncludeLicenseNumber";
-                    string includeProductKey = "brokenIncludeProductKey";
-                    string includeClientType = "brokenIncludeClientType";
-                    string includeClientSpecified = "brokenIncludeClientSpecified";
-
-                    // Put in code that deals with this line: "MATLAB:asset_info=112233" GROUP 112233_MATLAB
-                    if (line.TrimStart().StartsWith("INCLUDE "))
-                    {
-                        string[] lineParts = line.Split(' ');
-
-                        // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
-
-                        if (lineParts.Length < 4)
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDE line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        includeProductName = lineParts[1];
-                        if (includeProductName.Contains('"'))
-                        {
-                            includeProductName = includeProductName.Replace("\"", "");
-                            includeLicenseNumber = lineParts[2];
-                            if (!includeProductName.Contains(':'))
-                            {
-                                if (includeLicenseNumber.Contains("key="))
-                                {
-                                    includeProductKey = lineParts[2];
-                                    string unfixedIncludeProductKey = includeProductKey;
-                                    string quotedIncludeProductKey = unfixedIncludeProductKey.Replace("key=", "");
-                                    includeProductKey = quotedIncludeProductKey.Replace("\"", "");
-                                    includeLicenseNumber = string.Empty;
-                                }
-                                // asset_info=
-                                else
-                                {
-                                    string unfixedIncludeLicenseNumber = includeLicenseNumber;
-                                    string quoteIncludeLicenseNumber = Regex.Replace(unfixedIncludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                    includeLicenseNumber = quoteIncludeLicenseNumber.Replace("\"", "");
-                                    includeProductKey = string.Empty;
-                                }
-
-                                includeClientType = lineParts[3];
-                                includeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
-                            }
-                            // If you have " and :
-                            else
-                            {
-                                string[] colonParts = includeProductName.Split(":");
-                                if (colonParts.Length != 2)
-                                {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your INCLUDE lines has a stray colon for {includeProductName}.";
-                                    errorWindow.ShowDialog();
-                                    return;
-                                }
-                                includeProductName = colonParts[0];
-                                if (colonParts[1].Contains("key="))
-                                {
-                                    string unfixedIncludeProductKey = colonParts[1];
-                                    includeProductKey = unfixedIncludeProductKey.Replace("key=", "");
-                                    includeLicenseNumber = string.Empty;
-                                }
-                                else
-                                {
-                                    string unfixedIncludeLicenseNumber = colonParts[1];
-                                    includeLicenseNumber = Regex.Replace(unfixedIncludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                    includeProductKey = string.Empty;
-                                }
-                                includeClientType = lineParts[2];
-                                includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            }
-                        }
-                        // In case you decided to use a : instead of ""...
-                        else if (includeProductName.Contains(':'))
-                        {
-                            string[] colonParts = includeProductName.Split(":");
-                            if (colonParts.Length != 2)
-                            {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your INCLUDE lines has a stray colon for {includeProductName}.";
-                                errorWindow.ShowDialog();
-                                return;
-                            }
-                            includeProductName = colonParts[0];
-                            if (colonParts[1].Contains("key="))
-                            {
-                                string unfixedIncludeProductKey = colonParts[1];
-                                includeProductKey = unfixedIncludeProductKey.Replace("key=", "");
-                                includeLicenseNumber = string.Empty;
-                            }
-                            else
-                            {
-                                string unfixedIncludeLicenseNumber = colonParts[1];
-                                includeLicenseNumber = Regex.Replace(unfixedIncludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                includeProductKey = string.Empty;
-                            }
-                            includeClientType = lineParts[2];
-                            includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                        }
-                        else
-                        {
-                            includeClientType = lineParts[2];
-                            includeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            includeLicenseNumber = string.Empty;
-                            includeProductKey = string.Empty;
-                        }
-
-                        if (includeClientType != "GROUP" && includeClientType != "HOST_GROUP" && includeClientType != "USER" && includeClientType != "HOST" && includeClientType != "DISPLAY" && includeClientType != "INTERNET" && includeClientType != "PROJECT")
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified an invalid client type, \"{includeClientType}\" on an INCLUDE line. " +
-                                $"The line in question reads as \"{line}\".";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (debug)
-                        {
-                            OutputTextBlock.Text += $"{includeProductName}: SN:{includeLicenseNumber}. PK:{includeProductKey} CT:{includeClientType} CS: {includeClientSpecified}\r\n";
-                        }
-                        optionsIncludeIndex[optionsIncludeLineIndex] = Tuple.Create(includeProductName, includeLicenseNumber, includeProductKey, includeClientType, includeClientSpecified);
-                    }
+                    optionsIncludeIndex[index] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified);
+                });
+                if (analysisFailed)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    return;
                 }
-                OutputTextBlock.Text += $"Is case sensitivity turned off?: {caseSensitivity}\r\n";
+
+                // INCLUDE_BORROW dictionary setup.
+                ProcessIncludeAndExcludeLines(filteredOptionsFileLines, "INCLUDE_BORROW", (index, productName, licenseNumber, productKey, clientType, clientSpecified) =>
+                {
+                    optionsIncludeBorrowIndex[index] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified);
+                });
+                if (analysisFailed)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    return;
+                }
+
+                // EXCLUDE dictionary setup.
+                ProcessIncludeAndExcludeLines(filteredOptionsFileLines, "EXCLUDE", (index, productName, licenseNumber, productKey, clientType, clientSpecified) =>
+                {
+                    optionsExcludeIndex[index] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified);
+                });
+
+                if (analysisFailed)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    return;
+                }
+
+                // EXCLUDE_BORROW dictionary setup.
+                ProcessIncludeAndExcludeLines(filteredOptionsFileLines, "EXCLUDE_BORROW", (index, productName, licenseNumber, productKey, clientType, clientSpecified) =>
+                {
+                    optionsExcludeBorrowIndex[index] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified);
+                });
+
+                if (analysisFailed)
+                {
+                    OutputTextBlock.Text = string.Empty;
+                    return;
+                }
 
                 // RESERVE dictionary.                
                 for (int optionsReserveLineIndex = 0; optionsReserveLineIndex < filteredOptionsFileLines.Length; optionsReserveLineIndex++)
@@ -1208,136 +1135,6 @@ namespace Options.File.Checker.WPF
                     }
                 }
 
-                // EXCLUDE dictionary.
-                for (int optionsExcludeLineIndex = 0; optionsExcludeLineIndex < filteredOptionsFileLines.Length; optionsExcludeLineIndex++)
-                {
-                    string line = filteredOptionsFileLines[optionsExcludeLineIndex];
-                    string excludeProductName = "brokenProductName";
-                    string excludeLicenseNumber = "brokenLicenseNumber";
-                    string excludeProductKey = "brokenProductKey";
-                    string excludeClientType = "brokenClientType";
-                    string excludeClientSpecified = "brokenClientSpecified";
-                    if (line.TrimStart().StartsWith("EXCLUDE "))
-                    {
-                        excludeLinesAreUsed = true;
-                        string[] lineParts = line.Split(' ');
-
-                        // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
-
-                        if (lineParts.Length < 4)
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDE line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        excludeProductName = lineParts[1];
-                        if (excludeProductName.Contains('"'))
-                        {
-                            excludeProductName = excludeProductName.Replace("\"", "");
-                            excludeLicenseNumber = lineParts[2];
-                            if (!excludeProductName.Contains(':'))
-                            {
-                                if (excludeLicenseNumber.Contains("key="))
-                                {
-                                    excludeProductKey = lineParts[2];
-                                    string unfixedExcludeProductKey = excludeProductKey;
-                                    string quotedExcludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
-                                    excludeProductKey = quotedExcludeProductKey.Replace("\"", "");
-                                    excludeLicenseNumber = string.Empty;
-                                }
-                                // asset_info=
-                                else
-                                {
-                                    string unfixedExcludeLicenseNumber = excludeLicenseNumber;
-                                    string quoteExcludeLicenseNumber = Regex.Replace(unfixedExcludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                    excludeLicenseNumber = quoteExcludeLicenseNumber.Replace("\"", "");
-                                    excludeProductKey = string.Empty;
-                                }
-
-                                excludeClientType = lineParts[3];
-                                excludeClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
-                            }
-                            // If you have " and :
-                            else
-                            {
-                                string[] colonParts = excludeProductName.Split(":");
-                                if (colonParts.Length != 2)
-                                {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your EXCLUDE lines has a stray colon for {excludeProductName}.";
-                                    errorWindow.ShowDialog();
-                                    return;
-                                }
-                                excludeProductName = colonParts[0];
-                                if (colonParts[1].Contains("key="))
-                                {
-                                    string unfixedExcludeProductKey = colonParts[1];
-                                    excludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
-                                    excludeLicenseNumber = string.Empty;
-                                }
-                                else
-                                {
-                                    string unfixedExcludeLicenseNumber = colonParts[1];
-                                    excludeLicenseNumber = Regex.Replace(unfixedExcludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                    excludeProductKey = string.Empty;
-                                }
-                                excludeClientType = lineParts[2];
-                                excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            }
-                        }
-                        // In case you decided to use a : instead of ""...
-                        else if (excludeProductName.Contains(':'))
-                        {
-                            string[] colonParts = excludeProductName.Split(":");
-                            if (colonParts.Length != 2)
-                            {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your EXCLUDE lines has a stray colon for {excludeProductName}.";
-                                errorWindow.ShowDialog();
-                                return;
-                            }
-                            excludeProductName = colonParts[0];
-                            if (colonParts[1].Contains("key="))
-                            {
-                                string unfixedExcludeProductKey = colonParts[1];
-                                excludeProductKey = unfixedExcludeProductKey.Replace("key=", "");
-                                excludeLicenseNumber = string.Empty;
-                            }
-                            else
-                            {
-                                string unfixedExcludeLicenseNumber = colonParts[1];
-                                excludeLicenseNumber = Regex.Replace(unfixedExcludeLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                excludeProductKey = string.Empty;
-                            }
-                            excludeClientType = lineParts[2];
-                            excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                        }
-                        else
-                        {
-                            excludeClientType = lineParts[2];
-                            excludeClientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            excludeLicenseNumber = string.Empty;
-                            excludeProductKey = string.Empty;
-                        }
-
-                        if (debug)
-                        {
-                            OutputTextBlock.Text += $"{excludeProductName}: SN:{excludeLicenseNumber}. PK:{excludeProductKey} CT:{excludeClientType} CS: {excludeClientSpecified}\r\n";
-                        }
-                        optionsExcludeIndex[optionsExcludeLineIndex] = Tuple.Create(excludeProductName, excludeLicenseNumber, excludeProductKey, excludeClientType, excludeClientSpecified);
-                    }
-                }
-
                 // HOST_GROUP dictionary.
                 for (int optionsHostGroupLineIndex = 0; optionsHostGroupLineIndex < filteredOptionsFileLines.Length; optionsHostGroupLineIndex++)
                 {
@@ -1387,7 +1184,7 @@ namespace Options.File.Checker.WPF
 
                     if (line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
-                        excludeAllLinesAreUsed = true;
+                        excludeLinesAreUsed = true;
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -1487,7 +1284,7 @@ namespace Options.File.Checker.WPF
                 {
                     string line = filteredOptionsFileLines[optionsIncludeAllLineIndex];
                     if (line.TrimStart().StartsWith("LINGER") || line.TrimStart().StartsWith("TIMEOUT") || line.TrimStart().StartsWith("NOLOG") ||
-                        line.TrimStart().StartsWith("REPORTLOG") || line == "MAX_OVERDRAFT")
+                        line.TrimStart().StartsWith("REPORTLOG") || line == "MAX_OVERDRAFT" || line == "DEBUGLOG")
                     {
                         uncommonOptionUsed = true;
                         break;
@@ -1497,14 +1294,8 @@ namespace Options.File.Checker.WPF
                 // Output some warning messages, if needed.
                 if (excludeLinesAreUsed)
                 {
-                    OutputTextBlock.Text += "\r\nYou are using at least 1 EXCLUDE line in your options file. If a user is encountering an License Manager Error -38, " +
-                        "then this is because they are listed on an EXCLUDE or EXCLUDEALL line in the options file.\r\n";
-                }
-
-                if (excludeAllLinesAreUsed)
-                {
-                    OutputTextBlock.Text += "\r\nYou are using at least 1 EXCLUDEALL line in your options file. If a user is encountering an License Manager Error -38, " +
-                        "then this is because they are listed on an EXCLUDE or EXCLUDEALL line in the options file.\r\n";
+                    OutputTextBlock.Text += "\r\nYou are using at least 1 EXCLUDE, EXCLUDEALL, or EXCLUDE_BORROW line in your options file. If a user is encountering an License Manager Error -38, " +
+                        "then this is because they are listed on one of these lines in the options file.\r\n";
                 }
 
                 if (hostGroupsAreUsed)
@@ -1555,6 +1346,159 @@ namespace Options.File.Checker.WPF
                 errorWindow.ShowDialog();
             }
             return;
+        }
+
+        private void ProcessIncludeAndExcludeLines(string[] filteredOptionsFileLines, string optionType, Action<int, string, string, string, string, string> processLine)
+        {
+            for (int optionsLineIndex = 0; optionsLineIndex < filteredOptionsFileLines.Length; optionsLineIndex++)
+            {
+                string line = filteredOptionsFileLines[optionsLineIndex];
+                string productName = "brokenProductName";
+                string licenseNumber = "brokenLicenseNumber";
+                string productKey = "brokenProductKey";
+                string clientType = "brokenClientType";
+                string clientSpecified = "brokenClientSpecified";
+                if (line.TrimStart().StartsWith($"{optionType} "))
+                {
+                    if (line.TrimStart().StartsWith("EXCLUDE"))
+                    {
+                        excludeLinesAreUsed = true;
+                    }
+                    string[] lineParts = line.Split(' ');
+
+                    // Stop putting in random spaces.
+                    while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                    {
+                        lineParts = lineParts.Skip(1).ToArray();
+                    }
+
+                    if (lineParts.Length < 4)
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an incorrectly formatted {optionType} line. It is missing necessary information. " +
+                            $"The line in question is \"{line}\".";
+                        errorWindow.ShowDialog();
+                        analysisFailed = true;
+                        return;
+                    }
+
+                    productName = lineParts[1];
+                    if (productName.Contains('"'))
+                    {
+                        // Check for stray quotation marks.
+                        int quoteCount = productName.Count(c => c == '"');
+                        if (quoteCount % 2 != 0)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your {optionType} lines has a stray quotation mark. " +
+                                $"The line in question reads as this: {line}";
+                            errorWindow.ShowDialog();
+                            analysisFailed = true;
+                            return;
+                        }
+
+                        productName = productName.Replace("\"", "");
+                        licenseNumber = lineParts[2];
+                        if (!productName.Contains(':'))
+                        {
+                            if (licenseNumber.Contains("key="))
+                            {
+                                productKey = lineParts[2];
+                                string unfixedProductKey = productKey;
+                                string quotedProductKey = unfixedProductKey.Replace("key=", "");
+                                productKey = quotedProductKey.Replace("\"", "");
+                                licenseNumber = string.Empty;
+                            }
+                            // asset_info=
+                            else
+                            {
+                                string unfixedLicenseNumber = licenseNumber;
+                                string quoteLicenseNumber = Regex.Replace(unfixedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                                licenseNumber = quoteLicenseNumber.Replace("\"", "");
+                                productKey = string.Empty;
+                            }
+
+                            clientType = lineParts[3];
+                            clientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                        }
+                        // If you have " and :
+                        else
+                        {
+                            string[] colonParts = productName.Split(":");
+                            if (colonParts.Length != 2)
+                            {
+                                OutputTextBlock.Text = string.Empty;
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.";
+                                errorWindow.ShowDialog();
+                                analysisFailed = true;
+                                return;
+                            }
+                            productName = colonParts[0];
+                            if (colonParts[1].Contains("key="))
+                            {
+                                string unfixedProductKey = colonParts[1];
+                                productKey = unfixedProductKey.Replace("key=", "");
+                                licenseNumber = string.Empty;
+                            }
+                            else
+                            {
+                                string unfixedLicenseNumber = colonParts[1];
+                                licenseNumber = Regex.Replace(unfixedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                                productKey = string.Empty;
+                            }
+                            clientType = lineParts[2];
+                            clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                        }
+                    }
+                    // In case you decided to use a : instead of ""...
+                    else if (productName.Contains(':'))
+                    {
+                        string[] colonParts = productName.Split(":");
+                        if (colonParts.Length != 2)
+                        {
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.";
+                            errorWindow.ShowDialog();
+                            analysisFailed = true;
+                            return;
+                        }
+                        productName = colonParts[0];
+                        if (colonParts[1].Contains("key="))
+                        {
+                            string unfixedProductKey = colonParts[1];
+                            productKey = unfixedProductKey.Replace("key=", "");
+                            licenseNumber = string.Empty;
+                        }
+                        else
+                        {
+                            string unfixedLicenseNumber = colonParts[1];
+                            licenseNumber = Regex.Replace(unfixedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                            productKey = string.Empty;
+                        }
+                        clientType = lineParts[2];
+                        clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                    }
+                    else
+                    {
+                        clientType = lineParts[2];
+                        clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                        licenseNumber = string.Empty;
+                        productKey = string.Empty;
+                    }
+
+                    if (debug)
+                    {
+                        OutputTextBlock.Text += $"{productName}: SN:{licenseNumber}. PK:{productKey} CT:{clientType} CS: {clientSpecified}\r\n";
+                    }
+
+                    // Call the processLine action with the parsed data.
+                    processLine(optionsLineIndex, productName, licenseNumber, productKey, clientType, clientSpecified);
+                }
+            }
         }
 
         private void CalculateRemainingSeats()
@@ -3069,6 +3013,7 @@ namespace Options.File.Checker.WPF
 
                 if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
                 {
+                    OutputTextBlock.Text = string.Empty;
                     ErrorWindow errorWindow = new();
                     errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it uses \"USE_SERVER\". " +
                         "This should be in the end user's network.lic file, not the Network License Manager's license file.";
@@ -3357,7 +3302,7 @@ namespace Options.File.Checker.WPF
             }
         }
 
-        // Define a delegate that takes a tuple and returns the groupType and specified strings
+        // Define a delegate that takes a tuple and returns the groupType and specified strings.
         public delegate (string groupType, string specified) TupleExtractor<in TTuple>(TTuple tuple);
 
         private bool PerformGroupCheck<TKey, TTuple>(Dictionary<TKey, TTuple> optionsIndex,
