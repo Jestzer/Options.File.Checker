@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Options.File.Checker.WPF")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("0.1.5.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.5+27ddb1ae2fa6e10fc0b5fbad68d84ee89a989647")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("0.1.5+75bc2a88416bad5e29c0767da4d2864f763a5358")]
 [assembly: System.Reflection.AssemblyProductAttribute("Options.File.Checker.WPF")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Options.File.Checker.WPF")]
 [assembly: System.Reflection.AssemblyVersionAttribute("0.1.5.0")]
