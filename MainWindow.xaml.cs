@@ -450,397 +450,10 @@ namespace Options.File.Checker.WPF
 
                 // Currently in production, unfinished.
                 CollectProductInformation();
-
-                // Get the things we care about from the license file so that we can go through the options file appropriately.
-                string productName = string.Empty;
-                int seatCount = 0;
-
-                for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
+                if (analysisFailed)
                 {
-                    string line = filteredLicenseFileLines[lineIndex];
-
-                    if (line.TrimStart().StartsWith("INCREMENT"))
-                    {
-                        string[] lineParts = line.Split(' ');
-                        productName = lineParts[1];
-                        string productExpirationDate = lineParts[4];
-                        string productKey = lineParts[6];
-                        string licenseOffering = "licenseOfferingIsBroken";
-                        string licenseNumber = "licenseNumberisBroken";
-                        _ = int.TryParse(lineParts[5], out seatCount);
-                        string rawSeatCount = lineParts[5];
-
-                        // If you're using a PLP license, then we don't care about this product.
-                        if (productName == "TMW_Archive")
-                        {
-                            continue;
-                        }
-
-                        // You bastards put the product key (that nobody ever uses but I still have to check just in case) on a different line /sometimes/.
-                        if (productKey == "\\")
-                        {
-                            // Check if there is a next line.
-                            if (lineIndex + 1 < filteredLicenseFileLines.Length)
-                            {
-                                string nextLine = filteredLicenseFileLines[lineIndex + 1];
-                                // Parse the next line as needed.
-                                string[] nextLineParts = nextLine.Split(' ');
-                                string fixedProductKey = nextLineParts[0];
-                                fixedProductKey = fixedProductKey.Replace("\t", "");
-                                productKey = fixedProductKey;
-                                lineIndex++; // Move to the next line since it has been processed. I don't know why this needs to only be in this If statement.
-                            }
-                            else
-                            {
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product key is missing from {productName}.";
-                                errorWindow.ShowDialog();
-                                LicenseFileLocationTextBox.Text = string.Empty;
-                                return;
-                            }
-                        }
-
-                        if (lineIndex + 1 < filteredLicenseFileLines.Length)
-                        {
-                            // Okay now do the thing to get the license offering.
-                            string vendorLine = filteredLicenseFileLines[lineIndex + 1];
-                            string[] vendorLineParts = vendorLine.Split(':');
-                            licenseOffering = vendorLineParts[4];
-
-                            // Uh oh, somebody's using a trial!
-                            if (licenseOffering.Contains("lr="))
-                            {
-                                string possibleUSERGROUPline = filteredLicenseFileLines[lineIndex + 2];
-
-                                if (possibleUSERGROUPline.Contains("USER_BASED="))
-                                {
-                                    licenseOffering = "NNU";
-                                }
-                                else
-                                {
-                                    licenseOffering = "lo=CN";
-                                }
-
-                            }
-
-                            if (licenseOffering.Contains("ei="))
-                            {
-                                licenseOffering = vendorLineParts[3];
-                            }
-                        }
-                        else
-                        {
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The License Offering is missing for {productName}.";
-                            errorWindow.ShowDialog();
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        lineIndex++;
-
-                        // Get the license number.
-                        // IMPORTANT NOTE: There is a reason the license number is not being recorded as an integer. That's because sometimes it contains letters.
-                        // Yes, I understand that means it isn't a number. I don't make these rules.
-                        if (lineIndex + 1 < filteredLicenseFileLines.Length)
-                        {
-                            string licenseNumberLine = filteredLicenseFileLines[lineIndex + 1];
-                            string[] licenseNumberLineParts = licenseNumberLine.Split(" ");
-                            string unprocessedLicenseNumber = licenseNumberLineParts[1];
-                            licenseNumber = Regex.Replace(unprocessedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                            if (licenseNumber.Contains("USER_BASED="))
-                            {
-                                unprocessedLicenseNumber = licenseNumberLineParts[3];
-
-                                // Make sure you don't have a line break ruining our day.
-                                if (unprocessedLicenseNumber == "\\")
-                                {
-                                    string currentLine = filteredLicenseFileLines[lineIndex + 2];
-                                    string pattern = @"asset_info=(\S+)";
-
-                                    Regex regex = new Regex(pattern);
-                                    Match match = regex.Match(currentLine);
-
-                                    if (match.Success)
-                                    {
-                                        licenseNumber = match.Groups[1].Value;
-                                    }
-                                }
-                                else
-                                {
-                                    licenseNumber = Regex.Replace(unprocessedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                }
-                            }
-                        }
-                        else
-                        {
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The License Number is missing from {productName}.";
-                            errorWindow.ShowDialog();
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        //I guess we couldn't just put the license number in one place.
-                        if (licenseNumber.Contains("ISSUED="))
-                        {
-                            if (lineIndex + 1 < filteredLicenseFileLines.Length)
-                            {
-                                lineIndex++;
-                                string nextLine = filteredLicenseFileLines[lineIndex + 1];
-                                int startIndex = nextLine.IndexOf("SN=");
-
-                                // Trials really seem to make getting license numbers even worse.
-                                if (nextLine.Contains("SN=DEMO"))
-                                {
-                                    string currentLine = filteredLicenseFileLines[lineIndex];
-                                    string pattern = @"asset_info=(\S+)";
-
-                                    Regex regex = new Regex(pattern);
-                                    Match match = regex.Match(currentLine);
-
-                                    if (match.Success)
-                                    {
-                                        licenseNumber = match.Groups[1].Value;
-                                    }
-                                    else
-                                    {
-                                        currentLine = filteredLicenseFileLines[lineIndex - 1];
-                                        pattern = @"ei=([^:]+)";
-
-                                        regex = new Regex(pattern);
-                                        match = regex.Match(currentLine);
-
-                                        if (match.Success)
-                                        {
-                                            licenseNumber = match.Groups[1].Value;
-                                        }
-                                        else
-                                        {
-                                            OutputTextBlock.Text = string.Empty;
-                                            ErrorWindow errorWindow = new();
-                                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
-                                                $"It is be read as {licenseNumber} for the product {productName}.";
-                                            errorWindow.ShowDialog();
-                                            return;
-                                        }
-                                    }
-                                }
-                                // If you're not using a trial.
-                                else
-                                {
-                                    // Ensure "SN=" and 8 characters are present. Otherwise... look elsewhere for the license number.
-                                    if (startIndex != -1 && startIndex + 11 <= nextLine.Length)
-                                    {
-                                        string unprocessedLicenseNumber = nextLine.Substring(startIndex + 3, 8); // I imagine someday that 8 will need to be increased.
-                                        licenseNumber = Regex.Replace(unprocessedLicenseNumber, "[^0-9]", "");
-                                    }
-                                    else
-                                    {
-                                        string currentLine = filteredLicenseFileLines[lineIndex];
-                                        string pattern = @"asset_info=(\S+)";
-
-                                        Regex regex = new Regex(pattern);
-                                        Match match = regex.Match(currentLine);
-
-                                        if (match.Success)
-                                        {
-                                            licenseNumber = match.Groups[1].Value;
-                                        }
-                                        else
-                                        {
-                                            currentLine = filteredLicenseFileLines[lineIndex + 2];
-                                            pattern = @"SN=(\S+)";
-
-                                            regex = new Regex(pattern);
-                                            match = regex.Match(currentLine);
-
-                                            if (match.Success)
-                                            {
-                                                licenseNumber = match.Groups[1].Value;
-                                            }
-                                            else
-                                            {
-                                                OutputTextBlock.Text = string.Empty;
-                                                ErrorWindow errorWindow = new();
-                                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
-                                                    $"It is be read as {licenseNumber} for the product {productName}.";
-                                                errorWindow.ShowDialog();
-                                                return;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
-                                    $"It is be read as {licenseNumber} for the product {productName}.";
-                                errorWindow.ShowDialog();
-                                LicenseFileLocationTextBox.Text = string.Empty;
-                                return;
-                            }
-                        }
-                        // Really would kill us to put this license number in one place, wouldn't it?
-                        else if (licenseNumber.Contains("DUP_GROUP="))
-                        {
-                            string currentLine = filteredLicenseFileLines[lineIndex + 1];
-                            string pattern = @"asset_info=(\S+)";
-
-                            Regex regex = new Regex(pattern);
-                            Match match = regex.Match(currentLine);
-
-                            if (match.Success)
-                            {
-                                licenseNumber = match.Groups[1].Value;
-                            }
-                            else
-                            {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
-                                    $"It is be read as {licenseNumber} for the product {productName}.";
-                                errorWindow.ShowDialog();
-                                return;
-                            }
-                        }
-                        else if (licenseNumber == "\\")
-                        {
-                            string currentLine = filteredLicenseFileLines[lineIndex + 2];
-                            string pattern = @"SN=(\S+)";
-
-                            Regex regex = new Regex(pattern);
-                            Match match = regex.Match(currentLine);
-
-                            if (match.Success)
-                            {
-                                licenseNumber = match.Groups[1].Value;
-                            }
-                            else
-                            {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: A license number could not be correctly processed. " +
-                                    $"It is be read as {licenseNumber} for the product {productName}.";
-                                errorWindow.ShowDialog();
-                                return;
-                            }
-                        }
-
-                        // Check the product's expiration date. Year 0000 means perpetual.
-                        if (productExpirationDate == "01-jan-0000")
-                        {
-                            productExpirationDate = "01-jan-2999";
-                        }
-
-                        // Convert/parse the productExpirationDate string to a DateTime object.
-                        DateTime expirationDate = DateTime.ParseExact(productExpirationDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture);
-
-                        // Get the current system date.
-                        DateTime currentDate = DateTime.Now.Date;
-
-                        if (expirationDate < currentDate)
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product {productName} on license number " +
-                                $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (licenseOffering.Contains("NNU"))
-                        {
-                            seatCount /= 2;
-                        }
-
-                        // Technically infinite. This should avoid at least 1 unnecessary error report.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 0))
-                        {
-                            seatCount = 9999999;
-
-                            if (licenseOffering.Contains("CNU"))
-                            {
-                                cnuIsUsed = true;
-                            }
-                        }
-
-                        if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
-                                "that is incorrectly labeled as a Concurrent license.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
-                                $"which cannot use an options file. The license number is question is {licenseNumber}.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (seatCount < 1)
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero. " +
-                                "If you're using a trial license, make sure you selecting the correct License Offering. Otherwise, your license file is corrupt.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        // Before proceeding, make sure the values we've collected are valid.
-                        if (string.IsNullOrWhiteSpace(productName))
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product name is being detected as blank on {licenseNumber}.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: An invalid license number, {licenseNumber}, " +
-                                $"is detected for {productName}.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A license offering could not be detected for {productName} " +
-                                $"on license number {licenseNumber}.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-
-                        if (string.IsNullOrWhiteSpace(productKey))
-                        {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product key could not be detected for {productName} " +
-                                $"on license number {licenseNumber}.";
-                            errorWindow.ShowDialog();
-                            return;
-                        }
-                        if (debug)
-                        {
-                            OutputTextBlock.Text += $"INCREMENT {productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
-                        }
-                        licenseFileIndex[lineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
-                    }
+                    OutputTextBlock.Text = string.Empty;
+                    return;
                 }
 
                 // Check for case sensitivity.
@@ -3532,8 +3145,8 @@ namespace Options.File.Checker.WPF
                         continue;
                     }
 
-                    // License Number
-                    string pattern = @"asset_info=(\d+)"; // Modified pattern to match only digits
+                    // License number
+                    string pattern = @"asset_info=(\d+)";
 
                     if (line.Contains("asset_info="))
                     {
@@ -3549,6 +3162,162 @@ namespace Options.File.Checker.WPF
                     {
                         MessageBox.Show("oh no.");
                     }
+
+                    // License offering
+                    if (line.Contains("lo="))
+                    {
+                        if (line.Contains("lo=CN"))
+                        {
+                            licenseOffering = "lo=CN";
+                        }
+                        else if (line.Contains("lo=CNU"))
+                        {
+                            licenseOffering = "CNU";
+                        }
+                        else if (line.Contains("lo=NNU"))
+                        {
+                            licenseOffering = "NNU";
+                        }
+                        else if (line.Contains("lo=TH"))
+                        {
+                            if (!line.Contains("USER_BASED="))
+                            {
+                                licenseOffering = "lo=CN";
+                            }
+                            else
+                            {
+                                MessageBox.Show("How did you get here?1");
+                            }
+                        }
+                        else
+                        {
+                            MessageBox.Show("How did you get here?2");
+                        }
+                    }
+                    else // Figure out your trial's license offering.
+                    {
+                        if (line.Contains("USER_BASED="))
+                        {
+                            licenseOffering = "NNU";
+                        }
+                        else
+                        {
+                            licenseOffering = "lo=CN";
+                        }
+                    }
+
+                    // Check the product's expiration date. Year 0000 means perpetual.
+                    if (productExpirationDate == "01-jan-0000")
+                    {
+                        productExpirationDate = "01-jan-2999";
+                    }
+
+                    // Convert/parse the productExpirationDate string to a DateTime object.
+                    DateTime expirationDate = DateTime.ParseExact(productExpirationDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture);
+
+                    // Get the current system date.
+                    DateTime currentDate = DateTime.Now.Date;
+
+                    if (expirationDate < currentDate)
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product {productName} on license number " +
+                            $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    if (licenseOffering.Contains("NNU"))
+                    {
+                        seatCount /= 2;
+                    }
+
+                    // Technically infinite. This should avoid at least 1 unnecessary error report.
+                    if (licenseOffering.Contains("CNU") && (seatCount == 0))
+                    {
+                        seatCount = 9999999;
+
+                        if (licenseOffering.Contains("CNU"))
+                        {
+                            cnuIsUsed = true;
+                        }
+                    }
+
+                    if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
+                            "that is incorrectly labeled as a Concurrent license.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                            $"which cannot use an options file. The license number is question is {licenseNumber}.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    if (seatCount < 1)
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero. " +
+                            "If you're using a trial license, make sure you selecting the correct License Offering. Otherwise, your license file is corrupt.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    // Before proceeding, make sure the values we've collected are valid.
+                    if (string.IsNullOrWhiteSpace(productName))
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product name is being detected as blank on {licenseNumber}.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: An invalid license number, {licenseNumber}, " +
+                            $"is detected for {productName}.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A license offering could not be detected for {productName} " +
+                            $"on license number {licenseNumber}.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+
+                    if (string.IsNullOrWhiteSpace(productKey))
+                    {
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product key could not be detected for {productName} " +
+                            $"on license number {licenseNumber}.";
+                        errorWindow.ShowDialog();
+                        return;
+                    }
+                    if (debug)
+                    {
+                        OutputTextBlock.Text += $"INCREMENT {productName}: {seatCount} {productKey} {licenseOffering} {licenseNumber}\r\n";
+                    }
+                    licenseFileIndex[lineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                 }
             }
         }
