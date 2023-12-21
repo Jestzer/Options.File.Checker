@@ -448,6 +448,9 @@ namespace Options.File.Checker.WPF
                     return;
                 }
 
+                // Currently in production, unfinished.
+                CollectProductInformation();
+
                 // Get the things we care about from the license file so that we can go through the options file appropriately.
                 string productName = string.Empty;
                 int seatCount = 0;
@@ -971,7 +974,7 @@ namespace Options.File.Checker.WPF
                         }
 
                         // Check for stray quotation marks.
-                        int quoteCount = productName.Count(c => c == '"');
+                        int quoteCount = line.Count(c => c == '"');
                         if (quoteCount % 2 != 0)
                         {
                             OutputTextBlock.Text = string.Empty;
@@ -1400,7 +1403,7 @@ namespace Options.File.Checker.WPF
                     if (productName.Contains('"'))
                     {
                         // Check for stray quotation marks.
-                        int quoteCount = productName.Count(c => c == '"');
+                        int quoteCount = line.Count(c => c == '"');
                         if (quoteCount % 2 != 0)
                         {
                             OutputTextBlock.Text = string.Empty;
@@ -3483,6 +3486,68 @@ namespace Options.File.Checker.WPF
                     else
                     {
                         OutputTextBlock.Text += $"\r\nYou have specified more users on license {licenseNumber} for the product {productName} than you have seats for (counting at {seatCount}.)\r\n";
+                    }
+                }
+            }
+        }
+
+        private void CollectProductInformation()
+        {
+            string[] licenseFileContentsLines = System.IO.File.ReadAllLines(LicenseFileLocationTextBox.Text);
+
+            //Filter the things that don't matter.
+            string[] filteredLicenseFileLines = licenseFileContentsLines.Where(line => !line.TrimStart().StartsWith("#")
+            && !string.IsNullOrWhiteSpace(line)).ToArray();
+            string filteredLicenseFileContents = string.Join(Environment.NewLine, filteredLicenseFileLines);
+
+            // Remove the line breaks to make life easier.
+            string lineBreaksToRemove = "\\\r\n\t";
+            filteredLicenseFileContents = filteredLicenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
+            // Put it back together!
+            filteredLicenseFileLines = filteredLicenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
+            // Get the things we care about from the license file so that we can go through the options file appropriately.
+            string productName = string.Empty;
+            int seatCount = 0;
+
+            for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
+            {
+                string line = filteredLicenseFileLines[lineIndex];
+
+                if (line.TrimStart().StartsWith("INCREMENT"))
+                {
+                    string[] lineParts = line.Split(' ');
+                    productName = lineParts[1];
+                    string productExpirationDate = lineParts[4];
+                    string productKey = lineParts[6];
+                    string licenseOffering = "licenseOfferingIsBroken";
+                    string licenseNumber = "licenseNumberisBroken";
+                    _ = int.TryParse(lineParts[5], out seatCount);
+                    string rawSeatCount = lineParts[5];
+
+                    // If you're using a PLP license, then we don't care about this product.
+                    if (productName == "TMW_Archive")
+                    {
+                        continue;
+                    }
+
+                    // License Number
+                    string pattern = @"asset_info=(\d+)"; // Modified pattern to match only digits
+
+                    if (line.Contains("asset_info="))
+                    {
+                        Regex regex = new Regex(pattern);
+                        Match match = regex.Match(line);
+
+                        if (match.Success)
+                        {
+                            licenseNumber = match.Groups[1].Value;
+                        }
+                    }
+                    else
+                    {
+                        MessageBox.Show("oh no.");
                     }
                 }
             }
