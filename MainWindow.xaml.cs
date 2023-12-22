@@ -327,17 +327,15 @@ namespace Options.File.Checker.WPF
 
         private void LicenseFileLocationTextBox_TextChanged(object sender, EventArgs e)
         {
-            string licensePath = LicenseFileLocationTextBox.Text;
-            bool isLicenseFileValid = System.IO.File.Exists(licensePath);
+            bool isLicenseFileValid = System.IO.File.Exists(LicenseFileLocationTextBox.Text);
             bool isOptionsFileValid = System.IO.File.Exists(OptionsFileLocationTextBox.Text);
             AnalyzerButton.IsEnabled = isLicenseFileValid && isOptionsFileValid;
         }
 
         private void OptionsFileLocationTextBox_TextChanged(object sender, EventArgs e)
         {
-            string optionsPath = OptionsFileLocationTextBox.Text;
             bool isLicenseFileValid = System.IO.File.Exists(LicenseFileLocationTextBox.Text);
-            bool isOptionsFileValid = System.IO.File.Exists(optionsPath);
+            bool isOptionsFileValid = System.IO.File.Exists(OptionsFileLocationTextBox.Text);
             AnalyzerButton.IsEnabled = isLicenseFileValid && isOptionsFileValid;
         }
         private void SaveOutputButton_Click(object sender, RoutedEventArgs e)
@@ -359,8 +357,10 @@ namespace Options.File.Checker.WPF
             // Prevent previous entries/modified files from skewing data.
             optionsIncludeIndex.Clear();
             optionsIncludeAllIndex.Clear();
+            optionsIncludeBorrowIndex.Clear();
             optionsExcludeIndex.Clear();
             optionsExcludeAllIndex.Clear();
+            optionsExcludeBorrowIndex.Clear();
             optionsReserveIndex.Clear();
             optionsHostGroupIndex.Clear();
             optionsGroupIndex.Clear();
@@ -374,6 +374,19 @@ namespace Options.File.Checker.WPF
 
             try
             {
+                // Did you rename one of the files?
+                bool isLicenseFileValid = System.IO.File.Exists(LicenseFileLocationTextBox.Text);
+                bool isOptionsFileValid = System.IO.File.Exists(OptionsFileLocationTextBox.Text);
+                if (!isLicenseFileValid || !isOptionsFileValid)
+                {
+                    ErrorWindow errorWindow = new();
+                    errorWindow.ErrorTextBlock.Text = "The license and/or the options file you selected either no longer exists or doesn't have permissions to be read.";
+                    errorWindow.ShowDialog();
+                    OptionsFileLocationTextBox.Text = string.Empty;
+                    LicenseFileLocationTextBox.Text = string.Empty;
+                    return;
+                }
+
                 string[] optionsFileContentsLines = System.IO.File.ReadAllLines(OptionsFileLocationTextBox.Text);
                 string[] licenseFileContentsLines = System.IO.File.ReadAllLines(LicenseFileLocationTextBox.Text);
 
@@ -3077,28 +3090,24 @@ namespace Options.File.Checker.WPF
                 }
                 else
                 {
-                    if (overdraftCNWarningHit && licenseOffering == "lo=CN")
+                    if (licenseOffering == "lo=CN" && seatCount < 0)
                     {
-                        // No need to repeat information we're about to get.
+                        if (!overdraftCNWarningHit)
+                        {
+                            OutputTextBlock.Text += $"\r\nWARNING: You have specified more users on license {licenseNumber} for the product {productName} than you have seats for. " +
+                                $"If every user included was using the product at once then the seat count would technically be at {seatCount}. " +
+                                "This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
+                                "access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE.\r\n";
+                            overdraftCNWarningHit = true;
+                        }
+                        else
+                        {
+                            OutputTextBlock.Text += $"You have specified more users on Concurrent license {licenseNumber} for the product {productName} than you have seats for (technically counting at {seatCount} seats.)\r\n";
+                        }
                     }
                     else
                     {
                         OutputTextBlock.Text += $"The product {productName} has {seatCount} unassigned seats on license {licenseNumber}.\r\n";
-                    }
-                }
-
-                if (licenseOffering == "lo=CN" && seatCount < 0)
-                {
-                    if (!overdraftCNWarningHit)
-                    {
-                        OutputTextBlock.Text += $"\r\nWARNING: You have specified more users on license {licenseNumber} for the product {productName} than you have seats for (counting at {seatCount}.)  " +
-                            $"This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
-                            $"access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE.\r\n";
-                        overdraftCNWarningHit = true;
-                    }
-                    else
-                    {
-                        OutputTextBlock.Text += $"\r\nYou have specified more users on license {licenseNumber} for the product {productName} than you have seats for (counting at {seatCount}.)\r\n";
                     }
                 }
             }
@@ -3132,6 +3141,7 @@ namespace Options.File.Checker.WPF
                 {
                     string[] lineParts = line.Split(' ');
                     productName = lineParts[1];
+                    int productVersion = int.Parse(lineParts[3]);
                     string productExpirationDate = lineParts[4];
                     string productKey = lineParts[6];
                     string licenseOffering = "licenseOfferingIsBroken";
@@ -3145,7 +3155,7 @@ namespace Options.File.Checker.WPF
                         continue;
                     }
 
-                    // License number
+                    // License number.
                     string pattern = @"asset_info=(\d+)";
 
                     if (line.Contains("asset_info="))
@@ -3158,12 +3168,28 @@ namespace Options.File.Checker.WPF
                             licenseNumber = match.Groups[1].Value;
                         }
                     }
+                    else if (line.Contains("SN="))
+                    {
+                        pattern = @"SN=(\d+)";
+                        Regex regex = new Regex(pattern);
+                        Match match = regex.Match(line);
+
+                        if (match.Success)
+                        {
+                            licenseNumber = match.Groups[1].Value;
+                        }
+                    }
                     else
                     {
-                        MessageBox.Show("oh no.");
+                        analysisFailed = true;
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the license number was not found for the product {productName}.";
+                        errorWindow.ShowDialog();
+                        return;
                     }
 
-                    // License offering
+                    // License offering.
                     if (line.Contains("lo="))
                     {
                         if (line.Contains("lo=CN"))
@@ -3186,12 +3212,23 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                MessageBox.Show("How did you get here?1");
+                                analysisFailed = true;
+                                OutputTextBlock.Text = string.Empty;
+                                ErrorWindow errorWindow = new();
+                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is formatted incorrectly. " +
+                                    $"{productName}'s license offering is being read as Total Headcount, but also Network Named User, which doesn't exist.";
+                                errorWindow.ShowDialog();
+                                return;
                             }
                         }
                         else
                         {
-                            MessageBox.Show("How did you get here?2");
+                            analysisFailed = true;
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} has an invalid license offering.";
+                            errorWindow.ShowDialog();
+                            return;
                         }
                     }
                     else // Figure out your trial's license offering.
@@ -3220,6 +3257,7 @@ namespace Options.File.Checker.WPF
 
                     if (expirationDate < currentDate)
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product {productName} on license number " +
@@ -3246,16 +3284,26 @@ namespace Options.File.Checker.WPF
 
                     if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
+                        if ((productVersion <= 18) || (productName.Contains("Polyspace") && productVersion <= 22))
+                        {
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer or Individual license, {licenseNumber}.";
+                        }
+                        else
+                        {
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
                             "that is incorrectly labeled as a Concurrent license.";
+                        }
+
                         errorWindow.ShowDialog();
                         return;
                     }
 
                     if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
@@ -3266,10 +3314,10 @@ namespace Options.File.Checker.WPF
 
                     if (seatCount < 1)
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero. " +
-                            "If you're using a trial license, make sure you selecting the correct License Offering. Otherwise, your license file is corrupt.";
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero or less.";
                         errorWindow.ShowDialog();
                         return;
                     }
@@ -3277,28 +3325,30 @@ namespace Options.File.Checker.WPF
                     // Before proceeding, make sure the values we've collected are valid.
                     if (string.IsNullOrWhiteSpace(productName))
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product name is being detected as blank on {licenseNumber}.";
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: a product name is being detected as blank on {licenseNumber}.";
                         errorWindow.ShowDialog();
                         return;
                     }
 
                     if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: An invalid license number, {licenseNumber}, " +
-                            $"is detected for {productName}.";
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: an invalid license number, {licenseNumber}, is detected for {productName}.";
                         errorWindow.ShowDialog();
                         return;
                     }
 
                     if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A license offering could not be detected for {productName} " +
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: a license offering could not be detected for {productName} " +
                             $"on license number {licenseNumber}.";
                         errorWindow.ShowDialog();
                         return;
@@ -3306,9 +3356,10 @@ namespace Options.File.Checker.WPF
 
                     if (string.IsNullOrWhiteSpace(productKey))
                     {
+                        analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: A product key could not be detected for {productName} " +
+                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: a product key could not be detected for {productName} " +
                             $"on license number {licenseNumber}.";
                         errorWindow.ShowDialog();
                         return;
