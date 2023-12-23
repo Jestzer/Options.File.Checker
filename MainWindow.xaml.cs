@@ -482,7 +482,7 @@ namespace Options.File.Checker.WPF
                     }
                 }
 
-                OutputTextBlock.Text += $"Is case sensitivity turned off?: {caseSensitivity}\r\n";
+                OutputTextBlock.Text += $"Is case sensitivity turned off for GROUPs in your options file?: {caseSensitivity}\r\n";
 
                 // GROUP dictionary.                
                 for (int optionsGroupLineIndex = 0; optionsGroupLineIndex < filteredOptionsFileLines.Length; optionsGroupLineIndex++)
@@ -2067,7 +2067,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text += unspecifiedServerPortMessage;
                         }
-                        OutputTextBlock.Text += $"SERVER port: {serverPort}\r\n";
+                        OutputTextBlock.Text += $"SERVER port: {serverPort}";
                     }
 
                     // There is no situation where you should have more than 3 SERVER lines.
@@ -3119,8 +3119,11 @@ namespace Options.File.Checker.WPF
                     }
                 }
             }
+            // Remove line breaks when 3 are in a row.
+            string lineBreaksToRemove = "\r\n\r\n\r\n";
+            string newText = OutputTextBlock.Text.Replace(lineBreaksToRemove, "\r\n\r\n");
+            OutputTextBlock.Text = newText;
         }
-
         private void CollectProductInformation()
         {
             string[] licenseFileContentsLines = System.IO.File.ReadAllLines(LicenseFileLocationTextBox.Text);
@@ -3158,12 +3161,6 @@ namespace Options.File.Checker.WPF
                     _ = int.TryParse(lineParts[5], out seatCount);
                     string rawSeatCount = lineParts[5];
 
-                    // If you're using a PLP license, then we don't care about this product.
-                    if (productName == "TMW_Archive")
-                    {
-                        containsPLP = true;
-                    }
-
                     // License number.
                     string pattern = @"asset_info=(\d+)";
 
@@ -3187,8 +3184,9 @@ namespace Options.File.Checker.WPF
                         {
                             licenseNumber = match.Groups[1].Value;
                         }
-                        if (productName == "TMW_Archive")
+                        if (productName == "TMW_Archive") // Welcome to the land of PLPs!
                         {
+                            containsPLP = true;
                             plpLicenseNumber = licenseNumber;
                             continue;
                         }
