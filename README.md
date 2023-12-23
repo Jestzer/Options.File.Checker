@@ -11,7 +11,7 @@ To do:
 - Make icon look nicer.
 - Remove case sensitivity for key=
 - Redo logic for getting the license number.
-- Redo logic for DAEMON line to _not_ use lineParts since it's a mess (even if it works.) This will more easily allow for line breaks to be supported.
+- Redo logic for DAEMON line to _not_ use lineParts since it's a mess (even if it works.)
 - Print a warning when non-capital letters are used for PORT and OPTIONS for CNU licenses.
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.

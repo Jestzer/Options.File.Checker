@@ -59,7 +59,7 @@ namespace Options.File.Checker.WPF
         // Other goodies.
         bool cnuIsUsed = false;
         bool excludeLinesAreUsed = false;
-
+        bool containsPLP = false;
         public MainWindow()
         {
             InitializeComponent();
@@ -371,6 +371,8 @@ namespace Options.File.Checker.WPF
             OutputTextBlock.Text = string.Empty;
             excludeLinesAreUsed = false;
             bool hostGroupsAreUsed = false;
+            containsPLP = false;
+            cnuIsUsed = false;
 
             try
             {
@@ -2014,6 +2016,13 @@ namespace Options.File.Checker.WPF
             && !string.IsNullOrWhiteSpace(line)).ToArray();
             string filteredLicenseFileContents = string.Join(Environment.NewLine, filteredLicenseFileLines);
 
+            // Remove the line breaks to make life easier.
+            string lineBreaksToRemove = "\\\r\n";
+            filteredLicenseFileContents = filteredLicenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
+            // Put it back together!
+            filteredLicenseFileLines = filteredLicenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+
             string daemonProperty1 = string.Empty;
             string daemonProperty2 = string.Empty;
             int serverLineCount = 0;
@@ -2139,8 +2148,7 @@ namespace Options.File.Checker.WPF
                         OutputTextBlock.Text = string.Empty;
                         ErrorWindow errorWindow = new();
                         errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the options file. " +
-                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n" +
-                            "If you used a \\ to indicate a line break on your DAEMON line, this program currently does not support this.";
+                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n";
                         errorWindow.ShowDialog();
                         analysisFailed = true;
                         return;
@@ -3132,6 +3140,7 @@ namespace Options.File.Checker.WPF
             // Get the things we care about from the license file so that we can go through the options file appropriately.
             string productName = string.Empty;
             int seatCount = 0;
+            string plpLicenseNumber = string.Empty;
 
             for (int lineIndex = 0; lineIndex < filteredLicenseFileLines.Length; lineIndex++)
             {
@@ -3152,7 +3161,7 @@ namespace Options.File.Checker.WPF
                     // If you're using a PLP license, then we don't care about this product.
                     if (productName == "TMW_Archive")
                     {
-                        continue;
+                        containsPLP = true;
                     }
 
                     // License number.
@@ -3178,6 +3187,15 @@ namespace Options.File.Checker.WPF
                         {
                             licenseNumber = match.Groups[1].Value;
                         }
+                        if (productName == "TMW_Archive")
+                        {
+                            plpLicenseNumber = licenseNumber;
+                            continue;
+                        }
+                    }
+                    else if (containsPLP && productName.Contains("PolySpace")) // This is the best guess we can make if you're using a PLP-era product.
+                    {
+                        licenseNumber = plpLicenseNumber;
                     }
                     else
                     {
@@ -3192,7 +3210,7 @@ namespace Options.File.Checker.WPF
                     // License offering.
                     if (line.Contains("lo="))
                     {
-                        if (line.Contains("lo=CN"))
+                        if (line.Contains("lo=CN:"))
                         {
                             licenseOffering = "lo=CN";
                         }
@@ -3231,16 +3249,59 @@ namespace Options.File.Checker.WPF
                             return;
                         }
                     }
-                    else // Figure out your trial's license offering.
+                    else if (line.Contains("lr=") || containsPLP && !line.Contains("asset_info=")) // Figure out your trial or PLP's license offering.
                     {
-                        if (line.Contains("USER_BASED="))
+                        if (seatCount > 0)
                         {
-                            licenseOffering = "NNU";
+                            if (line.Contains("USER_BASED"))
+                            {
+                                licenseOffering = "NNU";
+                            }
+                            else
+                            {
+                                if (containsPLP && !line.Contains("asset_info="))
+                                {
+                                    licenseOffering = "lo=DC"; // See PLP-era explaination below.
+                                }
+                                else
+                                {
+                                    licenseOffering = "lo=CN";
+                                }
+                            }
+                        }
+                        // This means you're likely using a macOS or Linux PLP-era license, which CAN use an options file... I think it has to.
+                        else if (containsPLP && !line.Contains("asset_info="))
+                        {
+                            licenseOffering = "lo=IN";
+                            seatCount = 1;
                         }
                         else
                         {
-                            licenseOffering = "lo=CN";
+                            analysisFailed = true;
+                            OutputTextBlock.Text = string.Empty;
+                            ErrorWindow errorWindow = new();
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                $"or Designated Computer license, which cannot use an options file.";
+                            errorWindow.ShowDialog();
+                            return;
                         }
+                    }
+                    else
+                    {
+                        analysisFailed = true;
+                        OutputTextBlock.Text = string.Empty;
+                        ErrorWindow errorWindow = new();
+                        if (line.Contains("PLATFORMS=x"))
+                        {
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                $"or Designated Computer license generated from a PLP on Windows, which cannot use an options file.";
+                        }
+                        else
+                        {
+                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} has an valid license offering.";
+                        }
+                        errorWindow.ShowDialog();
+                        return;
                     }
 
                     // Check the product's expiration date. Year 0000 means perpetual.
@@ -3268,7 +3329,10 @@ namespace Options.File.Checker.WPF
 
                     if (licenseOffering.Contains("NNU"))
                     {
-                        seatCount /= 2;
+                        if (seatCount != 1 && !containsPLP)
+                        {
+                            seatCount /= 2;
+                        }                        
                     }
 
                     // Technically infinite. This should avoid at least 1 unnecessary error report.
@@ -3312,7 +3376,7 @@ namespace Options.File.Checker.WPF
                         return;
                     }
 
-                    if (seatCount < 1)
+                    if (seatCount < 1 && line.Contains("asset_info="))
                     {
                         analysisFailed = true;
                         OutputTextBlock.Text = string.Empty;
