@@ -10,7 +10,6 @@ Notes for user:
 To do:
 - Make icon look nicer.
 - Remove case sensitivity for key=
-- Redo logic for getting the license number.
 - Redo logic for DAEMON line to _not_ use lineParts since it's a mess (even if it works.)
 - Print a warning when non-capital letters are used for PORT and OPTIONS for CNU licenses.
 - Print warnings when wild cards & IP addresses are used.
