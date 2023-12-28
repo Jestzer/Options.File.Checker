@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:Options.File.Checker.WPF"
         mc:Ignorable="d"
-        Title="Option File Checker" Height="450" Width="800" MinHeight="450" MinWidth="800" Foreground="White"
+        Title="Options File Checker" Height="450" Width="800" MinHeight="450" MinWidth="800" Foreground="White"
         WindowStyle="None" AllowsTransparency="True" ResizeMode="CanResizeWithGrip" WindowStartupLocation="CenterScreen" SizeChanged="Window_SizeChanged">
     <Border BorderBrush="Gray" BorderThickness="1">
         <Grid>
