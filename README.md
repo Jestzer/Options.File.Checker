@@ -15,3 +15,4 @@ To do:
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
 - Make an options file creator/editor.
+- Make options file analysis not use line.TrimStart().StartsWith() so that the weirdos who don't use line breaks between option entries are included.

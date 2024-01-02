@@ -55,7 +55,6 @@ namespace Options.File.Checker.WPF
 
         // End operations if needed.
         bool analysisFailed = false;
-        bool analysisOfOptionsFileProductsFailed = false;
 
         // Other goodies.
         bool cnuIsUsed = false;
@@ -177,6 +176,7 @@ namespace Options.File.Checker.WPF
                         {
                             // A newer version is available!
                             ErrorWindow errorWindow = new();
+                            errorWindow.Owner = this;
                             errorWindow.ErrorTextBlock.Text = "";
                             errorWindow.URLTextBlock.Visibility = Visibility.Visible;
                             errorWindow.Title = "Check for updates";
@@ -186,6 +186,7 @@ namespace Options.File.Checker.WPF
                         {
                             // The current version is up-to-date.
                             ErrorWindow errorWindow = new();
+                            errorWindow.Owner = this;
                             errorWindow.Title = "Check for updates";
                             errorWindow.ErrorTextBlock.Text = "You are using the latest release available.";
                             errorWindow.ShowDialog();
@@ -194,6 +195,7 @@ namespace Options.File.Checker.WPF
                     catch (JsonException ex)
                     {
                         ErrorWindow errorWindow = new();
+                        errorWindow.Owner = this;
                         errorWindow.Title = "Check for updates";
                         errorWindow.ErrorTextBlock.Text = "The Json code in this program didn't work. Here's the automatic error message it made: \"" + ex.Message + "\"";
                         errorWindow.ShowDialog();
@@ -201,6 +203,7 @@ namespace Options.File.Checker.WPF
                     catch (HttpRequestException ex) when (ex.StatusCode == System.Net.HttpStatusCode.Forbidden)
                     {
                         ErrorWindow errorWindow = new();
+                        errorWindow.Owner = this;
                         errorWindow.Title = "Check for updates";
                         errorWindow.ErrorTextBlock.Text = "HTTP error 403: GitHub is saying you're sending them too many requests, so... slow down, I guess? " +
                             "Here's the automatic error message: \"" + ex.Message + "\"";
@@ -209,6 +212,7 @@ namespace Options.File.Checker.WPF
                     catch (HttpRequestException ex)
                     {
                         ErrorWindow errorWindow = new();
+                        errorWindow.Owner = this;
                         errorWindow.Title = "Check for updates";
                         errorWindow.ErrorTextBlock.Text = "HTTP error. Here's the automatic error message: \"" + ex.Message + "\"";
                         errorWindow.ShowDialog();
@@ -217,6 +221,7 @@ namespace Options.File.Checker.WPF
                 catch (Exception ex)
                 {
                     ErrorWindow errorWindow = new();
+                    errorWindow.Owner = this;
                     errorWindow.Title = "Check for updates";
                     errorWindow.ErrorTextBlock.Text = "Oh dear, it looks this program had a hard time making the needed connection to GitHub. Make sure you're connected to the internet " +
                         "and your lousy firewall/VPN isn't blocking the connection. Here's the automated error message: \"" + ex.Message + "\"";
@@ -360,7 +365,6 @@ namespace Options.File.Checker.WPF
             optionsMaxIndex.Clear();
             licenseFileIndex.Clear();
             analysisFailed = false;
-            analysisOfOptionsFileProductsFailed = false;
             OutputTextBlock.Text = string.Empty;
             excludeLinesAreUsed = false;
             bool hostGroupsAreUsed = false;
@@ -412,34 +416,25 @@ namespace Options.File.Checker.WPF
 
                 if (!System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("INCREMENT"))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is either not a license file or is corrupted.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
                 if (filteredLicenseFileContents.Contains("lo=IN") || filteredLicenseFileContents.Contains("lo=DC") || filteredLicenseFileContents.Contains("lo=CIN"))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
-                        "which cannot use an options file.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                        "which cannot use an options file.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
-                bool containsCONTRACT_ID = System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("CONTRACT_ID=");
-                if (containsCONTRACT_ID)
+                if (System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("CONTRACT_ID="))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is not a MathWorks license file.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is not a MathWorks license file.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
-
-                // Congrats. You passed. For now.
 
                 // Look for issues with your SERVER or DAEMON lines.
                 AnalyzeServerAndDaemonLine();
@@ -449,7 +444,7 @@ namespace Options.File.Checker.WPF
                     return;
                 }
 
-                // Currently in production, unfinished.
+                // Product information from the license file.
                 CollectProductInformation();
                 if (analysisFailed)
                 {
@@ -457,6 +452,7 @@ namespace Options.File.Checker.WPF
                     return;
                 }
 
+                // Congrats. You passed for now...
                 // Check for case sensitivity.
                 bool caseSensitivity = false;
                 for (int optionsCaseLineIndex = 0; optionsCaseLineIndex < filteredOptionsFileLines.Length; optionsCaseLineIndex++)
@@ -465,6 +461,7 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
                         caseSensitivity = true;
+                        break;
                     }
                 }
 
@@ -490,10 +487,8 @@ namespace Options.File.Checker.WPF
                         if (lineParts.Length < 3)
                         {
                             OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
@@ -579,11 +574,8 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 5)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
@@ -591,12 +583,8 @@ namespace Options.File.Checker.WPF
                         int quoteCount = line.Count(c => c == '"');
                         if (quoteCount % 2 != 0)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your RESERVE lines has a stray quotation mark. " +
-                                $"The line in question reads as this: {line}";
-                            errorWindow.ShowDialog();
-                            analysisFailed = true;
+                            ShowErrorWindow("There is an issue with the selected options file: one of your RESERVE lines has a stray quotation mark. " +
+                                $"The line in question reads as this: {line}");
                             return;
                         }
 
@@ -610,20 +598,14 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
-                                "You either chose an invalid number or specified something other than a number.";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
+                                "You either chose an invalid number or specified something other than a number.");
                             return;
                         }
 
                         if (reserveSeatCount <= 0)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you specified a RESERVE line with a seat count of 0 or less... why?";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you specified a RESERVE line with a seat count of 0 or less... why?");
                             return;
                         }
 
@@ -659,10 +641,7 @@ namespace Options.File.Checker.WPF
                                 string[] colonParts = reserveProductName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your RESERVE lines has a stray colon for {reserveProductName}.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: one of your RESERVE lines has a stray colon for {reserveProductName}.");
                                     return;
                                 }
                                 reserveProductName = colonParts[0];
@@ -687,10 +666,7 @@ namespace Options.File.Checker.WPF
                             string[] colonParts = reserveProductName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: One of your RESERVE lines has a stray colon for {reserveProductName}.";
-                                errorWindow.ShowDialog();
+                                ShowErrorWindow($"There is an issue with the selected options file: one of your RESERVE lines has a stray colon for {reserveProductName}.");
                                 return;
                             }
                             reserveProductName = colonParts[0];
@@ -744,11 +720,8 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 5)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted MAX line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted MAX line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
@@ -785,11 +758,8 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 3)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted HOST_GROUP line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted HOST_GROUP line. It is missing necessary information. " +
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
@@ -825,21 +795,15 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 3)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " + 
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
                         if (lineParts.Length < 3)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " + 
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
@@ -849,11 +813,8 @@ namespace Options.File.Checker.WPF
                         if (excludeAllClientType != "GROUP" && excludeAllClientType != "HOST" && excludeAllClientType != "HOST_GROUP" && excludeAllClientType != "DISPLAY" &&
                             excludeAllClientType != "PROJECT" && excludeAllClientType != "INTERNET")
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " +
-                                $"line as \"{excludeAllClientType}\". Please reformat this EXCLUDEALL line.";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " + 
+                                $"line as \"{excludeAllClientType}\". Please reformat this EXCLUDEALL line.");
                             return;
                         }
 
@@ -878,11 +839,8 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 3)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. It is missing necessary information. " + 
+                                $"The line in question is \"{line}\".");
                             return;
                         }
 
@@ -892,11 +850,8 @@ namespace Options.File.Checker.WPF
                         if (includeAllClientType != "GROUP" && includeAllClientType != "HOST" && includeAllClientType != "HOST_GROUP" && includeAllClientType != "DISPLAY" &&
                             includeAllClientType != "PROJECT" && includeAllClientType != "INTERNET")
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have incorrectly specified the client type on an INCLUDEALL " +
-                                $"line as \"{includeAllClientType}\". Please reformat this INCLUDEALL line.";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an INCLUDEALL " + 
+                                $"line as \"{includeAllClientType}\". Please reformat this INCLUDEALL line.");
                             return;
                         }
 
@@ -937,23 +892,20 @@ namespace Options.File.Checker.WPF
                 if (!optionsIncludeIndex.Any() && !optionsIncludeAllIndex.Any() && !optionsReserveIndex.Any() && !optionsExcludeIndex.Any() && !optionsExcludeAllIndex.Any() && !optionsMaxIndex.Any() &&
                     uncommonOptionUsed == false)
                 {
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: it is either not an options file or contains no usable content.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected options file: it is either not an options file or contains no usable content.");
                     return;
                 }
 
                 // Make sure the license numbers you're specifying are part of your license file.
                 CheckForValidLicenseNumbersAndProductKeys();
-                if (analysisOfOptionsFileProductsFailed)
+                if (analysisFailed)
                 {
                     OutputTextBlock.Text = string.Empty;
                     return;
                 }
 
                 CheckForValidProducts();
-                if (analysisOfOptionsFileProductsFailed)
+                if (analysisFailed)
                 {
                     OutputTextBlock.Text = string.Empty;
                     return;
@@ -970,10 +922,7 @@ namespace Options.File.Checker.WPF
             }
             catch (Exception ex)
             {
-                OutputTextBlock.Text = string.Empty;
-                ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = "Boo hoo, you broke something. Here's the program's automated error message: \"" + ex.Message + "\"";
-                errorWindow.ShowDialog();
+                ShowErrorWindow("Boo hoo, you broke something. Here's the program's automated error message: \"" + ex.Message + "\"");
             }
             return;
         }
@@ -1004,12 +953,8 @@ namespace Options.File.Checker.WPF
 
                     if (lineParts.Length < 4)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an incorrectly formatted {optionType} line. It is missing necessary information. " +
-                            $"The line in question is \"{line}\".";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have an incorrectly formatted {optionType} line. It is missing necessary information. " +
+                            $"The line in question is \"{line}\".");
                         return;
                     }
 
@@ -1020,12 +965,8 @@ namespace Options.File.Checker.WPF
                         int quoteCount = line.Count(c => c == '"');
                         if (quoteCount % 2 != 0)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your {optionType} lines has a stray quotation mark. " +
-                                $"The line in question reads as this: {line}";
-                            errorWindow.ShowDialog();
-                            analysisFailed = true;
+                            ShowErrorWindow($"There is an issue with the selected options file: one of your {optionType} lines has a stray quotation mark. " +
+                                $"The line in question reads as this: {line}");
                             return;
                         }
 
@@ -1059,11 +1000,7 @@ namespace Options.File.Checker.WPF
                             string[] colonParts = productName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.";
-                                errorWindow.ShowDialog();
-                                analysisFailed = true;
+                                ShowErrorWindow($"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.");
                                 return;
                             }
                             productName = colonParts[0];
@@ -1089,11 +1026,7 @@ namespace Options.File.Checker.WPF
                         string[] colonParts = productName.Split(":");
                         if (colonParts.Length != 2)
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.";
-                            errorWindow.ShowDialog();
-                            analysisFailed = true;
+                            ShowErrorWindow($"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.");
                             return;
                         }
                         productName = colonParts[0];
@@ -1171,11 +1104,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified a USER to be able to use {productName} " +
-                                        $"for license {licenseNumber}, but you did not define the USER.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: You have specified a USER to be able to use {productName} " +
+                                        $"for license {licenseNumber}, but you did not define the USER.");
                                     return;
                                 }
 
@@ -1191,11 +1121,8 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
-                                            $"for license {licenseNumber}.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " + 
+                                            $"for license {licenseNumber}.");
                                         return;
                                     }
                                 }
@@ -1218,11 +1145,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
-                                        $"for license {licenseNumber}, but you did not specify which GROUP.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
+                                        $"for license {licenseNumber}, but you did not specify which GROUP.");
                                     return;
                                 }
 
@@ -1250,11 +1174,8 @@ namespace Options.File.Checker.WPF
                                             }
                                             else
                                             {
-                                                OutputTextBlock.Text = string.Empty;
-                                                ErrorWindow errorWindow = new();
-                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
-                                                    $"for license {licenseNumber}.";
-                                                errorWindow.ShowDialog();
+                                                ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                                    $"for license {licenseNumber}.");
                                                 return;
                                             }
                                         }
@@ -1340,11 +1261,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
-                                    "but you did not define the USER.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
+                                    "but you did not define the USER.");
                                     return;
                                 }
 
@@ -1360,10 +1278,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.");
                                         return;
                                     }
                                 }
@@ -1386,10 +1301,7 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.");
                                     return;
                                 }
 
@@ -1417,10 +1329,7 @@ namespace Options.File.Checker.WPF
                                             }
                                             else
                                             {
-                                                OutputTextBlock.Text = string.Empty;
-                                                ErrorWindow errorWindow = new();
-                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.";
-                                                errorWindow.ShowDialog();
+                                                ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.");
                                                 return;
                                             }
                                         }
@@ -1446,10 +1355,7 @@ namespace Options.File.Checker.WPF
                 }
                 if (allSeatCountsZero && seatCount == 0)
                 {
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {includeProductName}.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {includeProductName}.");
                     return;
                 }
             }
@@ -1495,11 +1401,8 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " +
-                                    $"Don't forget that you are using at least one INCLUDEALL line.";
-                                errorWindow.ShowDialog();
+                                ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " +
+                                    "Don't forget that you are using at least one INCLUDEALL line.");
                                 return;
                             }
                         }
@@ -1520,10 +1423,7 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrWhiteSpace(includeAllClientSpecified))
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow("There is an issue with the selected options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.");
                         return;
                     }
 
@@ -1568,11 +1468,8 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " +
-                                            "Don't forget that you are using at least 1 INCLUDEALL line.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " + 
+                                            "Don't forget that you are using at least 1 INCLUDEALL line.");
                                         return;
                                     }
                                 }
@@ -1597,10 +1494,7 @@ namespace Options.File.Checker.WPF
                 }
                 else
                 {
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you specified an invalid client type for an INCLUDEALL line.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected options file: you specified an invalid client type for an INCLUDEALL line.");
                     return;
                 }
             }
@@ -1644,11 +1538,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName} " +
-                                        $"for license {licenseNumber}, but you did not define the USER.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a USER to be able to use {productName} " + 
+                                        $"for license {licenseNumber}, but you did not define the USER.");
                                     return;
                                 }
 
@@ -1664,11 +1555,8 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
-                                            $"for license {licenseNumber}.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                            $"for license {licenseNumber}.");
                                         return;
                                     }
                                 }
@@ -1690,11 +1578,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName} " +
-                                        $"for license {licenseNumber}, but you did not specify which GROUP.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName} " + 
+                                        $"for license {licenseNumber}, but you did not specify which GROUP.");
                                     return;
                                 }
 
@@ -1722,11 +1607,8 @@ namespace Options.File.Checker.WPF
                                             }
                                             else
                                             {
-                                                OutputTextBlock.Text = string.Empty;
-                                                ErrorWindow errorWindow = new();
-                                                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
-                                                    $"for license {licenseNumber}.";
-                                                errorWindow.ShowDialog();
+                                                ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                                    $"for license {licenseNumber}.");
                                                 return;
                                             }
                                         }
@@ -1757,10 +1639,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.");
                                         return;
                                     }
                                 }
@@ -1834,11 +1713,7 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: " +
-                                        $"you have specified a USER to be able to use {productName}, but you did not define the USER.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, but you did not define the USER.");
                                     return;
                                 }
 
@@ -1852,10 +1727,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.");
                                         return;
                                     }
                                 }
@@ -1878,11 +1750,8 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified a {reserveClientType} to be able to use {productName}, " +
-                                        $"but you did not specify which {reserveClientType}.";
-                                    errorWindow.ShowDialog();
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a {reserveClientType} to be able to use {productName}, " +
+                                        $"but you did not specify which {reserveClientType}.");
                                     return;
                                 }
 
@@ -1931,10 +1800,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
-                                        errorWindow.ShowDialog();
+                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.");
                                         return;
                                     }
                                 }
@@ -1947,10 +1813,7 @@ namespace Options.File.Checker.WPF
                 }
                 if (allSeatCountsZero && seatCount == 0)
                 {
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {reserveProductName}.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {reserveProductName}.");
                     return;
                 }
             }
@@ -1975,11 +1838,7 @@ namespace Options.File.Checker.WPF
                 }
                 else
                 {
-                    analysisFailed = true;
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.");
                     return;
                 }
             }
@@ -2024,11 +1883,7 @@ namespace Options.File.Checker.WPF
                     // SERVER lines should come before the product(s).
                     if (productLinesHaveBeenReached)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: your SERVER line(s) are listed after a product.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected license file: your SERVER line(s) are listed after a product.");
                         return;
                     }
                     serverLineCount++;
@@ -2059,11 +1914,7 @@ namespace Options.File.Checker.WPF
                     // There is no situation where you should have more than 3 SERVER lines.
                     if (serverLineCount > 3)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: it has too many SERVER lines. Only 1 or 3 are accepted.");
                         return;
                     }
                 }
@@ -2074,11 +1925,7 @@ namespace Options.File.Checker.WPF
                     // DAEMON line should come before the product(s).
                     if (productLinesHaveBeenReached)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: your DAEMON line is listed after a product.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: your DAEMON line is listed after a product.");
                         return;
                     }
 
@@ -2086,11 +1933,7 @@ namespace Options.File.Checker.WPF
                     daemonLineCount++;
                     if (daemonLineCount > 1)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have more than 1 DAEMON line.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you have more than 1 DAEMON line.");
                         return;
                     }
 
@@ -2101,42 +1944,26 @@ namespace Options.File.Checker.WPF
 
                     if (countCommentedBeginLines > 0)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has content that is intended to be commented out in your DAEMON line.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: it has content that is intended to be commented out in your DAEMON line.");
                         return;
                     }
 
                     if (countPortEquals > 1)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified more than 1 port number for MLM.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you have specified more than 1 port number for MLM.");
                         return;
                     }
 
                     if (countOptionsEquals > 1)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified the path to more than 1 options file.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you have specified the path to more than 1 options file.");
                         return;
                     }
 
                     if (countOptionsEquals == 0)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the options file. " +
-                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you did not specify the path to the options file. " + 
+                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n");
                         return;
                     }
 
@@ -2146,12 +1973,7 @@ namespace Options.File.Checker.WPF
                     // Just having the word "DAEMON" isn't enough.
                     if (lineParts.Length == 1)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have a DAEMON line, " +
-                            "but did not specify the daemon to be used (MLM) nor the path to it.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.");
                         return;
                     }
 
@@ -2160,43 +1982,27 @@ namespace Options.File.Checker.WPF
 
                     if (string.IsNullOrWhiteSpace(daemonVendor))
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: there are too many spaces between \"DAEMON\" and \"MLM\".";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: there are too many spaces between \"DAEMON\" and \"MLM\".");
                         return;
                     }
 
                     // The vendor daemon needs to MLM. Not mlm or anything else.
                     if (daemonVendor != "MLM")
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have incorrectly specified the vendor daemon MLM.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you have incorrectly specified the vendor daemon MLM.");
                         return;
                     }
 
                     // Just specifying "DAEMON MLM" isn't enough.
                     if (lineParts.Length == 2)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the vendor daemon MLM.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you did not specify the path to the vendor daemon MLM.");
                         return;
                     }
 
                     if (lineParts.Length == 3)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you did not specify the path to the options file.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you did not specify the path to the options file.");
                         return;
                     }
 
@@ -2246,21 +2052,13 @@ namespace Options.File.Checker.WPF
                     // Make sure you're not forgetting a quotation mark, if you used one.
                     if (waitingForNextQuotationMark)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you are missing a quotation mark at the end of the full path to MLM.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you are missing a quotation mark at the end of the full path to MLM.");
                         return;
                     }
 
                     if (daemonPath.EndsWith("\""))
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you are missing a quotation mark at the beginning of the full path to MLM.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you are missing a quotation mark at the beginning of the full path to MLM.");
                         return;
                     }
 
@@ -2279,12 +2077,8 @@ namespace Options.File.Checker.WPF
 
                     if (!isDaemonPathAccepted)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you incorrectly specifed the full path to MLM. If there are spaces in the path, " +
-                            "please put quotes around the path.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow("There is an issue with the selected license file: you incorrectly specifed the full path to MLM. If there are spaces in the path, " +
+                            "please put quotes around the path.");
                         return;
                     }
 
@@ -2364,11 +2158,7 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
-                                errorWindow.ShowDialog();
-                                analysisFailed = true;
+                                ShowErrorWindow(generalDaemonOrPortErrorMessage);
                                 return;
                             }
                         }
@@ -2385,11 +2175,7 @@ namespace Options.File.Checker.WPF
 
                                     if (optionsFileHasBeenSpecified)
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
-                                        errorWindow.ShowDialog();
-                                        analysisFailed = true;
+                                        ShowErrorWindow("There is an issue with the selected license file: you have specified 2 options files.");
                                         return;
                                     }
                                     else
@@ -2418,7 +2204,7 @@ namespace Options.File.Checker.WPF
                                                     {
                                                         waitingForNextQuotationMark = false;
                                                         sb.Append(" ");
-                                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark)
+                                                        sb.Append(lineParts[quotedOptionsFileLinePartNumber].Substring(0, lineParts[quotedOptionsFileLinePartNumber].Length - 1)); // Remove the last character (quotation mark.)
                                                         break; // Exit the loop since we found the next quotation mark and hopefully the end of the filepath.
                                                     }
                                                     else if (isConcatenating)
@@ -2441,11 +2227,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 port numbers for MLM.";
-                                        errorWindow.ShowDialog();
-                                        analysisFailed = true;
+                                        ShowErrorWindow("There is an issue with the selected license file: you have specified 2 port numbers for MLM.");
                                         return;
                                     }
                                     else
@@ -2455,11 +2237,7 @@ namespace Options.File.Checker.WPF
                                 }
                                 else
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
-                                    errorWindow.ShowDialog();
-                                    analysisFailed = true;
+                                    ShowErrorWindow(generalDaemonOrPortErrorMessage);
                                     return;
                                 }
                             }
@@ -2471,11 +2249,7 @@ namespace Options.File.Checker.WPF
                             {
                                 if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
-                                    errorWindow.ShowDialog();
-                                    analysisFailed = true;
+                                    ShowErrorWindow("There is an issue with the selected license file: you have specified 2 options files.");
                                     return;
 
                                 }
@@ -2543,11 +2317,7 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
-                                errorWindow.ShowDialog();
-                                analysisFailed = true;
+                                ShowErrorWindow(generalDaemonOrPortErrorMessage);
                                 return;
                             }
                         }
@@ -2560,11 +2330,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     if (optionsFileHasBeenSpecified)
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
-                                        errorWindow.ShowDialog();
-                                        analysisFailed = true;
+                                        ShowErrorWindow("There is an issue with the selected license file: you have specified 2 options files.");
                                         return;
                                     }
                                     else
@@ -2576,11 +2342,7 @@ namespace Options.File.Checker.WPF
                                 {
                                     if (daemonPortNumberHasBeenSpecified)
                                     {
-                                        OutputTextBlock.Text = string.Empty;
-                                        ErrorWindow errorWindow = new();
-                                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 port numbers for MLM.";
-                                        errorWindow.ShowDialog();
-                                        analysisFailed = true;
+                                        ShowErrorWindow("There is an issue with the selected license file: you have specified 2 port numbers for MLM.");
                                         return;
                                     }
                                     else
@@ -2590,11 +2352,7 @@ namespace Options.File.Checker.WPF
                                 }
                                 else
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = generalDaemonOrPortErrorMessage;
-                                    errorWindow.ShowDialog();
-                                    analysisFailed = true;
+                                    ShowErrorWindow(generalDaemonOrPortErrorMessage);
                                     return;
                                 }
                             }
@@ -2606,11 +2364,7 @@ namespace Options.File.Checker.WPF
                             {
                                 if (lineParts[quotedOptionsFileLinePartNumber + 1].TrimStart().StartsWith("options=", StringComparison.OrdinalIgnoreCase))
                                 {
-                                    OutputTextBlock.Text = string.Empty;
-                                    ErrorWindow errorWindow = new();
-                                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: you have specified 2 options files.";
-                                    errorWindow.ShowDialog();
-                                    analysisFailed = true;
+                                    ShowErrorWindow("There is an issue with the selected license file: you have specified 2 options files.");
                                     return;
 
                                 }
@@ -2649,12 +2403,8 @@ namespace Options.File.Checker.WPF
 
                 if (line.TrimStart().StartsWith("USE_SERVER", StringComparison.OrdinalIgnoreCase))
                 {
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it uses \"USE_SERVER\". " +
-                        "This should be in the end user's network.lic file, not the Network License Manager's license file.";
-                    errorWindow.ShowDialog();
-                    analysisFailed = true;
+                    ShowErrorWindow("There is an issue with the selected license file: it contains \"USE_SERVER\". This should be in the end user's network.lic file, " +
+                        "not the Network License Manager's license file.");
                     return;
                 }
                 if (line.TrimStart().StartsWith("INCREMENT"))
@@ -2666,33 +2416,21 @@ namespace Options.File.Checker.WPF
             // We have to do this after the loop so that it doesn't get stuck while counting to 3.
             if (serverLineCount == 2)
             {
-                OutputTextBlock.Text = string.Empty;
-                ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it has an invalid number of SERVER lines. Only 1 or 3 are accepted.";
-                errorWindow.ShowDialog();
-                analysisFailed = true;
+                ShowErrorWindow("There is an issue with the selected license file: it has an invalid number of SERVER lines. Only 1 or 3 are accepted.");
                 return;
             }
 
             // These have to happen outside the loop to get a proper tally.
             if (daemonLineCount == 0)
             {
-                OutputTextBlock.Text = string.Empty;
-                ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: you have no DAEMON line in your license file. You should not " +
-                    "be using VENDOR lines for MathWorks licenses, if you are.";
-                errorWindow.ShowDialog();
-                analysisFailed = true;
+                ShowErrorWindow("There is an issue with the selected options file: you have no DAEMON line in your license file. You should not " +
+                    "be using VENDOR lines for MathWorks licenses, if you are.");
                 return;
             }
 
             if ((!daemonProperty1.Contains("options=", StringComparison.OrdinalIgnoreCase)) && (!daemonProperty2.Contains("options=", StringComparison.OrdinalIgnoreCase)))
             {
-                OutputTextBlock.Text = string.Empty;
-                ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it does not specify an options file.";
-                errorWindow.ShowDialog();
-                analysisFailed = true;
+                ShowErrorWindow("There is an issue with the selected license file: it does not specify an options file.");
                 return;
             }
         }
@@ -2721,12 +2459,8 @@ namespace Options.File.Checker.WPF
                 }
                 if (!foundMatchingProduct)
                 {
-                    OutputTextBlock.Text = string.Empty;
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a product, {includeProductName}, but this product is not in your license file. " +
-                        $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.";
-                    errorWindow.ShowDialog();
-                    analysisOfOptionsFileProductsFailed = true;
+                    ShowErrorWindow($"There is an issue with the selected options file: you specified a product, {includeProductName}, but this product is not in your license file. " +
+                        $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.");
                     return;
                 }
             }
@@ -2780,7 +2514,7 @@ namespace Options.File.Checker.WPF
                             errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
                                 $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, {productName}.";
                             errorWindow.ShowDialog();
-                            analysisOfOptionsFileProductsFailed = true;
+                            analysisFailed = true;
                             return;
                         }
                     }
@@ -2795,7 +2529,7 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
                             "that does not exist in the specified license file.";
                         errorWindow.ShowDialog();
-                        analysisOfOptionsFileProductsFailed = true;
+                        analysisFailed = true;
                         return;
                     }
                     else
@@ -2805,7 +2539,7 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
                             "that does not exist in the specified license file.";
                         errorWindow.ShowDialog();
-                        analysisOfOptionsFileProductsFailed = true;
+                        analysisFailed = true;
                         return;
                     }
                 }
@@ -2858,7 +2592,7 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " +
                             "that does not exist in the specified license file.";
                         errorWindow.ShowDialog();
-                        analysisOfOptionsFileProductsFailed = true;
+                        analysisFailed = true;
                         return;
                     }
                     else
@@ -2868,7 +2602,7 @@ namespace Options.File.Checker.WPF
                         errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
                             "that does not exist in the specified license file.";
                         errorWindow.ShowDialog();
-                        analysisOfOptionsFileProductsFailed = true;
+                        analysisFailed = true;
                         return;
                     }
                 }
@@ -2916,22 +2650,14 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrEmpty(reserveProductKey) == true)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have a RESERVE line that specifies a license number, {reserveLicenseNumber}, " +
-                            "that does not exist in the specified license file.";
-                        errorWindow.ShowDialog();
-                        analysisOfOptionsFileProductsFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have a RESERVE line that specifies a license number, {reserveLicenseNumber}, " +
+                            "that does not exist in the specified license file.");
                         return;
                     }
                     else
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have a RESERVE line that specifies a product key, {reserveProductKey}, " +
-                            "that does not exist in the specified license file.";
-                        errorWindow.ShowDialog();
-                        analysisOfOptionsFileProductsFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have a RESERVE line that specifies a product key, {reserveProductKey}, " +
+                            "that does not exist in the specified license file.");
                         return;
                     }
                 }
@@ -2985,6 +2711,7 @@ namespace Options.File.Checker.WPF
                 }
 
                 // No matching group found.
+                // Grammar is important, kids!
                 string aOrAn;
 
                 if (lineType == "RESERVE")
@@ -2995,13 +2722,8 @@ namespace Options.File.Checker.WPF
                 {
                     aOrAn = "an";
                 }
-
-                analysisFailed = true;
-                OutputTextBlock.Text = string.Empty;
-                ErrorWindow errorWindow = new();
-                errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                    $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
-                errorWindow.ShowDialog();
+                ShowErrorWindow($"There is an issue with the selected options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                    $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.");
                 return false;
             }
             return true;
@@ -3183,11 +2905,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the license number was not found for the product {productName}.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: the license number was not found for the product {productName}.");
                         return;
                     }
 
@@ -3214,22 +2932,14 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                analysisFailed = true;
-                                OutputTextBlock.Text = string.Empty;
-                                ErrorWindow errorWindow = new();
-                                errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is formatted incorrectly. " +
-                                    $"{productName}'s license offering is being read as Total Headcount, but also Network Named User, which doesn't exist.";
-                                errorWindow.ShowDialog();
+                                ShowErrorWindow("There is an issue with the selected license file: it is formatted incorrectly. " +
+                                    $"{productName}'s license offering is being read as Total Headcount, but also Network Named User, which doesn't exist.");
                                 return;
                             }
                         }
                         else
                         {
-                            analysisFailed = true;
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} has an invalid license offering.";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow($"There is an issue with the selected license file: the product {productName} has an invalid license offering.");
                             return;
                         }
                     }
@@ -3261,30 +2971,22 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            analysisFailed = true;
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} comes from an Individual " +
-                                $"or Designated Computer license, which cannot use an options file.";
-                            errorWindow.ShowDialog();
+                            ShowErrorWindow($"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                "or Designated Computer license, which cannot use an options file.");
                             return;
                         }
                     }
                     else
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
                         if (line.Contains("PLATFORMS=x"))
                         {
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} comes from an Individual " +
-                                $"or Designated Computer license generated from a PLP on Windows, which cannot use an options file.";
+                           ShowErrorWindow($"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                $"or Designated Computer license generated from a PLP on Windows, which cannot use an options file.");
                         }
                         else
                         {
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: the product {productName} has an valid license offering.";
+                            ShowErrorWindow($"There is an issue with the selected license file: the product {productName} has an valid license offering.");
                         }
-                        errorWindow.ShowDialog();
                         return;
                     }
 
@@ -3302,12 +3004,8 @@ namespace Options.File.Checker.WPF
 
                     if (expirationDate < currentDate)
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: The product {productName} on license number " +
-                            $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: The product {productName} on license number " + 
+                            $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.");
                         return;
                     }
 
@@ -3332,84 +3030,54 @@ namespace Options.File.Checker.WPF
 
                     if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
                         if ((productVersion <= 18) || (productName.Contains("Polyspace") && productVersion <= 22))
                         {
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer or Individual license, {licenseNumber}.";
+                            ShowErrorWindow($"There is an issue with the selected license file: it contains a Designated Computer or Individual license, {licenseNumber}.");
                         }
                         else
                         {
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
-                            "that is incorrectly labeled as a Concurrent license.";
+                            ShowErrorWindow($"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " + 
+                                "that is incorrectly labeled as a Concurrent license.");
                         }
-
-                        errorWindow.ShowDialog();
                         return;
                     }
 
                     if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
-                            $"which cannot use an options file. The license number is question is {licenseNumber}.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow("There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                            $"which cannot use an options file. The license number is question is {licenseNumber}.");
                         return;
                     }
 
                     if (seatCount < 1 && line.Contains("asset_info="))
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero or less.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero or less.");
                         return;
                     }
 
                     // Before proceeding, make sure the values we've collected are valid.
                     if (string.IsNullOrWhiteSpace(productName))
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: a product name is being detected as blank on {licenseNumber}.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: a product name is being detected as blank on {licenseNumber}.");
                         return;
                     }
 
                     if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: an invalid license number, {licenseNumber}, is detected for {productName}.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: an invalid license number, {licenseNumber}, is detected for {productName}.");
                         return;
                     }
 
                     if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: a license offering could not be detected for {productName} " +
-                            $"on license number {licenseNumber}.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: a license offering could not be detected for {productName} " +
+                            $"on license number {licenseNumber}.");
                         return;
                     }
 
                     if (string.IsNullOrWhiteSpace(productKey))
                     {
-                        analysisFailed = true;
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected license file: a product key could not be detected for {productName} " +
-                            $"on license number {licenseNumber}.";
-                        errorWindow.ShowDialog();
+                        ShowErrorWindow($"There is an issue with the selected license file: a product key could not be detected for {productName} on license number {licenseNumber}.");
                         return;
                     }
                     if (debug)
