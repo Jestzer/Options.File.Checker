@@ -10,6 +10,7 @@ using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 using System.Text.Json;
+using System.Media;
 
 namespace Options.File.Checker.WPF
 {
@@ -72,6 +73,17 @@ namespace Options.File.Checker.WPF
 
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
+        }
+
+        private void ShowErrorWindow(string errorMessage)
+        {
+            OutputTextBlock.Text = string.Empty;
+            analysisFailed = true;
+            ErrorWindow errorWindow = new ErrorWindow();
+            errorWindow.ErrorTextBlock.Text = errorMessage;
+            errorWindow.Owner = this;
+            SystemSounds.Exclamation.Play();
+            errorWindow.ShowDialog();
         }
 
         public static string PackageVersion
@@ -223,6 +235,7 @@ namespace Options.File.Checker.WPF
                 string selectedFile = openFileDialog.FileName;
                 LicenseFileLocationTextBox.Text = selectedFile;
 
+                // The first of many checks.
                 // This massive file is hopefully not a license file...
                 FileInfo fileInfo = new FileInfo(selectedFile);
                 long fileSizeInBytes = fileInfo.Length;
@@ -230,21 +243,14 @@ namespace Options.File.Checker.WPF
 
                 if (fileSizeInBytes > FiftyMegabytes)
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is over 50 MB and therefore, likely (hopefully) not a license file.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
-                }
+                }                
 
-                // The first of a handful of checks.
-                bool containsINCREMENT = System.IO.File.ReadAllText(selectedFile).Contains("INCREMENT");
-
-                if (!containsINCREMENT)
+                if (!System.IO.File.ReadAllText(selectedFile).Contains("INCREMENT"))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or it is corrupted.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is either not a license file or it is corrupted.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -252,31 +258,22 @@ namespace Options.File.Checker.WPF
                 string fileContents = System.IO.File.ReadAllText(selectedFile);
                 if (fileContents.Contains("lo=IN") || fileContents.Contains("lo=DC") || fileContents.Contains("lo=CIN"))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
-                        "which cannot use an options file.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                        "which cannot use an options file.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
-                bool containsCONTRACT_ID = System.IO.File.ReadAllText(selectedFile).Contains("CONTRACT_ID=");
-                if (containsCONTRACT_ID)
+                if (System.IO.File.ReadAllText(selectedFile).Contains("CONTRACT_ID="))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is not a MathWorks license file.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is not a MathWorks license file.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
-                bool missingServer = System.IO.File.ReadAllText(selectedFile).Contains("SERVER");
-                bool missingDaemon = System.IO.File.ReadAllText(selectedFile).Contains("DAEMON");
-                if (!missingDaemon && !missingServer)
+                if (!System.IO.File.ReadAllText(selectedFile).Contains("SERVER") && !System.IO.File.ReadAllText(selectedFile).Contains("DAEMON"))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is missing the SERVER and/or DAEMON line.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is missing the SERVER and/or DAEMON line.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -303,10 +300,8 @@ namespace Options.File.Checker.WPF
 
                 if (fileSizeInBytes > FiftyMegabytes)
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: it is over 50 MB and therefore, likely (hopefully) not an options file.";
-                    errorWindow.ShowDialog();
-                    LicenseFileLocationTextBox.Text = string.Empty;
+                    ShowErrorWindow("There is an issue with the selected options file: it is over 50 MB and therefore, likely (hopefully) not an options file.");
+                    OptionsFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
@@ -314,9 +309,7 @@ namespace Options.File.Checker.WPF
 
                 if (string.IsNullOrWhiteSpace(fileContent))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either empty or only contains white space.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is either empty or only contains white space.");
                     OptionsFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -381,9 +374,7 @@ namespace Options.File.Checker.WPF
                 bool isOptionsFileValid = System.IO.File.Exists(OptionsFileLocationTextBox.Text);
                 if (!isLicenseFileValid || !isOptionsFileValid)
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "The license and/or the options file you selected either no longer exists or doesn't have permissions to be read.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("The license and/or the options file you selected either no longer exists or doesn't have permissions to be read.");
                     OptionsFileLocationTextBox.Text = string.Empty;
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
@@ -404,9 +395,7 @@ namespace Options.File.Checker.WPF
                 // Error time again, in case you decided to be sneaky and close the program or manually enter the filepath.
                 if (string.IsNullOrWhiteSpace(filteredOptionsFileContents))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either empty or only contains white space.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected license file: it is either empty or only contains white space.");
                     OptionsFileLocationTextBox.Text = string.Empty;
                     return;
                 }
@@ -416,15 +405,12 @@ namespace Options.File.Checker.WPF
                     && !filteredOptionsFileContents.Contains("MAX") && !filteredOptionsFileContents.Contains("LINGER") && !filteredOptionsFileContents.Contains("LOG") &&
                     !filteredOptionsFileContents.Contains("TIMEOUT"))
                 {
-                    ErrorWindow errorWindow = new();
-                    errorWindow.ErrorTextBlock.Text = "There is an issue with the selected options file: it is likely not an options file or contains no usable content.";
-                    errorWindow.ShowDialog();
+                    ShowErrorWindow("There is an issue with the selected options file: it is likely not an options file or contains no usable content.");
                     OptionsFileLocationTextBox.Text = string.Empty;
                     return;
                 }
 
-                bool containsINCREMENT = System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("INCREMENT");
-                if (!containsINCREMENT)
+                if (!System.IO.File.ReadAllText(LicenseFileLocationTextBox.Text).Contains("INCREMENT"))
                 {
                     ErrorWindow errorWindow = new();
                     errorWindow.ErrorTextBlock.Text = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
