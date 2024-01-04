@@ -2509,12 +2509,8 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            OutputTextBlock.Text = string.Empty;
-                            ErrorWindow errorWindow = new();
-                            errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
-                                $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, {productName}.";
-                            errorWindow.ShowDialog();
-                            analysisFailed = true;
+                            ShowErrorWindow($"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
+                                $"but the product on your INCLUDE line, {includeProductName}, does not match the product it is tied to in the license file, {productName}.");
                             return;
                         }
                     }
@@ -2524,22 +2520,14 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrEmpty(includeProductKey) == true)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
-                            "that does not exist in the specified license file.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have an INCLUDE line that specifies a license number, {includeLicenseNumber}, " +
+                            "that does not exist in the specified license file.");
                         return;
                     }
                     else
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
-                            "that does not exist in the specified license file.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " + 
+                            "that does not exist in the specified license file.");
                         return;
                     }
                 }
@@ -2587,22 +2575,13 @@ namespace Options.File.Checker.WPF
                 {
                     if (string.IsNullOrEmpty(excludeProductKey) == true)
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " +
-                            "that does not exist in the specified license file.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have an EXCLUDE line that specifies a license number, {excludeLicenseNumber}, " + "that does not exist in the specified license file.");
                         return;
                     }
                     else
                     {
-                        OutputTextBlock.Text = string.Empty;
-                        ErrorWindow errorWindow = new();
-                        errorWindow.ErrorTextBlock.Text = $"There is an issue with the selected options file: you have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
-                            "that does not exist in the specified license file.";
-                        errorWindow.ShowDialog();
-                        analysisFailed = true;
+                        ShowErrorWindow($"There is an issue with the selected options file: you have an EXCLUDE line that specifies a product key, {excludeProductKey}, " +
+                            "that does not exist in the specified license file.");
                         return;
                     }
                 }

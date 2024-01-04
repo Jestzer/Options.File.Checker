@@ -68,3 +68,4 @@ C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows
 C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\ErrorWindow.baml
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\ErrorWindow.g.cs
 C:\Users\jbuonopa\My Programs\options.file.checker.c\obj\Debug\net7.0-windows\ErrorWindow.baml
+C:\Users\toaja\My_Programs_Local\options.file.checker.c\obj\Debug\net7.0-windows\Options.File.Checker.WPF.sourcelink.json
