@@ -8,7 +8,6 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 
 To do:
-- Make icon look nicer.
 - Remove case sensitivity for key=
 - Redo logic for DAEMON line to _not_ use lineParts since it's a mess (even if it works.)
 - Print a warning when non-capital letters are used for PORT and OPTIONS for CNU licenses.
