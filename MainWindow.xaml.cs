@@ -83,6 +83,7 @@ namespace Options.File.Checker.WPF
             errorWindow.Owner = this;
             SystemSounds.Exclamation.Play();
             errorWindow.ShowDialog();
+            GC.Collect();
         }
 
         public static string PackageVersion
@@ -919,12 +920,13 @@ namespace Options.File.Checker.WPF
                 }
 
                 CalculateRemainingSeats();
+                GC.Collect();
             }
             catch (Exception ex)
             {
                 ShowErrorWindow("Boo hoo, you broke something. Here's the program's automated error message: \"" + ex.Message + "\"");
             }
-            return;
+            return;            
         }
 
         private void ProcessIncludeAndExcludeLines(string[] filteredOptionsFileLines, string optionType, Action<int, string, string, string, string, string> processLine)
@@ -1963,7 +1965,7 @@ namespace Options.File.Checker.WPF
                     if (countOptionsEquals == 0)
                     {
                         ShowErrorWindow("There is an issue with the selected license file: you did not specify the path to the options file. " + 
-                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.\r\n\r\n");
+                            "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.");
                         return;
                     }
 
