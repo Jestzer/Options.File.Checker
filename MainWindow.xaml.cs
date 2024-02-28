@@ -2849,7 +2849,7 @@ namespace Options.File.Checker.WPF
                     string rawSeatCount = lineParts[5];
 
                     // License number.
-                    string pattern = @"asset_info=(\d+)";
+                    string pattern = @"asset_info=([^\s]+)";
 
                     if (line.Contains("asset_info="))
                     {
@@ -2863,7 +2863,7 @@ namespace Options.File.Checker.WPF
                     }
                     else if (line.Contains("SN="))
                     {
-                        pattern = @"SN=(\d+)";
+                        pattern = @"SN=([^\s]+)";
                         Regex regex = new Regex(pattern);
                         Match match = regex.Match(line);
 
