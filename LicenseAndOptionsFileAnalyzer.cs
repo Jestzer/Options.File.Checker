@@ -18,8 +18,6 @@ namespace Options.File.Checker.WPF
             string[] optionsFileContentsLines = System.IO.File.ReadAllLines(licenseFilePath);
             string[] licenseFileContentsLines = System.IO.File.ReadAllLines(optionsFilePath);
 
-            bool hostGroupsAreUsed;
-
             // Options file information gathering.
             for (int optionsLineIndex = 0; optionsLineIndex < optionsFileContentsLines.Length; optionsLineIndex++)
             {
@@ -28,10 +26,6 @@ namespace Options.File.Checker.WPF
 
                 if (line.TrimStart().StartsWith("MAX "))
                 {
-                    int maxSeats;
-                    string maxProductName;
-                    string maxClientType;
-                    string maxClientSpecified;
                     string[] lineParts = line.Split(' ');
 
                     // Stop putting in random spaces.
@@ -47,18 +41,15 @@ namespace Options.File.Checker.WPF
                         return (null, null, err);
                     }
 
-                    maxSeats = int.Parse(lineParts[1]);
-                    maxProductName = lineParts[2];
-                    maxClientType = lineParts[3];
-                    maxClientSpecified = string.Join(" ", lineParts.Skip(4));
+                    int maxSeats = int.Parse(lineParts[1]);
+                    string maxProductName = lineParts[2];
+                    string maxClientType = lineParts[3];
+                    string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
 
                     maxDictionary[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
                 }
                 else if (line.TrimStart().StartsWith("HOST_GROUP "))
                 {
-                    string hostGroupName;
-                    string hostGroupClientSpecified;
-                    hostGroupsAreUsed = true;
                     string[] lineParts = line.Split(' ');
 
                     // Stop putting in random spaces.
@@ -74,8 +65,8 @@ namespace Options.File.Checker.WPF
                         return (null, null, err);
                     }
 
-                    hostGroupName = lineParts[1];
-                    hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
+                    string hostGroupName = lineParts[1];
+                    string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
 
                     hostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
 
