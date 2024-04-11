@@ -16,7 +16,6 @@ namespace Options.File.Checker.WPF
 {
     public partial class MainWindow : Window
     {
-
         // Debug stuff.
         private bool debug;
 
@@ -388,7 +387,7 @@ namespace Options.File.Checker.WPF
                 string[] optionsFileContentsLines = System.IO.File.ReadAllLines(OptionsFileLocationTextBox.Text);
                 string[] licenseFileContentsLines = System.IO.File.ReadAllLines(LicenseFileLocationTextBox.Text);
 
-                //Filter the things that don't matter.
+                // Filter the things that don't matter.
                 string[] filteredOptionsFileLines = optionsFileContentsLines.Where(line => !line.TrimStart().StartsWith("#")
                 && !string.IsNullOrWhiteSpace(line)).ToArray();
                 string filteredOptionsFileContents = string.Join(Environment.NewLine, filteredOptionsFileLines);
