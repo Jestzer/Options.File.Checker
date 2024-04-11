@@ -18,21 +18,12 @@ namespace Options.File.Checker.WPF
             string[] optionsFileContentsLines = System.IO.File.ReadAllLines(licenseFilePath);
             string[] licenseFileContentsLines = System.IO.File.ReadAllLines(optionsFilePath);
 
-            // Filter the things that don't matter.
-            string[] filteredOptionsFileLines = optionsFileContentsLines.Where(line => !line.TrimStart().StartsWith("#")
-            && !string.IsNullOrWhiteSpace(line)).ToArray();
-            string filteredOptionsFileContents = string.Join(Environment.NewLine, filteredOptionsFileLines);
-
-            string[] filteredLicenseFileLines = licenseFileContentsLines.Where(line => !line.TrimStart().StartsWith("#")
-            && !string.IsNullOrWhiteSpace(line)).ToArray();
-            string filteredLicenseFileContents = string.Join(Environment.NewLine, filteredLicenseFileLines);
-
             bool hostGroupsAreUsed;
 
             // Options file information gathering.
-            for (int optionsLineIndex = 0; optionsLineIndex < filteredOptionsFileLines.Length; optionsLineIndex++)
+            for (int optionsLineIndex = 0; optionsLineIndex < optionsFileContentsLines.Length; optionsLineIndex++)
             {
-                string line = filteredOptionsFileLines[optionsLineIndex];                
+                string line = optionsFileContentsLines[optionsLineIndex];                
                 string err;
 
                 if (line.TrimStart().StartsWith("MAX "))
