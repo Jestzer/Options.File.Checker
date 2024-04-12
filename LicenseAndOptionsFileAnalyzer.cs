@@ -658,12 +658,17 @@ namespace Options.File.Checker.WPF
                 }
                 else if (line.TrimStart().StartsWith("INCLUDEALL ") || line.TrimStart().StartsWith("EXCLUDEALL "))
                 {
-                    string line = filteredOptionsFileLines[optionsExcludeAllLineIndex];
-                    string excludeAllClientType = "broken-excludeAllClientType";
+                    string excludeAllClientType;
                     string excludeAllClientSpecified = "broken-excludeAllClientSpecified";
 
                     if (line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
+                        clientType = "EXCLUDEALL";
+                    }
+                    else if (line.TrimStart().StartsWith("INCLUDEALL "))
+                    {
+                        clientType = "INCLUDEALL";
+                    }
                         excludeLinesAreUsed = true;
                         string[] lineParts = line.Split(' ');
 
@@ -695,7 +700,7 @@ namespace Options.File.Checker.WPF
                         {
                             OutputTextBlock.Text += $"EXCLUDEALL: {excludeAllClientType}. Clients: {excludeAllClientSpecified}\r\n";
                         }
-                        optionsExcludeAllIndex[optionsExcludeAllLineIndex] = Tuple.Create(excludeAllClientType, excludeAllClientSpecified);
+                        optionsExcludeAllIndex[optionsExcludeAllLineIndex] = Tuple.Create(excludeAllClientType, excludeAllClientSpecified);                    
                 }
                 else if (line.TrimStart().StartsWith("MAX "))
                 {
