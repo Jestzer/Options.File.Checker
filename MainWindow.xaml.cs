@@ -800,13 +800,6 @@ namespace Options.File.Checker.WPF
                             return;
                         }
 
-                        if (lineParts.Length < 3)
-                        {
-                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " + 
-                                $"The line in question is \"{line}\".");
-                            return;
-                        }
-
                         excludeAllClientType = lineParts[1];
                         excludeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
 
@@ -836,6 +829,12 @@ namespace Options.File.Checker.WPF
                     if (line.TrimStart().StartsWith("INCLUDEALL "))
                     {
                         string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces.
+                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                        {
+                            lineParts = lineParts.Skip(1).ToArray();
+                        }
 
                         if (lineParts.Length < 3)
                         {
