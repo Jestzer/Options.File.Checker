@@ -350,6 +350,41 @@ namespace Options.File.Checker.WPF
                 System.IO.File.WriteAllText(filePath, OutputTextBlock.Text);
             }
         }
+
+        private void AnalyzerButton_Copy_Click(object sender, RoutedEventArgs e)
+        {
+            string licenseFilePath = LicenseFileLocationTextBox.Text;
+            string optionsFilePath = OptionsFileLocationTextBox.Text;
+
+            // Call the AnalyzeFiles method.
+            var analysisResult = LicenseAndOptionsFileAnalyzer.AnalyzeFiles(licenseFilePath, optionsFilePath);
+
+            // Check if there was an error.
+            if (!string.IsNullOrEmpty(analysisResult.err))
+            {
+                ShowErrorWindow(analysisResult.err);
+                return;
+            }
+
+            // Process the returned data (example with maxDictionary.)
+            StringBuilder output = new();
+
+            // Process the maxDictionary if it's not null.
+            if (analysisResult.maxDictionary != null)
+            {
+                foreach (var item in analysisResult.maxDictionary)
+                {
+                    output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}");
+                }
+            }
+            else
+            {
+                output.AppendLine("maxDictionary is null.");
+            }
+
+            // Update the OutputTextBlock if we didn't hit any errors.
+            OutputTextBlock.Text = output.ToString();
+        }
         private void AnalyzerButton_Click(object sender, RoutedEventArgs e)
         {
             // Prevent previous entries/modified files from skewing data.

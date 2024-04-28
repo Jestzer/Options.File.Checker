@@ -59,11 +59,17 @@ namespace Options.File.Checker.WPF
 
             // Remove the line breaks to make life easier for product information detection.
             licenseFileContentsLines = licenseFileContentsLines
-                .Select(line => line.Replace("\r", "").Replace("\n", "").Replace("\t", ""))
+                .Select(line => line.Replace("\\\r\n", ""))
                 .ToArray();
 
             string optionsFileContents = string.Join(Environment.NewLine, optionsFileContentsLines);
             string licenseFileContents = string.Join(Environment.NewLine, licenseFileContentsLines);
+
+            string lineBreaksToRemove = "\\\r\n";
+            licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
+            // Put it back together!
+            licenseFileContentsLines = licenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
             // Next, let's check for some obvious errors.
 
@@ -74,40 +80,40 @@ namespace Options.File.Checker.WPF
                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
 
-                // Error time again, in case you decided to be sneaky and close the program or manually enter the filepath.
-                if (string.IsNullOrWhiteSpace(optionsFileContents))
-                {
-                    err = "There is an issue with the selected license file: it is either empty or only contains white space.";                    
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                }
+            // Error time again, in case you decided to be sneaky and close the program or manually enter the filepath.
+            if (string.IsNullOrWhiteSpace(optionsFileContents))
+            {
+                err = "There is an issue with the selected license file: it is either empty or only contains white space.";
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
 
-                // Make sure you actually picked an options file.
-                if (!optionsFileContents.Contains("INCLUDE") && !optionsFileContents.Contains("EXCLUDE") && !optionsFileContents.Contains("RESERVE")
-                    && !optionsFileContents.Contains("MAX") && !optionsFileContents.Contains("LINGER") && !optionsFileContents.Contains("LOG") &&
-                    !optionsFileContents.Contains("TIMEOUT"))
-                {
-                    err = "There is an issue with the selected options file: it is likely not an options file or contains no usable content.";                    
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                }
+            // Make sure you actually picked an options file.
+            if (!optionsFileContents.Contains("INCLUDE") && !optionsFileContents.Contains("EXCLUDE") && !optionsFileContents.Contains("RESERVE")
+                && !optionsFileContents.Contains("MAX") && !optionsFileContents.Contains("LINGER") && !optionsFileContents.Contains("LOG") &&
+                !optionsFileContents.Contains("TIMEOUT"))
+            {
+                err = "There is an issue with the selected options file: it is likely not an options file or contains no usable content.";
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
 
-                if (!System.IO.File.ReadAllText(licenseFilePath).Contains("INCREMENT"))
-                {
-                    err = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                }
+            if (!System.IO.File.ReadAllText(licenseFilePath).Contains("INCREMENT"))
+            {
+                err = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
 
-                if (licenseFileContents.Contains("lo=IN") || licenseFileContents.Contains("lo=DC") || licenseFileContents.Contains("lo=CIN"))
-                {
-                    err = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
-                        "which cannot use an options file.";
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                }
+            if (licenseFileContents.Contains("lo=IN") || licenseFileContents.Contains("lo=DC") || licenseFileContents.Contains("lo=CIN"))
+            {
+                err = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                    "which cannot use an options file.";
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
 
-                if (System.IO.File.ReadAllText(licenseFilePath).Contains("CONTRACT_ID="))
-                {
-                    err = "There is an issue with the selected license file: it is not a MathWorks license file.";
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                }
+            if (System.IO.File.ReadAllText(licenseFilePath).Contains("CONTRACT_ID="))
+            {
+                err = "There is an issue with the selected license file: it is not a MathWorks license file.";
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
 
             // Reset everything!
             serverLineHasPort = true;
@@ -342,7 +348,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
-                        err = $"There is an issue with the selected license file: the license number was not found for the product {productName}.";
+                        err = $"There is an issue with the selected license file: the license number {licenseNumber} was not found for the product {productName}.";
                         return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
@@ -658,49 +664,37 @@ namespace Options.File.Checker.WPF
                 }
                 else if (line.TrimStart().StartsWith("INCLUDEALL ") || line.TrimStart().StartsWith("EXCLUDEALL "))
                 {
-                    string excludeAllClientType;
-                    string excludeAllClientSpecified = "broken-excludeAllClientSpecified";
+                    string optionSpecified = string.Empty; // Could either be INCLUDEALL or EXCLUDEALL.
+                    string clientType; // Examples include GROUP or USER.                    
+                    string clientSpecified = string.Empty; // Examples include "matlab_group" or "root".
+                    string[] lineParts = line.Split(' ');
 
-                    if (line.TrimStart().StartsWith("EXCLUDEALL "))
+                    // Stop putting in random spaces.
+                    while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
                     {
-                        clientType = "EXCLUDEALL";
+                        lineParts = lineParts.Skip(1).ToArray();
                     }
-                    else if (line.TrimStart().StartsWith("INCLUDEALL "))
+
+                    if (lineParts.Length < 3)
                     {
-                        clientType = "INCLUDEALL";
+                        err = $"There is an issue with the selected options file: you have an incorrectly formatted {optionSpecified} line. It is missing necessary information. " +
+                            $"The line in question is \"{line}\".";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
-                        excludeLinesAreUsed = true;
-                        string[] lineParts = line.Split(' ');
 
-                        // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
+                    clientType = lineParts[1];
+                    clientSpecified = string.Join(" ", lineParts.Skip(2));
 
-                        if (lineParts.Length < 3)
-                        {
-                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " + 
-                                $"The line in question is \"{line}\".");
-                            return;
-                        }
+                    if (clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
+                        clientType != "PROJECT" && clientType != "INTERNET")
+                    {
+                        err = $"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " +
+                            $"line as \"{clientType}\". Please reformat this EXCLUDEALL line.";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
 
-                        excludeAllClientType = lineParts[1];
-                        excludeAllClientSpecified = string.Join(" ", lineParts.Skip(2));
-
-                        if (excludeAllClientType != "GROUP" && excludeAllClientType != "HOST" && excludeAllClientType != "HOST_GROUP" && excludeAllClientType != "DISPLAY" &&
-                            excludeAllClientType != "PROJECT" && excludeAllClientType != "INTERNET")
-                        {
-                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " + 
-                                $"line as \"{excludeAllClientType}\". Please reformat this EXCLUDEALL line.");
-                            return;
-                        }
-
-                        if (debug)
-                        {
-                            OutputTextBlock.Text += $"EXCLUDEALL: {excludeAllClientType}. Clients: {excludeAllClientSpecified}\r\n";
-                        }
-                        optionsExcludeAllIndex[optionsExcludeAllLineIndex] = Tuple.Create(excludeAllClientType, excludeAllClientSpecified);                    
+                    if (line.TrimStart().StartsWith("INCLUDEALL ")) { includeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
+                    else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { excludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                 }
                 else if (line.TrimStart().StartsWith("MAX "))
                 {
@@ -730,108 +724,81 @@ namespace Options.File.Checker.WPF
                 {
                     string[] lineParts = line.Split(' ');
 
-                        // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
+                    // Stop putting in random spaces.
+                    while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                    {
+                        lineParts = lineParts.Skip(1).ToArray();
+                    }
 
-                        if (lineParts.Length < 5)
-                        {
-                            err = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                    if (lineParts.Length < 5)
+                    {
+                        err = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
+                            $"The line in question is \"{line}\".";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
 
-                        // Check for stray quotation marks.
-                        int quoteCount = line.Count(c => c == '"');
-                        if (quoteCount % 2 != 0)
-                        {
-                            err = "There is an issue with the selected options file: one of your RESERVE lines has a stray quotation mark. " +
-                                $"The line in question reads as this: {line}";
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                    // Check for stray quotation marks.
+                    int quoteCount = line.Count(c => c == '"');
+                    if (quoteCount % 2 != 0)
+                    {
+                        err = "There is an issue with the selected options file: one of your RESERVE lines has a stray quotation mark. " +
+                            $"The line in question reads as this: {line}";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
 
-                        string reserveSeatsString = lineParts[1];
-                        string reserveProductName = lineParts[2];
-                        int reserveSeatCount = 0;
-                        string reserveLicenseNumber;
-                        string reserveProductKey;
-                        string reserveClientType;
-                        string reserveClientSpecified;
+                    string reserveSeatsString = lineParts[1];
+                    string reserveProductName = lineParts[2];
+                    string reserveLicenseNumber;
+                    string reserveProductKey;
+                    string reserveClientType;
+                    string reserveClientSpecified;
 
+                    // Convert the seat count from a string to a integer.
+                    if (int.TryParse(reserveSeatsString, out int reserveSeatCount))
+                    {
+                        // Parsing was successful.
+                    }
+                    else
+                    {
+                        err = "There is an issue with the selected options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
+                            "You either chose an invalid number or specified something other than a number.";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
 
-                        // Convert the seat count from a string to a integer.
-                        if (int.TryParse(reserveSeatsString, out reserveSeatCount))
-                        {
-                            // Parsing was successful.
-                        }
-                        else
-                        {
-                            err = "There is an issue with the selected options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
-                                "You either chose an invalid number or specified something other than a number.";
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                    if (reserveSeatCount <= 0)
+                    {
+                        err = "There is an issue with the selected options file: you specified a RESERVE line with a seat count of 0 or less... why?";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
 
-                        if (reserveSeatCount <= 0)
+                    if (reserveProductName.Contains('"'))
+                    {
+                        reserveProductName = reserveProductName.Replace("\"", "");
+                        reserveLicenseNumber = lineParts[3];
+                        if (!reserveProductName.Contains(':'))
                         {
-                            err = "There is an issue with the selected options file: you specified a RESERVE line with a seat count of 0 or less... why?";
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
-
-                        if (reserveProductName.Contains('"'))
-                        {
-                            reserveProductName = reserveProductName.Replace("\"", "");
-                            reserveLicenseNumber = lineParts[3];
-                            if (!reserveProductName.Contains(':'))
+                            if (reserveLicenseNumber.Contains("key="))
                             {
-                                if (reserveLicenseNumber.Contains("key="))
-                                {
-                                    reserveProductKey = lineParts[3];
-                                    string unfixedReserveProductKey = reserveProductKey;
-                                    string quotedReserveProductKey = unfixedReserveProductKey.Replace("key=", "");
-                                    reserveProductKey = quotedReserveProductKey.Replace("\"", "");
-                                    reserveLicenseNumber = string.Empty;
-                                }
-                                // asset_info=
-                                else
-                                {
-                                    string unfixedReserveLicenseNumber = reserveLicenseNumber;
-                                    string quoteReserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
-                                    reserveLicenseNumber = quoteReserveLicenseNumber.Replace("\"", "");
-                                    reserveProductKey = string.Empty;
-                                }
-
-                                reserveClientType = lineParts[4];
-                                reserveClientSpecified = string.Join(" ", lineParts.Skip(5)).TrimEnd();
+                                reserveProductKey = lineParts[3];
+                                string unfixedReserveProductKey = reserveProductKey;
+                                string quotedReserveProductKey = unfixedReserveProductKey.Replace("key=", "");
+                                reserveProductKey = quotedReserveProductKey.Replace("\"", "");
+                                reserveLicenseNumber = string.Empty;
                             }
-                            // If you have " and :
+                            // asset_info=
                             else
                             {
-                                string[] colonParts = reserveProductName.Split(":");
-                                if (colonParts.Length != 2)
-                                {
-                                    err = $"There is an issue with the selected options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
-                                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                                }
-                                reserveProductName = colonParts[0];
-                                if (colonParts[1].Contains("key="))
-                                {
-                                    string unfixedReserveProductKey = colonParts[1];
-                                    reserveProductKey = unfixedReserveProductKey.Replace("key=", "");
-                                    reserveLicenseNumber = string.Empty;
-                                }
-                                else
-                                {
-                                    string unfixedReserveLicenseNumber = colonParts[1];
-                                    reserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase); reserveProductKey = string.Empty;
-                                }
-                                reserveClientType = lineParts[3];
-                                reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                                string unfixedReserveLicenseNumber = reserveLicenseNumber;
+                                string quoteReserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                                reserveLicenseNumber = quoteReserveLicenseNumber.Replace("\"", "");
+                                reserveProductKey = string.Empty;
                             }
+
+                            reserveClientType = lineParts[4];
+                            reserveClientSpecified = string.Join(" ", lineParts.Skip(5)).TrimEnd();
                         }
-                        // In case you decided to use a : instead of ""...
-                        else if (reserveProductName.Contains(':'))
+                        // If you have " and :
+                        else
                         {
                             string[] colonParts = reserveProductName.Split(":");
                             if (colonParts.Length != 2)
@@ -854,37 +821,62 @@ namespace Options.File.Checker.WPF
                             reserveClientType = lineParts[3];
                             reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
                         }
+                    }
+                    // In case you decided to use a : instead of ""...
+                    else if (reserveProductName.Contains(':'))
+                    {
+                        string[] colonParts = reserveProductName.Split(":");
+                        if (colonParts.Length != 2)
+                        {
+                            err = $"There is an issue with the selected options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                        reserveProductName = colonParts[0];
+                        if (colonParts[1].Contains("key="))
+                        {
+                            string unfixedReserveProductKey = colonParts[1];
+                            reserveProductKey = unfixedReserveProductKey.Replace("key=", "");
+                            reserveLicenseNumber = string.Empty;
+                        }
                         else
                         {
-                            reserveClientType = lineParts[3];
-                            reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
-                            reserveLicenseNumber = string.Empty;
-                            reserveProductKey = string.Empty;
+                            string unfixedReserveLicenseNumber = colonParts[1];
+                            reserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase); reserveProductKey = string.Empty;
                         }
-                        reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
+                        reserveClientType = lineParts[3];
+                        reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                    }
+                    else
+                    {
+                        reserveClientType = lineParts[3];
+                        reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                        reserveLicenseNumber = string.Empty;
+                        reserveProductKey = string.Empty;
+                    }
+                    reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                 }
                 else if (line.TrimStart().StartsWith("GROUP "))
                 {
                     string[] lineParts = line.Split(' ');
 
-                        // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
+                    // Stop putting in random spaces.
+                    while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
+                    {
+                        lineParts = lineParts.Skip(1).ToArray();
+                    }
 
-                        if (lineParts.Length < 3)
-                        {                            
-                            err = "There is an issue with the selected options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                    if (lineParts.Length < 3)
+                    {
+                        err = "There is an issue with the selected options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
+                            $"The line in question is \"{line}\".";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
 
-                        string groupName = lineParts[1];
-                        string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
-                        int groupUserCount = groupUsers.Split(' ').Length;
+                    string groupName = lineParts[1];
+                    string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
+                    int groupUserCount = groupUsers.Split(' ').Length;
 
-                        groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                    groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                 }
                 else if (line.TrimStart().StartsWith("HOST_GROUP "))
                 {
