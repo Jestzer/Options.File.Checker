@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Windows.Shapes;
 
 namespace Options.File.Checker.WPF
 {
@@ -24,6 +25,9 @@ namespace Options.File.Checker.WPF
 
             AnalyzeData(string licenseFilePath, string optionsFilePath)
         {
+            // I'm putting this here so that we can print its contents if we hit a generic error message.
+            string line = string.Empty;
+
             var (serverLineHasPort,
                 daemonLineHasPort,
                 caseSensitivity,
@@ -39,17 +43,57 @@ namespace Options.File.Checker.WPF
                 groupDictionary,
                 hostGroupDictionary,
                 err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
-            var analysisResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
-            
-            foreach (var includeEntry in includeDictionary)
-            {
-                
-            }
-            foreach (var excludeEntry in excludeDictionary)
-            {
 
+            // Gather the data from the license and options files first.
+            var analysisResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
+
+            // Try to make meaningful conclusions from said data.
+            try
+            {
+                if (includeDictionary != null && excludeDictionary != null)
+                {
+                    foreach (var includeEntry in includeDictionary)
+                    {
+
+                    }
+                    foreach (var excludeEntry in excludeDictionary)
+                    {
+
+                    }
+                }
+                return (serverLineHasPort, 
+                    daemonLineHasPort, 
+                    caseSensitivity,
+                    licenseFileDictionary,
+                    includeDictionary,
+                    includeBorrowDictionary,
+                    includeAllDictionary,
+                    excludeDictionary,
+                    excludeBorrowDictionary,
+                    excludeAllDictionary,
+                    reserveDictionary,
+                    maxDictionary,
+                    groupDictionary,
+                    hostGroupDictionary,
+                    null);
             }
-            return (serverLineHasPort, daemonLineHasPort, caseSensitivity, licenseFileDictionary, includeDictionary, includeBorrowDictionary, includeAllDictionary, excludeDictionary, excludeBorrowDictionary, excludeAllDictionary, reserveDictionary, maxDictionary, groupDictionary, hostGroupDictionary, null);
+            catch (Exception ex)
+            {
+                if (ex.Message == "The value cannot be an empty string. (Parameter 'path')")
+                {
+                    err = "You left the license or options file text field blank.";
+                }
+                else if (ex.Message == "Index was outside the bounds of the array.")
+                {
+                    err = $"There is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"";
+                }
+                else
+                {
+                    err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
+                }
+
+                return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
         }
     }
 }
