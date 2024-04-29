@@ -357,7 +357,7 @@ namespace Options.File.Checker.WPF
             string optionsFilePath = OptionsFileLocationTextBox.Text;
 
             // Call the AnalyzeFiles method.
-            var analysisResult = LicenseAndOptionsFileAnalyzer.AnalyzeFiles(licenseFilePath, optionsFilePath);
+            var analysisResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
             // Check if there was an error.
             if (!string.IsNullOrEmpty(analysisResult.err))
@@ -383,18 +383,18 @@ namespace Options.File.Checker.WPF
                 output.AppendLine("License File Dictionary is null.");
             }
 
-            // Process the maxDictionary if it's not null.
-            output.AppendLine("maxDictionary:");
-            if (analysisResult.maxDictionary != null)
+            // Process the includeDictionary if it's not null.
+            output.AppendLine("includeDictionary:");
+            if (analysisResult.includeDictionary != null)
             {
-                foreach (var item in analysisResult.maxDictionary)
+                foreach (var item in analysisResult.includeDictionary)
                 {
-                    output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}");
+                    output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}, {item.Value.Item4}, {item.Value.Item5}");
                 }
             }
             else
             {
-                output.AppendLine("maxDictionary is null.");
+                output.AppendLine("includeDictionary is null.");
             }
 
             // Update the OutputTextBlock if we didn't hit any errors.
