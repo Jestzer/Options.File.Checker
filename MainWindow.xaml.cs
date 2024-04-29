@@ -251,7 +251,7 @@ namespace Options.File.Checker.WPF
                     ShowErrorWindow("There is an issue with the selected license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
                     LicenseFileLocationTextBox.Text = string.Empty;
                     return;
-                }                
+                }
 
                 if (!System.IO.File.ReadAllText(selectedFile).Contains("INCREMENT"))
                 {
@@ -366,10 +366,25 @@ namespace Options.File.Checker.WPF
                 return;
             }
 
-            // Process the returned data (example with maxDictionary.)
+            // Process the returned data.
             StringBuilder output = new();
 
+            // Print licenseFileDictionary.
+            output.AppendLine("License File Dictionary:");
+            if (analysisResult.licenseFileDictionary != null)
+            {
+                foreach (var item in analysisResult.licenseFileDictionary)
+                {
+                    output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}, {item.Value.Item4}, {item.Value.Item5}");
+                }
+            }
+            else
+            {
+                output.AppendLine("License File Dictionary is null.");
+            }
+
             // Process the maxDictionary if it's not null.
+            output.AppendLine("maxDictionary:");
             if (analysisResult.maxDictionary != null)
             {
                 foreach (var item in analysisResult.maxDictionary)
@@ -830,7 +845,7 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 3)
                         {
-                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " + 
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted EXCLUDEALL line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".");
                             return;
                         }
@@ -841,7 +856,7 @@ namespace Options.File.Checker.WPF
                         if (excludeAllClientType != "GROUP" && excludeAllClientType != "HOST" && excludeAllClientType != "HOST_GROUP" && excludeAllClientType != "DISPLAY" &&
                             excludeAllClientType != "PROJECT" && excludeAllClientType != "INTERNET")
                         {
-                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " + 
+                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " +
                                 $"line as \"{excludeAllClientType}\". Please reformat this EXCLUDEALL line.");
                             return;
                         }
@@ -873,7 +888,7 @@ namespace Options.File.Checker.WPF
 
                         if (lineParts.Length < 3)
                         {
-                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. It is missing necessary information. " + 
+                            ShowErrorWindow("There is an issue with the selected options file: you have an incorrectly formatted INCLUDEALL line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".");
                             return;
                         }
@@ -884,7 +899,7 @@ namespace Options.File.Checker.WPF
                         if (includeAllClientType != "GROUP" && includeAllClientType != "HOST" && includeAllClientType != "HOST_GROUP" && includeAllClientType != "DISPLAY" &&
                             includeAllClientType != "PROJECT" && includeAllClientType != "INTERNET")
                         {
-                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an INCLUDEALL " + 
+                            ShowErrorWindow($"There is an issue with the selected options file: you have incorrectly specified the client type on an INCLUDEALL " +
                                 $"line as \"{includeAllClientType}\". Please reformat this INCLUDEALL line.");
                             return;
                         }
@@ -959,7 +974,7 @@ namespace Options.File.Checker.WPF
             {
                 ShowErrorWindow("Boo hoo, you broke something. Here's the program's automated error message: \"" + ex.Message + "\"");
             }
-            return;            
+            return;
         }
 
         private void ProcessIncludeAndExcludeLines(string[] filteredOptionsFileLines, string optionType, Action<int, string, string, string, string, string> processLine)
@@ -1156,7 +1171,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " + 
+                                        ShowErrorWindow($"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
                                             $"for license {licenseNumber}.");
                                         return;
                                     }
@@ -1503,7 +1518,7 @@ namespace Options.File.Checker.WPF
                                     }
                                     else
                                     {
-                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " + 
+                                        ShowErrorWindow($"There is an issue with the selected options file: you have specified too many users to be able to use {productName}. " +
                                             "Don't forget that you are using at least 1 INCLUDEALL line.");
                                         return;
                                     }
@@ -1573,7 +1588,7 @@ namespace Options.File.Checker.WPF
                                 // Check that a user has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a USER to be able to use {productName} " + 
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a USER to be able to use {productName} " +
                                         $"for license {licenseNumber}, but you did not define the USER.");
                                     return;
                                 }
@@ -1613,7 +1628,7 @@ namespace Options.File.Checker.WPF
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(reserveClientSpecified))
                                 {
-                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName} " + 
+                                    ShowErrorWindow($"There is an issue with the selected options file: you have specified a GROUP to be able to use {productName} " +
                                         $"for license {licenseNumber}, but you did not specify which GROUP.");
                                     return;
                                 }
@@ -1997,7 +2012,7 @@ namespace Options.File.Checker.WPF
 
                     if (countOptionsEquals == 0)
                     {
-                        ShowErrorWindow("There is an issue with the selected license file: you did not specify the path to the options file. " + 
+                        ShowErrorWindow("There is an issue with the selected license file: you did not specify the path to the options file. " +
                             "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.");
                         return;
                     }
@@ -2561,7 +2576,7 @@ namespace Options.File.Checker.WPF
                     }
                     else
                     {
-                        ShowErrorWindow($"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " + 
+                        ShowErrorWindow($"There is an issue with the selected options file: you have an INCLUDE line that specifies a product key, {includeProductKey}, " +
                             "that does not exist in the specified license file.");
                         return;
                     }
@@ -2994,8 +3009,8 @@ namespace Options.File.Checker.WPF
                     {
                         if (line.Contains("PLATFORMS=x"))
                         {
-                           ShowErrorWindow($"There is an issue with the selected license file: the product {productName} comes from an Individual " +
-                                $"or Designated Computer license generated from a PLP on Windows, which cannot use an options file.");
+                            ShowErrorWindow($"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                 $"or Designated Computer license generated from a PLP on Windows, which cannot use an options file.");
                         }
                         else
                         {
@@ -3018,7 +3033,7 @@ namespace Options.File.Checker.WPF
 
                     if (expirationDate < currentDate)
                     {
-                        ShowErrorWindow($"There is an issue with the selected license file: The product {productName} on license number " + 
+                        ShowErrorWindow($"There is an issue with the selected license file: The product {productName} on license number " +
                             $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.");
                         return;
                     }
@@ -3028,7 +3043,7 @@ namespace Options.File.Checker.WPF
                         if (seatCount != 1 && !containsPLP)
                         {
                             seatCount /= 2;
-                        }                        
+                        }
                     }
 
                     // Technically infinite. This should avoid at least 1 unnecessary error report.
@@ -3050,7 +3065,7 @@ namespace Options.File.Checker.WPF
                         }
                         else
                         {
-                            ShowErrorWindow($"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " + 
+                            ShowErrorWindow($"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
                                 "that is incorrectly labeled as a Concurrent license.");
                         }
                         return;
