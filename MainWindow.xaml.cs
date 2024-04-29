@@ -357,12 +357,12 @@ namespace Options.File.Checker.WPF
             string optionsFilePath = OptionsFileLocationTextBox.Text;
 
             // Call the AnalyzeFiles method.
-            var analysisResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
+            var (serverLineHasPort, daemonLineHasPort, caseSensitivity, licenseFileDictionary, includeDictionary, includeBorrowDictionary, includeAllDictionary, excludeDictionary, excludeBorrowDictionary, excludeAllDictionary, reserveDictionary, maxDictionary, groupDictionary, hostGroupDictionary, err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
             // Check if there was an error.
-            if (!string.IsNullOrEmpty(analysisResult.err))
+            if (!string.IsNullOrEmpty(err))
             {
-                ShowErrorWindow(analysisResult.err);
+                ShowErrorWindow(err);
                 return;
             }
 
@@ -371,9 +371,9 @@ namespace Options.File.Checker.WPF
 
             // Print licenseFileDictionary.
             output.AppendLine("License File Dictionary:");
-            if (analysisResult.licenseFileDictionary != null)
+            if (licenseFileDictionary != null)
             {
-                foreach (var item in analysisResult.licenseFileDictionary)
+                foreach (var item in licenseFileDictionary)
                 {
                     output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}, {item.Value.Item4}, {item.Value.Item5}");
                 }
@@ -385,9 +385,9 @@ namespace Options.File.Checker.WPF
 
             // Process the includeDictionary if it's not null.
             output.AppendLine("includeDictionary:");
-            if (analysisResult.includeDictionary != null)
+            if (includeDictionary != null)
             {
-                foreach (var item in analysisResult.includeDictionary)
+                foreach (var item in includeDictionary)
                 {
                     output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}, {item.Value.Item4}, {item.Value.Item5}");
                 }
