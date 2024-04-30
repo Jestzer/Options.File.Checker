@@ -55,19 +55,28 @@ namespace Options.File.Checker.WPF
             // Try to make meaningful conclusions from said data.
             try
             {
-                if (includeDictionary != null && includeAllDictionary != null)
+                // # Add some code to make sure that any GROUPs or HOST_GROUPs specified actually exist.
+                // It'll be more efficient if we do this all at once, rather than repeatedly in the foreach loop below.
+
+                if (includeDictionary != null && includeAllDictionary != null && licenseFileDictionary != null)
                 {
                     foreach (var includeEntry in includeDictionary)
                     {
                         optionSelected = "INCLUDE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value));
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary);
                     }
                     foreach (var includeAllEntry in includeAllDictionary)
                     {
                         optionSelected = "INCLUDEALL";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value));
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary);
                     }
                 }
+                else
+                {
+                    err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
+                    return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                }
+
                 return (serverLineHasPort,
                     daemonLineHasPort,
                     caseSensitivity,
@@ -103,10 +112,11 @@ namespace Options.File.Checker.WPF
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary)
         {
             int optionLineIndex = optionsEntry.Key;
 
+            // Determine the option we're using.
             if (optionSelected == "INCLUDE")
             {
                 Tuple<string, string, string, string, string> optionsData = optionsEntry.Value;
@@ -121,16 +131,24 @@ namespace Options.File.Checker.WPF
                 Tuple<string, string> optionsData = optionsEntry.Value;
                 string includeAllClientType = optionsData.Item1;
                 string includeAllClientSpecified = optionsData.Item2;
-
-            } else if (optionSelected == "RESERVE")
+            }
+            else if (optionSelected == "RESERVE")
             {
                 Tuple<int, string, string, string, string, string> optionsData = optionsEntry.Value;
                 int reserveSeatCount = optionsData.Item1;
-                string reserveProductName = optionsData.Item2;
-                string reserveLicenseNumber = optionsData.Item3;
-                string reserveProductKey = optionsData.Item4;
-                string reserveClientType = optionsData.Item5;
-                string reserveClientSpecified = optionsData.Item6;
+                string productName = optionsData.Item2;
+                string licenseNumber = optionsData.Item3;
+                string productKey = optionsData.Item4;
+                string clientType = optionsData.Item5;
+                string clientSpecified = optionsData.Item6;
+            }            
+
+            // Go through each line and subtract seats accordingly.
+            foreach (var licenseFileEntry in licenseFileDictionary)
+            {
+                int licenseLineIndex = licenseFileEntry.Key;
+                Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
             }
         }
     }
