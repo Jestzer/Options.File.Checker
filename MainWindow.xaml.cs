@@ -357,7 +357,21 @@ namespace Options.File.Checker.WPF
             string optionsFilePath = OptionsFileLocationTextBox.Text;
 
             // Call the AnalyzeFiles method.
-            var (serverLineHasPort, daemonLineHasPort, caseSensitivity, licenseFileDictionary, includeDictionary, includeBorrowDictionary, includeAllDictionary, excludeDictionary, excludeBorrowDictionary, excludeAllDictionary, reserveDictionary, maxDictionary, groupDictionary, hostGroupDictionary, err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
+            var (serverLineHasPort, 
+                daemonLineHasPort,
+                caseSensitivity,
+                licenseFileDictionary,
+                includeDictionary,
+                includeBorrowDictionary,
+                includeAllDictionary,
+                excludeDictionary,
+                excludeBorrowDictionary,
+                excludeAllDictionary,
+                reserveDictionary,
+                maxDictionary,
+                groupDictionary,
+                hostGroupDictionary,
+                err) = LicenseAndOptionsFileDataAnalyzer.AnalyzeData(licenseFilePath, optionsFilePath);
 
             // Check if there was an error.
             if (!string.IsNullOrEmpty(err))

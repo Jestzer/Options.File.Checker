@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Windows.Shapes;
 
 namespace Options.File.Checker.WPF
 {
@@ -28,6 +27,7 @@ namespace Options.File.Checker.WPF
             // I'm putting this here so that we can print its contents if we hit a generic error message.
             string line = string.Empty;
 
+            // Gather the data from the license and options files first.
             var (serverLineHasPort,
                 daemonLineHasPort,
                 caseSensitivity,
@@ -44,25 +44,32 @@ namespace Options.File.Checker.WPF
                 hostGroupDictionary,
                 err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
-            // Gather the data from the license and options files first.
-            var analysisResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
+            // Don't proceed if you've got an error.
+            if (err != null )
+            {
+                return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
+
+            string optionSelected = string.Empty;
 
             // Try to make meaningful conclusions from said data.
             try
             {
-                if (includeDictionary != null && excludeDictionary != null)
+                if (includeDictionary != null && includeAllDictionary != null)
                 {
                     foreach (var includeEntry in includeDictionary)
                     {
-
+                        optionSelected = "INCLUDE";
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value));
                     }
-                    foreach (var excludeEntry in excludeDictionary)
+                    foreach (var includeAllEntry in includeAllDictionary)
                     {
-
+                        optionSelected = "INCLUDEALL";
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value));
                     }
                 }
-                return (serverLineHasPort, 
-                    daemonLineHasPort, 
+                return (serverLineHasPort,
+                    daemonLineHasPort,
                     caseSensitivity,
                     licenseFileDictionary,
                     includeDictionary,
@@ -93,6 +100,37 @@ namespace Options.File.Checker.WPF
                 }
 
                 return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+            }
+        }
+
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry)
+        {
+            int optionLineIndex = optionsEntry.Key;
+
+            if (optionSelected == "INCLUDE")
+            {
+                Tuple<string, string, string, string, string> optionsData = optionsEntry.Value;
+                string productName = optionsData.Item1;
+                string licenseNumber = optionsData.Item2;
+                string productKey = optionsData.Item3;
+                string clientType = optionsData.Item4;
+                string clientSpecified = optionsData.Item5;
+            }
+            else if (optionSelected == "INCLUDEALL")
+            {
+                Tuple<string, string> optionsData = optionsEntry.Value;
+                string includeAllClientType = optionsData.Item1;
+                string includeAllClientSpecified = optionsData.Item2;
+
+            } else if (optionSelected == "RESERVE")
+            {
+                Tuple<int, string, string, string, string, string> optionsData = optionsEntry.Value;
+                int reserveSeatCount = optionsData.Item1;
+                string reserveProductName = optionsData.Item2;
+                string reserveLicenseNumber = optionsData.Item3;
+                string reserveProductKey = optionsData.Item4;
+                string reserveClientType = optionsData.Item5;
+                string reserveClientSpecified = optionsData.Item6;
             }
         }
     }
