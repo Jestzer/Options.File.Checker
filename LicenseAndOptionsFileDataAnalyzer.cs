@@ -149,6 +149,16 @@ namespace Options.File.Checker.WPF
                 int licenseLineIndex = licenseFileEntry.Key;
                 Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
 
+                string licenseFileProductName = licenseFileData.Item1;
+                int licenseFileSeatCount = licenseFileData.Item2;
+                string licenseFileLicenseOffering = licenseFileData.Item4;
+                string licenseFileLicenseNumber = licenseFileData.Item5;
+
+                // CNU licenses have unlimited seats.
+                if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
+                {
+                    continue;
+                }
             }
         }
     }
