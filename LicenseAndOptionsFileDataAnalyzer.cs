@@ -63,12 +63,22 @@ namespace Options.File.Checker.WPF
                     foreach (var includeEntry in includeDictionary)
                     {
                         optionSelected = "INCLUDE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary);
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, err);
+
+                        if (err != null)
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
                     }
                     foreach (var includeAllEntry in includeAllDictionary)
                     {
                         optionSelected = "INCLUDEALL";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary);
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, err);
+
+                        if (err != null)
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
                     }
                 }
                 else
@@ -112,7 +122,7 @@ namespace Options.File.Checker.WPF
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, string? err)
         {
             int optionLineIndex = optionsEntry.Key;
 
@@ -151,6 +161,9 @@ namespace Options.File.Checker.WPF
                 clientSpecified = optionsData.Item6;
             }
 
+            bool matchingProductFoundInLicenseFile = false;
+            bool usableLicenseNumberFoundInLicenseFile = false;
+
             // Go through each line and subtract seats accordingly.
             foreach (var licenseFileEntry in licenseFileDictionary)
             {
@@ -164,6 +177,7 @@ namespace Options.File.Checker.WPF
 
                 // CNU licenses have unlimited seats, so nothing should be done with them...
                 // # Add some code here. The problem with having this here is that you can specify products that don't exist and therefore should be lower in this code's section.
+                // I'm excluding CN because unlike CNU, CN can never have "uncounted" seat count.
                 if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
                 {
                     continue;
@@ -172,15 +186,77 @@ namespace Options.File.Checker.WPF
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                 if (productName == licenseFileProductName)
                 {
+                    matchingProductFoundInLicenseFile = true;
+
                     if (licenseNumber == licenseFileLicenseNumber)
+                    {
+                        // Continue on, adventurer.
+                        usableLicenseNumberFoundInLicenseFile = true;
+                    }
+
+                    // If you didn't specify a license number, then we need to find a license number we can use, if any.
+                    else
+                    {
+                        if (licenseFileSeatCount == 0)
+                        {
+                            // See if we can find another entry with the same product that does not have a seat count of 0.
+                            continue;
+                        }
+                        else
+                        {
+                            usableLicenseNumberFoundInLicenseFile = true;
+                        }
+                    }
+
+                    if (clientType == "USER")
+                    {
+                        // Check that a user has actually been specified.
+                        if (string.IsNullOrWhiteSpace(clientSpecified))
+                        {
+                            err = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
+                            "but you did not define the USER.";
+                            return;
+                        }
+
+                        licenseFileSeatCount--;
+
+                        // Error out if the seat count is negative.
+                        if (licenseFileSeatCount < 0)
+                        {
+                            if (licenseFileLicenseOffering == "lo=CN")
+                            {
+                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                            }
+                            else
+                            {
+                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                return;
+                            }
+                        }
+                    }
+                    else if (clientType == "GROUP")
                     {
 
                     }
-                    else
-                    {
-                        // # Add some code here that'll subtract seats accordingly.
-                    }
+
+                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                    licenseFileDictionary[licenseLineIndex] = licenseFileData;
                 }
+            }
+
+            // You can't give away what you don't have.
+            if (!matchingProductFoundInLicenseFile)
+            {
+                err = $"There is an issue with the selected options file: you specified a product, {productName}, but this product is not in your license file. " +
+                        $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.";
+                return;
+            }
+
+            // You're likely here because you didn't specify a license number in your specified option and there is no combination of products with seats remaining from any licenses in the license file to subtract from.
+            if (!usableLicenseNumberFoundInLicenseFile)
+            {
+                err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.";
+                return;
             }
         }
     }
