@@ -45,7 +45,7 @@ namespace Options.File.Checker.WPF
                 err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
             // Don't proceed if you've got an error.
-            if (err != null )
+            if (err != null)
             {
                 return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
@@ -116,15 +116,23 @@ namespace Options.File.Checker.WPF
         {
             int optionLineIndex = optionsEntry.Key;
 
+            // These need to be defined outside the if statements below so they can be used across them.
+            int reserveSeatCount = 0;
+            string productName = string.Empty;
+            string licenseNumber = string.Empty;
+            string productKey = string.Empty;
+            string clientType = string.Empty;
+            string clientSpecified = string.Empty;
+
             // Determine the option we're using.
             if (optionSelected == "INCLUDE")
             {
                 Tuple<string, string, string, string, string> optionsData = optionsEntry.Value;
-                string productName = optionsData.Item1;
-                string licenseNumber = optionsData.Item2;
-                string productKey = optionsData.Item3;
-                string clientType = optionsData.Item4;
-                string clientSpecified = optionsData.Item5;
+                productName = optionsData.Item1;
+                licenseNumber = optionsData.Item2;
+                productKey = optionsData.Item3;
+                clientType = optionsData.Item4;
+                clientSpecified = optionsData.Item5;
             }
             else if (optionSelected == "INCLUDEALL")
             {
@@ -135,13 +143,13 @@ namespace Options.File.Checker.WPF
             else if (optionSelected == "RESERVE")
             {
                 Tuple<int, string, string, string, string, string> optionsData = optionsEntry.Value;
-                int reserveSeatCount = optionsData.Item1;
-                string productName = optionsData.Item2;
-                string licenseNumber = optionsData.Item3;
-                string productKey = optionsData.Item4;
-                string clientType = optionsData.Item5;
-                string clientSpecified = optionsData.Item6;
-            }            
+                reserveSeatCount = optionsData.Item1;
+                productName = optionsData.Item2;
+                licenseNumber = optionsData.Item3;
+                productKey = optionsData.Item4;
+                clientType = optionsData.Item5;
+                clientSpecified = optionsData.Item6;
+            }
 
             // Go through each line and subtract seats accordingly.
             foreach (var licenseFileEntry in licenseFileDictionary)
@@ -154,10 +162,24 @@ namespace Options.File.Checker.WPF
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
 
-                // CNU licenses have unlimited seats.
+                // CNU licenses have unlimited seats, so nothing should be done with them...
+                // # Add some code here. The problem with having this here is that you can specify products that don't exist and therefore should be lower in this code's section.
                 if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
                 {
                     continue;
+                }
+
+                // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
+                if (productName == licenseFileProductName)
+                {
+                    if (licenseNumber == licenseFileLicenseNumber)
+                    {
+
+                    }
+                    else
+                    {
+                        // # Add some code here that'll subtract seats accordingly.
+                    }
                 }
             }
         }
