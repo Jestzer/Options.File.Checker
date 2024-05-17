@@ -389,26 +389,12 @@ namespace Options.File.Checker.WPF
             {
                 foreach (var item in licenseFileDictionary)
                 {
-                    output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}, {item.Value.Item4}, {item.Value.Item5}");
+                    output.AppendLine($"The product {item.Value.Item1} has {item.Value.Item2} unassigned seats on license number {item.Value.Item5}");
                 }
             }
             else
             {
                 output.AppendLine("License File Dictionary is null.");
-            }
-
-            // Process the includeDictionary if it's not null.
-            output.AppendLine("includeDictionary:");
-            if (includeDictionary != null)
-            {
-                foreach (var item in includeDictionary)
-                {
-                    output.AppendLine($"Key: {item.Key}, Value: {item.Value.Item1}, {item.Value.Item2}, {item.Value.Item3}, {item.Value.Item4}, {item.Value.Item5}");
-                }
-            }
-            else
-            {
-                output.AppendLine("includeDictionary is null.");
             }
 
             // Update the OutputTextBlock if we didn't hit any errors.
@@ -1205,7 +1191,6 @@ namespace Options.File.Checker.WPF
                             }
                             if (includeClientType == "GROUP")
                             {
-
                                 // Check that a group has actually been specified.
                                 if (string.IsNullOrWhiteSpace(includeClientSpecified))
                                 {
