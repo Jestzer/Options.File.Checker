@@ -58,12 +58,12 @@ namespace Options.File.Checker.WPF
                 // # Add some code to make sure that any GROUPs or HOST_GROUPs specified actually exist.
                 // It'll be more efficient if we do this all at once, rather than repeatedly in the foreach loop below.
 
-                if (includeDictionary != null && includeAllDictionary != null && licenseFileDictionary != null)
+                if (includeDictionary != null && includeAllDictionary != null && licenseFileDictionary != null && groupDictionary != null)
                 {
                     foreach (var includeEntry in includeDictionary)
                     {
                         optionSelected = "INCLUDE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, err);
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, groupDictionary, ref err);
 
                         if (err != null)
                         {
@@ -73,7 +73,7 @@ namespace Options.File.Checker.WPF
                     foreach (var includeAllEntry in includeAllDictionary)
                     {
                         optionSelected = "INCLUDEALL";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, err);
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, groupDictionary, ref err);
 
                         if (err != null)
                         {
@@ -122,7 +122,7 @@ namespace Options.File.Checker.WPF
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, string? err)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref string? err)
         {
             int optionLineIndex = optionsEntry.Key;
 
@@ -175,36 +175,40 @@ namespace Options.File.Checker.WPF
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
 
-                // CNU licenses have unlimited seats, so nothing should be done with them...
-                // # Add some code here. The problem with having this here is that you can specify products that don't exist and therefore should be lower in this code's section.
-                // I'm excluding CN because unlike CNU, CN can never have "uncounted" seat count.
-                if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
-                {
-                    continue;
-                }
-
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                 if (productName == licenseFileProductName)
                 {
                     matchingProductFoundInLicenseFile = true;
+
+                    // CNU licenses have unlimited seats, so nothing should be done with them...
+                    // I'm excluding CN because unlike CNU, CN can never have "uncounted" seat count.
+                    if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
+                    {
+                        continue;
+                    }
 
                     if (licenseNumber == licenseFileLicenseNumber)
                     {
                         // Continue on, adventurer.
                         usableLicenseNumberFoundInLicenseFile = true;
                     }
-
-                    // If you didn't specify a license number, then we need to find a license number we can use, if any.
-                    else
+                    else // If you didn't specify a license number, then we need to find a license number we can use, if any.
                     {
-                        if (licenseFileSeatCount == 0)
+                        if (!string.IsNullOrEmpty(licenseNumber)) // Skip this entry if the option entry is using a license number.
                         {
-                            // See if we can find another entry with the same product that does not have a seat count of 0.
                             continue;
                         }
-                        else
+                        else // If you're here, your option specified does not use a license number.
                         {
-                            usableLicenseNumberFoundInLicenseFile = true;
+                            if (licenseFileSeatCount == 0)
+                            {
+                                // See if we can find another entry with the same product that does not have a seat count of 0.
+                                continue;
+                            }
+                            else
+                            {
+                                usableLicenseNumberFoundInLicenseFile = true;
+                            }
                         }
                     }
 
@@ -236,7 +240,45 @@ namespace Options.File.Checker.WPF
                     }
                     else if (clientType == "GROUP")
                     {
+                        // Check that a group has actually been specified.
+                        if (string.IsNullOrWhiteSpace(clientSpecified))
+                        {
+                            err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
+                                $"for license {licenseNumber}, but you did not specify which GROUP.";
+                            return;
+                        }
 
+                        foreach (var optionsGroupEntry in groupDictionary)
+                        {
+                            // Load GROUP specifications.
+                            int optionsGroupLineIndex = optionsGroupEntry.Key;
+                            Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                            string groupName = optionsGroupData.Item1;
+                            string groupUsers = optionsGroupData.Item2;
+                            int groupUserCount = optionsGroupData.Item3;
+
+                            if (groupName == clientSpecified)
+                            {
+                                // Subtract the appropriate number of seats.
+                                licenseFileSeatCount -= groupUserCount;
+
+                                // Error out if the seat count is negative.
+                                if (licenseFileSeatCount < 0)
+                                {
+                                    if (licenseFileLicenseOffering == "lo=CN")
+                                    {
+                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                    }
+                                    else
+                                    {
+                                        err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                            $"for license {licenseNumber}.";
+                                        return;
+                                    }
+                                }
+                            }
+                        }
                     }
 
                     licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
