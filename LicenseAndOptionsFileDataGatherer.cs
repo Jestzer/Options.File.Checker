@@ -132,7 +132,7 @@ namespace Options.File.Checker.WPF
                 bool containsPLP = false;
                 int serverLineCount = 0;
                 int daemonLineCount = 0;
-                bool productLinesHaveBeenReached = false;                
+                bool productLinesHaveBeenReached = false;
 
                 // License file information gathering.
                 for (int licenseLineIndex = 0; licenseLineIndex < licenseFileContentsLines.Length; licenseLineIndex++)
@@ -599,6 +599,15 @@ namespace Options.File.Checker.WPF
                                 }
 
                                 clientType = lineParts[3];
+
+                                if (clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
+                                clientType != "PROJECT" && clientType != "INTERNET")
+                                {
+                                    err = $"There is an issue with the selected options file: you have incorrectly specified the client type on a line using {optionType}." +
+                                        $"You attempted to use \"{clientType}\". Please reformat this {optionType} line.";
+                                    return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                                }
+
                                 clientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
                             }
                             // If you have " and :
@@ -691,8 +700,8 @@ namespace Options.File.Checker.WPF
                         if (clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
                             clientType != "PROJECT" && clientType != "INTERNET")
                         {
-                            err = $"There is an issue with the selected options file: you have incorrectly specified the client type on an EXCLUDEALL " +
-                                $"line as \"{clientType}\". Please reformat this EXCLUDEALL line.";
+                            err = $"There is an issue with the selected options file: you have incorrectly specified the client type on an {optionSpecified} " +
+                                $"line as \"{clientType}\". Please reformat this {optionSpecified} line.";
                             return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -925,7 +934,7 @@ namespace Options.File.Checker.WPF
                 {
                     err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
                 }
-               
+
                 return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
         }
