@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using static Options.File.Checker.WPF.MainWindow;
 
 namespace Options.File.Checker.WPF
 {
@@ -55,9 +56,63 @@ namespace Options.File.Checker.WPF
             // Try to make meaningful conclusions from said data.
             try
             {
-                // # Add some code to make sure that any GROUPs or HOST_GROUPs specified actually exist.
+                // Make sure that any GROUPs or HOST_GROUPs specified actually exist.
                 // It'll be more efficient if we do this all at once, rather than repeatedly in the foreach loop below.
+                // In words of all shitty programmers, the situation where any of these are null "sHoUlD nEvEr hApPeN" but I am trying to be the better man and give some kind of error if they don't.
+                if (includeDictionary != null && groupDictionary != null && hostGroupDictionary != null && excludeDictionary != null && reserveDictionary != null && includeAllDictionary != null && excludeAllDictionary != null)
+                {
+                    foreach (var optionsIncludeEntry in includeDictionary)
+                    {
+                        err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
 
+                    foreach (var optionsExcludeEntry in excludeDictionary)
+                    {
+                        err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+
+                    foreach (var optionsReserveEntry in reserveDictionary)
+                    {
+                        err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+
+                    foreach (var optionsIncludeAllEntry in includeAllDictionary)
+                    {
+                        err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+
+                    foreach (var optionsExcludeAllEntry in excludeAllDictionary)
+                    {
+                        err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+                }
+                else
+                {
+                    err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
+                    return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                }
+
+                // Subtract seats now.
                 if (includeDictionary != null && includeAllDictionary != null && licenseFileDictionary != null && groupDictionary != null)
                 {
                     foreach (var includeEntry in includeDictionary)
@@ -124,8 +179,6 @@ namespace Options.File.Checker.WPF
 
         private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref string? err)
         {
-            int optionLineIndex = optionsEntry.Key;
-
             // These need to be defined outside the if statements below so they can be used across them.
             int reserveSeatCount = 0;
             string productName = string.Empty;
@@ -147,8 +200,8 @@ namespace Options.File.Checker.WPF
             else if (optionSelected == "INCLUDEALL")
             {
                 Tuple<string, string> optionsData = optionsEntry.Value;
-                string includeAllClientType = optionsData.Item1;
-                string includeAllClientSpecified = optionsData.Item2;
+                clientType = optionsData.Item1;
+                clientSpecified = optionsData.Item2;
             }
             else if (optionSelected == "RESERVE")
             {
@@ -162,7 +215,7 @@ namespace Options.File.Checker.WPF
             }
 
             bool matchingProductFoundInLicenseFile = false;
-            bool usableLicenseNumberFoundInLicenseFile = false;
+            bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
 
             // Go through each line and subtract seats accordingly.
             foreach (var licenseFileEntry in licenseFileDictionary)
@@ -172,6 +225,7 @@ namespace Options.File.Checker.WPF
 
                 string licenseFileProductName = licenseFileData.Item1;
                 int licenseFileSeatCount = licenseFileData.Item2;
+                string licenseFileProductKey = licenseFileData.Item3;
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
 
@@ -180,25 +234,24 @@ namespace Options.File.Checker.WPF
                 {
                     matchingProductFoundInLicenseFile = true;
 
-                    // CNU licenses have unlimited seats, so nothing should be done with them...
-                    // I'm excluding CN because unlike CNU, CN can never have "uncounted" seat count.
+                    // I'm excluding CN because unlike CNU, CN can never have an "uncounted" seat count.
                     if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
                     {
-                        continue;
+                        continue; // CNU licenses have unlimited seats, so nothing should be done with them...
                     }
 
-                    if (licenseNumber == licenseFileLicenseNumber)
+                    if (licenseNumber == licenseFileLicenseNumber || productKey == licenseFileProductKey)
                     {
                         // Continue on, adventurer.
-                        usableLicenseNumberFoundInLicenseFile = true;
+                        usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                     }
-                    else // If you didn't specify a license number, then we need to find a license number we can use, if any.
+                    else
                     {
-                        if (!string.IsNullOrEmpty(licenseNumber)) // Skip this entry if the option entry is using a license number.
+                        if (!string.IsNullOrEmpty(licenseNumber) || !string.IsNullOrEmpty(productKey))
                         {
-                            continue;
+                            continue; // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
                         }
-                        else // If you're here, your option specified does not use a license number.
+                        else // If you're here, your option entry does not use a license number/product key, so we'll check if the current license file license number/product key has any remaining seats we can use/subtract from.
                         {
                             if (licenseFileSeatCount == 0)
                             {
@@ -207,22 +260,15 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                usableLicenseNumberFoundInLicenseFile = true;
+                                usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                             }
                         }
                     }
 
-                    if (clientType == "USER")
+                    // RESERVE lines don't care about your clientType.
+                    if (optionSelected == "RESERVE")
                     {
-                        // Check that a user has actually been specified.
-                        if (string.IsNullOrWhiteSpace(clientSpecified))
-                        {
-                            err = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
-                            "but you did not define the USER.";
-                            return;
-                        }
-
-                        licenseFileSeatCount--;
+                        licenseFileSeatCount -= reserveSeatCount;
 
                         // Error out if the seat count is negative.
                         if (licenseFileSeatCount < 0)
@@ -233,48 +279,78 @@ namespace Options.File.Checker.WPF
                             }
                             else
                             {
-                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                    $"for license {licenseNumber}.";
                                 return;
                             }
                         }
                     }
-                    else if (clientType == "GROUP")
+                    else
                     {
-                        // Check that a group has actually been specified.
-                        if (string.IsNullOrWhiteSpace(clientSpecified))
+                        if (clientType == "USER")
                         {
-                            err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
-                                $"for license {licenseNumber}, but you did not specify which GROUP.";
-                            return;
-                        }
-
-                        foreach (var optionsGroupEntry in groupDictionary)
-                        {
-                            // Load GROUP specifications.
-                            int optionsGroupLineIndex = optionsGroupEntry.Key;
-                            Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-
-                            string groupName = optionsGroupData.Item1;
-                            string groupUsers = optionsGroupData.Item2;
-                            int groupUserCount = optionsGroupData.Item3;
-
-                            if (groupName == clientSpecified)
+                            // Check that a user has actually been specified.
+                            if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                // Subtract the appropriate number of seats.
-                                licenseFileSeatCount -= groupUserCount;
+                                err = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
+                                "but you did not define the USER.";
+                                return;
+                            }
 
-                                // Error out if the seat count is negative.
-                                if (licenseFileSeatCount < 0)
+                            licenseFileSeatCount--;
+
+                            // Error out if the seat count is negative.
+                            if (licenseFileSeatCount < 0)
+                            {
+                                if (licenseFileLicenseOffering == "lo=CN")
                                 {
-                                    if (licenseFileLicenseOffering == "lo=CN")
+                                    // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                }
+                                else
+                                {
+                                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                    return;
+                                }
+                            }
+                        }
+                        else if (clientType == "GROUP")
+                        {
+                            // Check that a group has actually been specified.
+                            if (string.IsNullOrWhiteSpace(clientSpecified))
+                            {
+                                err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
+                                    $"for license {licenseNumber}, but you did not specify which GROUP.";
+                                return;
+                            }
+
+                            foreach (var optionsGroupEntry in groupDictionary)
+                            {
+                                // Load GROUP specifications.
+                                int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                string groupName = optionsGroupData.Item1;
+                                string groupUsers = optionsGroupData.Item2;
+                                int groupUserCount = optionsGroupData.Item3;
+
+                                if (groupName == clientSpecified)
+                                {
+                                    // Subtract the appropriate number of seats.
+                                    licenseFileSeatCount -= groupUserCount;
+
+                                    // Error out if the seat count is negative.
+                                    if (licenseFileSeatCount < 0)
                                     {
-                                        // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                                    }
-                                    else
-                                    {
-                                        err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
-                                            $"for license {licenseNumber}.";
-                                        return;
+                                        if (licenseFileLicenseOffering == "lo=CN")
+                                        {
+                                            // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                        }
+                                        else
+                                        {
+                                            err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName} " +
+                                                $"for license {licenseNumber}.";
+                                            return;
+                                        }
                                     }
                                 }
                             }
@@ -295,11 +371,85 @@ namespace Options.File.Checker.WPF
             }
 
             // You're likely here because you didn't specify a license number in your specified option and there is no combination of products with seats remaining from any licenses in the license file to subtract from.
-            if (!usableLicenseNumberFoundInLicenseFile)
+            if (!usableLicenseNumberOrProductKeyFoundInLicenseFile)
             {
-                err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}.";
+                if (!string.IsNullOrEmpty(licenseNumber))
+                {
+                    err = $"There is an issue with the selected options file: you have specified a license number, {licenseNumber}, which does not exist in the license file.";
+                }
+                else if (!string.IsNullOrEmpty(productKey))
+                {
+                    err = $"There is an issue with the selected options file: you have specified a product key, {productKey}, which does not exist in the license file.";
+                }
+                else
+                {
+                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                }
+                
                 return;
             }
+        }
+
+        // Method to check if the groups you're specifying in your options have also been defined.
+        private static string? PerformGroupCheck<TKey, TTuple>(Dictionary<TKey, TTuple> optionsIndex,
+                                                     Dictionary<TKey, Tuple<string, string, int>> groupIndex,
+                                                     Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
+                                                     TupleExtractor<TTuple> extractor,
+                                                     string lineType) where TKey : notnull
+        {
+            foreach (var entry in optionsIndex)
+            {
+                TTuple tuple = entry.Value;
+
+                // Use the extractor to get the groupType and specified strings.
+                (string groupType, string specified) = extractor(tuple);
+                if (groupType == "GROUP")
+                {
+                    foreach (var optionsGroupEntry in groupIndex)
+                    {
+                        Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+                        string groupName = optionsGroupData.Item1;
+
+                        if (groupName == specified)
+                        {
+                            return null; // Matching GROUP found.
+                        }
+                    }
+                }
+                else if (groupType == "HOST_GROUP")
+                {
+                    foreach (var optionsHostGroupEntry in hostGroupIndex)
+                    {
+                        Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
+                        string hostGroupName = optionsHostGroupData.Item1;
+
+                        if (hostGroupName == specified)
+                        {
+                            return null; // Matching HOST_GROUP found.
+                        }
+                    }
+                }
+                else
+                {
+                    return null; // No need to do this for other client types.
+                }
+
+                // No matching group found.                
+                string aOrAn; // Grammar is important, kids!
+
+                if (lineType == "RESERVE")
+                {
+                    aOrAn = "a";
+                }
+                else
+                {
+                    aOrAn = "an";
+                }
+                string err = $"There is an issue with the selected options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                   $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                return err;
+            }
+            return null;
         }
     }
 }
