@@ -9,6 +9,7 @@ namespace Options.File.Checker.WPF
         public static (
             bool serverLineHasPort,
             bool daemonLineHasPort,
+            bool daemonPortIsCNUFriendly,
             bool caseSensitivity,
             bool unspecifiedLicenseOrProductKey,
             Dictionary<int, Tuple<string, int, string, string, string>>? licenseFileDictionary,
@@ -32,6 +33,7 @@ namespace Options.File.Checker.WPF
             // Gather the data from the license and options files first.
             var (serverLineHasPort,
                 daemonLineHasPort,
+                daemonPortIsCNUFriendly,
                 caseSensitivity,
                 licenseFileDictionary,
                 includeDictionary,
@@ -51,7 +53,7 @@ namespace Options.File.Checker.WPF
             // Don't proceed if you've got an error.
             if (err != null)
             {
-                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
 
             string optionSelected = string.Empty;
@@ -69,7 +71,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -78,7 +80,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -87,7 +89,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -96,7 +98,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -105,14 +107,14 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 // Subtract seats now.
@@ -125,7 +127,7 @@ namespace Options.File.Checker.WPF
 
                         if (err != null)
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                     foreach (var includeAllEntry in includeAllDictionary)
@@ -135,7 +137,7 @@ namespace Options.File.Checker.WPF
 
                         if (err != null)
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -146,18 +148,19 @@ namespace Options.File.Checker.WPF
 
                         if (err != null)
                         {
-                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
-                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 return (serverLineHasPort,
                     daemonLineHasPort,
+                    daemonPortIsCNUFriendly,
                     caseSensitivity,
                     unspecifiedLicenseOrProductKey,
                     licenseFileDictionary,
@@ -188,7 +191,7 @@ namespace Options.File.Checker.WPF
                     err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
                 }
 
-                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
         }
 

@@ -359,6 +359,7 @@ namespace Options.File.Checker.WPF
             // Call the AnalyzeFiles method. I'm leaving these unused variables in case I want to use them later. You're welcome future me.
             var (serverLineHasPort,
                 daemonLineHasPort,
+                daemonPortIsCNUFriendly,
                 caseSensitivity,
                 unspecifiedLicenseOrProductKey,
                 licenseFileDictionary,
@@ -410,6 +411,7 @@ namespace Options.File.Checker.WPF
             if (licenseFileDictionary != null)
             {
                 bool overdraftCNWarningHit = false;
+                bool alreadyYelledToCNUAboutPORTFormat = false;
 
                 foreach (var item in licenseFileDictionary)
                 {
@@ -424,15 +426,24 @@ namespace Options.File.Checker.WPF
                         seatOrSeats = "seats";
                     }
 
-                    if (item.Value.Item1 == "lo=CNU" && item.Value.Item2 == 9999999)
+                    if (!daemonPortIsCNUFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU"))
                     {
-                        output.AppendLine($"{item.Value.Item1} has unlimited seats on license {item.Value.Item5}");
+                        if (!alreadyYelledToCNUAboutPORTFormat)
+                        {
+                            output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
+                            alreadyYelledToCNUAboutPORTFormat = true;
+                        }
                     }
-                    else if (item.Value.Item1 == "lo=CN" && item.Value.Item2 < 0)
+
+                    if (item.Value.Item4.Contains("CNU") && item.Value.Item2 == 9999999)
+                    {
+                        output.AppendLine($"{item.Value.Item1} has unlimited seats on license {item.Value.Item5}\n");
+                    }
+                    else if (item.Value.Item4.Contains("CN") && item.Value.Item2 < 0)
                     {
                         if (!overdraftCNWarningHit)
                         {
-                            OutputTextBlock.Text += $"\r\nWARNING: You have specified more users on license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for. " +
+                            OutputTextBlock.Text += $"\r\nWARNING: you have specified more users on license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for. " +
                                 $"If every user included was using the product at once then the seat count would technically be at {item.Value.Item2}. " +
                                 "This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
                                 "access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE FOR THIS SINGLE PRODUCT.\r\n";
