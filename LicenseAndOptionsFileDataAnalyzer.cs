@@ -408,6 +408,8 @@ namespace Options.File.Checker.WPF
         }
 
         // Method to check if the groups you're specifying in your options have also been defined.
+        // Define a delegate that takes a tuple and returns the groupType and specified strings.
+        public delegate (string groupType, string specified) TupleExtractor<in TTuple>(TTuple tuple);
         private static string? PerformGroupCheck<TKey, TTuple>(Dictionary<TKey, TTuple> optionsIndex,
                                                      Dictionary<TKey, Tuple<string, string, int>> groupIndex,
                                                      Dictionary<TKey, Tuple<string, string>> hostGroupIndex,

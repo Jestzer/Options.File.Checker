@@ -123,28 +123,6 @@
                         </ControlTemplate>
                     </Button.Template>
                 </Button>
-                <Button x:Name="AnalyzerButton_Copy" Content="Analyze" HorizontalAlignment="Left" Margin="509,56,0,0" VerticalAlignment="Top" Width="64" Click="AnalyzerButton_Copy_Click" IsEnabled="True" Foreground="White">
-                    <Button.Template>
-                        <ControlTemplate TargetType="{x:Type Button}">
-                            <Border x:Name="border" Background="#FF464646" BorderBrush="#FF1E699B" BorderThickness="2">
-                                <ContentPresenter x:Name="contentPresenter" HorizontalAlignment="Center" VerticalAlignment="Center" />
-                            </Border>
-                            <ControlTemplate.Triggers>
-                                <Trigger Property="IsMouseOver" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="Gray" />
-                                </Trigger>
-                                <Trigger Property="IsEnabled" Value="False">
-                                    <Setter TargetName="border" Property="Background" Value="#FF858585" />
-                                    <Setter TargetName="border" Property="BorderBrush" Value="#FF858585" />
-                                    <Setter TargetName="contentPresenter" Property="TextElement.Foreground" Value="#FFA5A5A5" />
-                                </Trigger>
-                                <Trigger Property="IsPressed" Value="True">
-                                    <Setter TargetName="border" Property="Background" Value="#FFCECECE" />
-                                </Trigger>
-                            </ControlTemplate.Triggers>
-                        </ControlTemplate>
-                    </Button.Template>
-                </Button>
             </Grid>
         </Grid>
     </Border>
