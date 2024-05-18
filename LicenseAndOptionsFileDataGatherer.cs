@@ -16,6 +16,12 @@ namespace Options.File.Checker.WPF
         [GeneratedRegex("# BEGIN--------------", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex countCommentedBeginLines();
 
+        [GeneratedRegex("key=", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex KeyEquals();
+
+        [GeneratedRegex("asset_info=", RegexOptions.IgnoreCase, "en-US")]
+        private static partial Regex AssetInfo();
+
         private static bool serverLineHasPort = true;
         private static bool daemonLineHasPort = false;
         private static bool caseSensitivity = true;
@@ -155,6 +161,13 @@ namespace Options.File.Checker.WPF
                         string[] lineParts = line.Split(' ');
                         string serverWord = lineParts[0];
                         string serverHostID = lineParts[2];
+
+                        if (serverHostID == "27000" || serverHostID == "27001" || serverHostID == "27002" || serverHostID == "27003" || serverHostID == "27004" || serverHostID == "27005" )
+                        {
+                            err = "There is an issue with the selected license file: you have likely omitted your Host ID and attempted to specify a SERVER port number. " +
+                                "Because you have omitted the Host ID, the port you've attempted to specify will not be used.";
+                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
 
                         if (lineParts.Length < 3)
                         {
@@ -301,7 +314,7 @@ namespace Options.File.Checker.WPF
                             return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
-                        if (countPortEquals != 1)
+                        if (countPortEquals == 1)
                         {
                             daemonLineHasPort = true;
                         }
@@ -325,7 +338,7 @@ namespace Options.File.Checker.WPF
 
                         if (line.Contains("asset_info="))
                         {
-                            Regex regex = new Regex(pattern);
+                            Regex regex = new(pattern);
                             Match match = regex.Match(line);
 
                             if (match.Success)
@@ -336,7 +349,7 @@ namespace Options.File.Checker.WPF
                         else if (line.Contains("SN="))
                         {
                             pattern = @"SN=([^\s]+)";
-                            Regex regex = new Regex(pattern);
+                            Regex regex = new(pattern);
                             Match match = regex.Match(line);
 
                             if (match.Success)
@@ -581,19 +594,18 @@ namespace Options.File.Checker.WPF
                             licenseNumber = lineParts[2];
                             if (!productName.Contains(':'))
                             {
-                                if (licenseNumber.Contains("key="))
+                                if (licenseNumber.Contains("key=", StringComparison.CurrentCultureIgnoreCase))
                                 {
                                     productKey = lineParts[2];
                                     string unfixedProductKey = productKey;
-                                    string quotedProductKey = unfixedProductKey.Replace("key=", "");
+                                    string quotedProductKey = KeyEquals().Replace(unfixedProductKey, "");
                                     productKey = quotedProductKey.Replace("\"", "");
                                     licenseNumber = string.Empty;
                                 }
-                                // asset_info=
-                                else
+                                else // asset_info=
                                 {
                                     string unfixedLicenseNumber = licenseNumber;
-                                    string quoteLicenseNumber = Regex.Replace(unfixedLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                                    string quoteLicenseNumber = AssetInfo().Replace(unfixedLicenseNumber, "");
                                     licenseNumber = quoteLicenseNumber.Replace("\"", "");
                                     productKey = string.Empty;
                                 }
@@ -610,8 +622,7 @@ namespace Options.File.Checker.WPF
 
                                 clientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
                             }
-                            // If you have " and :
-                            else
+                            else // If you have " and :
                             {
                                 string[] colonParts = productName.Split(":");
                                 if (colonParts.Length != 2)
@@ -635,9 +646,8 @@ namespace Options.File.Checker.WPF
                                 clientType = lineParts[2];
                                 clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                             }
-                        }
-                        // In case you decided to use a : instead of ""...
-                        else if (productName.Contains(':'))
+                        }                        
+                        else if (productName.Contains(':')) // In case you decided to use a : instead of ""...
                         {
                             string[] colonParts = productName.Split(":");
                             if (colonParts.Length != 2)

@@ -356,10 +356,11 @@ namespace Options.File.Checker.WPF
             string licenseFilePath = LicenseFileLocationTextBox.Text;
             string optionsFilePath = OptionsFileLocationTextBox.Text;
 
-            // Call the AnalyzeFiles method.
-            var (serverLineHasPort, 
+            // Call the AnalyzeFiles method. I'm leaving these unused variables in case I want to use them later. You're welcome future me.
+            var (serverLineHasPort,
                 daemonLineHasPort,
                 caseSensitivity,
+                unspecifiedLicenseOrProductKey,
                 licenseFileDictionary,
                 includeDictionary,
                 includeBorrowDictionary,
@@ -383,18 +384,74 @@ namespace Options.File.Checker.WPF
             // Process the returned data.
             StringBuilder output = new();
 
-            // Print licenseFileDictionary.
-            output.AppendLine("License File Dictionary:");
+            if (!serverLineHasPort)
+            {
+                output.AppendLine("Warning: you did not specify a port number on your SERVER line.\n");
+            }
+
+            if (!daemonLineHasPort)
+            {
+                output.AppendLine("Warning: you did not specify a port number on your DAEMON line. This means random port will be chosen each time you restart FlexLM.\n");
+            }
+
+            if (caseSensitivity)
+            {
+                output.AppendLine("Warning: case sensitivity is enabled for users define in GROUPs and HOST_GROUPs.\n");
+            }
+
+            // Warn the user if they didn't specify a license number or product key in their seat-subtracting option entries.
+            if (unspecifiedLicenseOrProductKey)
+            {
+                output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE, INCLUDEALL, or RESERVE lines. This means we will subtract the seat from the first" +
+                    "license the product appears on.\n");
+            }
+
+            // Print seatCount.
             if (licenseFileDictionary != null)
             {
+                bool overdraftCNWarningHit = false;
+
                 foreach (var item in licenseFileDictionary)
                 {
-                    output.AppendLine($"The product {item.Value.Item1} has {item.Value.Item2} unassigned seats on license number {item.Value.Item5}");
+                    string seatOrSeats; // Grammar is important, I guess.
+
+                    if (item.Value.Item2 == 1)
+                    {
+                        seatOrSeats = "seat";
+                    }
+                    else
+                    {
+                        seatOrSeats = "seats";
+                    }
+
+                    if (item.Value.Item1 == "lo=CNU" && item.Value.Item2 == 9999999)
+                    {
+                        output.AppendLine($"{item.Value.Item1} has unlimited seats on license {item.Value.Item5}");
+                    }
+                    else if (item.Value.Item1 == "lo=CN" && item.Value.Item2 < 0)
+                    {
+                        if (!overdraftCNWarningHit)
+                        {
+                            OutputTextBlock.Text += $"\r\nWARNING: You have specified more users on license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for. " +
+                                $"If every user included was using the product at once then the seat count would technically be at {item.Value.Item2}. " +
+                                "This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
+                                "access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE FOR THIS SINGLE PRODUCT.\r\n";
+                            overdraftCNWarningHit = true;
+                        }
+                        else
+                        {
+                            output.AppendLine($"You have specified more users on Concurrent license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for (technically counting at {item.Value.Item2} seats.)");
+                        }
+                    }
+                    else
+                    {
+                        output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5}");
+                    }
                 }
             }
             else
             {
-                output.AppendLine("License File Dictionary is null.");
+                ShowErrorWindow("The license file dictionary is null. Please report this error on GitHub.");
             }
 
             // Update the OutputTextBlock if we didn't hit any errors.
