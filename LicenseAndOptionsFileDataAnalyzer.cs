@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using static Options.File.Checker.WPF.MainWindow;
 
 namespace Options.File.Checker.WPF
 {
