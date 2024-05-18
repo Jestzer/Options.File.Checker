@@ -10,6 +10,7 @@ namespace Options.File.Checker.WPF
             bool serverLineHasPort,
             bool daemonLineHasPort,
             bool caseSensitivity,
+            bool unspecifiedLicenseOrProductKey,
             Dictionary<int, Tuple<string, int, string, string, string>>? licenseFileDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
@@ -45,10 +46,12 @@ namespace Options.File.Checker.WPF
                 hostGroupDictionary,
                 err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
+            bool unspecifiedLicenseOrProductKey = false;
+
             // Don't proceed if you've got an error.
             if (err != null)
             {
-                return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
 
             string optionSelected = string.Empty;
@@ -66,7 +69,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -75,7 +78,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -84,7 +87,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -93,7 +96,7 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -102,14 +105,14 @@ namespace Options.File.Checker.WPF
                         err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
-                    return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 // Subtract seats now.
@@ -118,33 +121,45 @@ namespace Options.File.Checker.WPF
                     foreach (var includeEntry in includeDictionary)
                     {
                         optionSelected = "INCLUDE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, groupDictionary, ref err);
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
 
                         if (err != null)
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                     foreach (var includeAllEntry in includeAllDictionary)
                     {
                         optionSelected = "INCLUDEALL";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, groupDictionary, ref err);
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
 
                         if (err != null)
                         {
-                            return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+
+                    foreach (var reserveEntry in reserveDictionary)
+                    {
+                        optionSelected = "RESERVE";
+                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
+
+                        if (err != null)
+                        {
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
-                    return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 return (serverLineHasPort,
                     daemonLineHasPort,
                     caseSensitivity,
+                    unspecifiedLicenseOrProductKey,
                     licenseFileDictionary,
                     includeDictionary,
                     includeBorrowDictionary,
@@ -173,11 +188,11 @@ namespace Options.File.Checker.WPF
                     err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
                 }
 
-                return (false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref string? err)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
         {
             // These need to be defined outside the if statements below so they can be used across them.
             int reserveSeatCount = 0;
@@ -241,9 +256,8 @@ namespace Options.File.Checker.WPF
                     }
 
                     if (licenseNumber == licenseFileLicenseNumber || productKey == licenseFileProductKey)
-                    {
-                        // Continue on, adventurer.
-                        usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
+                    {                        
+                        usableLicenseNumberOrProductKeyFoundInLicenseFile = true; // Continue on, adventurer.
                     }
                     else
                     {
@@ -254,12 +268,12 @@ namespace Options.File.Checker.WPF
                         else // If you're here, your option entry does not use a license number/product key, so we'll check if the current license file license number/product key has any remaining seats we can use/subtract from.
                         {
                             if (licenseFileSeatCount == 0)
-                            {
-                                // See if we can find another entry with the same product that does not have a seat count of 0.
-                                continue;
+                            {                                
+                                continue; // See if we can find another entry with the same product that does not have a seat count of 0.
                             }
                             else
                             {
+                                unspecifiedLicenseOrProductKey = true;
                                 usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                             }
                         }
