@@ -26,7 +26,8 @@
              Width="330"
              Background="#FF464646"
              Foreground="White"
-             Text=""/>
+			 Watermark="Browse or enter your license file path"
+             TextChanged="LicenseFileLocationTextBox_TextChanged"/>
 
     <Button Name="LicenseFileBrowseButton"
             Content="Browse"
@@ -67,7 +68,8 @@
              Width="330"
              Background="#FF464646"
              Foreground="White"
-             Text=""/>
+			 Watermark="Browse or enter your options file path"
+             TextChanged="OptionsFileLocationTextBox_TextChanged"/>
 
     <Button Name="OptionsFileBrowseButton"
             Content="Browse"
