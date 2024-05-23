@@ -98,7 +98,7 @@ public partial class MainWindow : Window
 
         // Check if VisualRoot is not null and is a Window before casting
         if (this.VisualRoot is Window window)
-        {            
+        {
             await errorWindow.ShowDialog(window);
         }
         else
@@ -123,12 +123,12 @@ public partial class MainWindow : Window
             var filePickerOptions = new FilePickerOpenOptions
             {
                 Title = "Select a license file",
-                AllowMultiple = false,                 
+                AllowMultiple = false,
                 FileTypeFilter =
                 [
                 new FilePickerFileType("License Files") { Patterns = ["*.lic", "*.dat"] },
                 new FilePickerFileType("All Files") { Patterns = ["*"] }
-            ]
+                ]
             };
 
             // Open the file dialog and await the user's response
@@ -188,7 +188,7 @@ public partial class MainWindow : Window
                     }
 
                     // Gotta convert some things, ya know?
-                    var rawFilePath = selectedFile.TryGetLocalPath; 
+                    var rawFilePath = selectedFile.TryGetLocalPath;
                     string? filePath = rawFilePath();
                     LicenseFileLocationTextBox.Text = filePath;
                 }
@@ -214,7 +214,7 @@ public partial class MainWindow : Window
                 [
                 new FilePickerFileType("Options Files") { Patterns = ["*.opt"] },
                 new FilePickerFileType("All Files") { Patterns = ["*"] }
-            ]
+                ]
             };
 
             // Open the file dialog.
