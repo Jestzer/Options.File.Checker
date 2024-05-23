@@ -19,7 +19,7 @@
 		<TextBlock Name="ErrorTextBlock"
 				 HorizontalAlignment="Center"
 				 VerticalAlignment="Center"
-				 Margin="0,0,0,0"
+				 Margin="0,0,0,50"
 				 TextAlignment="Center"
 				 Background="#FF2D2B2B"
 				 Foreground="White"
@@ -29,9 +29,16 @@
 		<Button Name="OKButton"
 				HorizontalAlignment="Center"
 				VerticalAlignment="Center"
-				Margin="0,160,0,0"
-				Content="OK"
-				Click="OKButton_Click">
+				Margin="0,180,0,0"
+				Click="OKButton_Click"
+				Height="50"
+				Width="150">
+			<Button.Content>
+				<TextBlock Text="OK"
+						   HorizontalAlignment="Center"
+						   VerticalAlignment="Center"
+						   Foreground="White"/>
+			</Button.Content>
 			<Button.Styles>
 				<Style Selector="Button">
 					<Setter Property="Background" Value="#FF464646"/>
