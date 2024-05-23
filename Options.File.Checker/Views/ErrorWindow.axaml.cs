@@ -1,4 +1,5 @@
 using Avalonia.Controls;
+using Avalonia.Interactivity;
 
 namespace Options.File.Checker.Views
 {
@@ -9,6 +10,9 @@ namespace Options.File.Checker.Views
             InitializeComponent();
         }
 
-        
+        private void OKButton_Click(object sender, RoutedEventArgs e)
+        {
+            Close();
+        }
     }
 }
