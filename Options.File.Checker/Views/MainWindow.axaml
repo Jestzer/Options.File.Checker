@@ -147,7 +147,7 @@
             VerticalAlignment="Top"
             Width="105"
             Foreground="White"
-            Command="">
+            Click="SaveOutputButton_Click">
       <Button.Styles>
         <Style Selector="Button">
           <Setter Property="Background" Value="#FF464646"/>
