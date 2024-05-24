@@ -3,8 +3,6 @@ using System.Net.Http;
 using System.Text.Json;
 using System;
 using Avalonia.Interactivity;
-using Avalonia.Media;
-using Avalonia;
 
 namespace Options.File.Checker.Views
 {
