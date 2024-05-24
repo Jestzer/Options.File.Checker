@@ -105,15 +105,15 @@ public partial class MainWindow : Window
         }
         else
         {
-            errorWindow.ErrorTextBlock.Text = "The error window broke somehow. Please make an issue for this in GitHub.";
+            OutputTextBlock.Text = "The error window broke somehow. Please make an issue for this in GitHub.";
         }
     }
 
-    private void CheckForUpdateButton_Click(object sender, RoutedEventArgs e)
+    private async void CheckForUpdateButton_Click(object sender, RoutedEventArgs e)
     {
         var updateWindow = new UpdateWindow();
 
-        updateWindow.Show();
+        await updateWindow.ShowDialog(this); // Putting this here, otherwise it won't center it on the MainWindow. Sorryyyyy.
     }
 
     private async void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)

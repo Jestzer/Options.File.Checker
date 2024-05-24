@@ -6,7 +6,7 @@
         x:Class="Options.File.Checker.Views.ErrorWindow"
         Title="Error"
         Width="450" Height="250"
-		CanResize="False"
+				CanResize="False"
         Icon="/Assets/icon.ico"
         Background="#FF2D2B2B"
         WindowStartupLocation="CenterOwner">
