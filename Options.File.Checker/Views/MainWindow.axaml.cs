@@ -8,6 +8,8 @@ using Avalonia;
 using System.Text.Json;
 using System.IO;
 using System.Text;
+using System.Collections.Generic;
+using System;
 
 namespace Options.File.Checker.Views;
 
@@ -197,6 +199,47 @@ public partial class MainWindow : Window
         else
         {
             ShowErrorWindow("idk man, you really broke something. Make an issue on GitHub for this.");
+        }
+    }
+
+    private async void SaveOutputButton_Click(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            {
+                var mainWindow = desktop.MainWindow;
+
+                var fileSaveOptions = new FilePickerSaveOptions
+                {
+                    Title = "Save Output",
+                    DefaultExtension = ".txt",
+                    FileTypeChoices =
+                    [
+                    new FilePickerFileType("Text Files") { Patterns = [ "*.txt" ] }
+                    ]
+                };
+
+                var result = await mainWindow.StorageProvider.SaveFilePickerAsync(fileSaveOptions);
+
+                if (result != null)
+                {
+                    string? fileContents = OutputTextBlock.Text;
+
+                    // Save the file contents.
+                    using var stream = await result.OpenWriteAsync();
+                    using var writer = new StreamWriter(stream);
+                    await writer.WriteAsync(fileContents);
+                }
+            }
+            else
+            {
+                ShowErrorWindow("Unable to open save output dialog. Please report this issue on GitHub.");
+            }
+        }
+        catch (Exception ex)
+        {
+           ShowErrorWindow($"You managed to break something. How? Here's the automatic message: {ex.Message}");
         }
     }
 
