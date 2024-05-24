@@ -4,7 +4,7 @@ A simple program designed to help you spot obvious errors in your options file u
 Notes for user:
 - This tool is not created by nor associated with MathWorks.
 - Supports Windows, macOS, and Linux. Compiled builds in the releases section exist for Windows 11, Debian 12.5, macOS Sonoma (ARM), and macOS High Sierra (x64)
-- If you don't already have the .NET 8.0 runtime download and installed, you will need to do so in order to use this program.
+- If you don't already have the .NET 8.0 runtime download and installed, you will need to do so in order to use this program. This largely sets the platform compability; if it can't run .NET 8.0, it can't run this program (that means you, CentOS!)
 - Project is built with .NET 8.0 and 7.0.
 - Yes, options= and port= aren't technically needed on the DAEMON line, but MathWorks says you should use them.
 - Not all errors can be accounted for. If you're getting an error -38, there isn't a way for this to detect that (or at least, not any good way IMO.)
