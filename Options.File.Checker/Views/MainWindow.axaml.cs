@@ -8,7 +8,6 @@ using Avalonia;
 using System.Text.Json;
 using System.IO;
 using System.Text;
-using System.Collections.Generic;
 using System;
 
 namespace Options.File.Checker.Views;
