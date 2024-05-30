@@ -11,7 +11,7 @@ namespace Options.File.Checker.Views
         public UpdateWindow()
         {
             InitializeComponent();
-            CheckForUpdate();
+            this.Opened += UpdateWindow_Opened; // This will allow the window to open before checking for updates has finished.
         }
 
         public static string PackageVersion
@@ -29,6 +29,11 @@ namespace Options.File.Checker.Views
                 }
                 return "Error getting version number.";
             }
+        }
+
+        private void UpdateWindow_Opened(object? sender, EventArgs e)
+        {
+            CheckForUpdate();
         }
 
         private bool updateIsAvailable = false;
