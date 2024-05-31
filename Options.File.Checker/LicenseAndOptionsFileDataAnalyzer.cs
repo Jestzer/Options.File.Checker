@@ -289,14 +289,18 @@ namespace Options.File.Checker
                         // Error out if the seat count is negative.
                         if (licenseFileSeatCount < 0)
                         {
-                            if (licenseFileLicenseOffering == "lo=CN")
+                            if (licenseFileLicenseOffering != "lo=CN")
                             {
-                                // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                            }
-                            else
-                            {
-                                err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                {
+                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
                                     $"for license {licenseNumber}.";
+                                }
+                                else
+                                {
+                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}. ";
+                                }
+                                
                                 return;
                             }
                         }
@@ -334,8 +338,16 @@ namespace Options.File.Checker
                             // Check that a group has actually been specified.
                             if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
+                                if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                {
+                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
                                     $"for license {licenseNumber}, but you did not specify which GROUP.";
+                                }
+                                else
+                                {
+                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.";
+                                }
+                                    
                                 return;
                             }
 
@@ -363,8 +375,16 @@ namespace Options.File.Checker
                                         }
                                         else
                                         {
-                                            err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName} " +
+                                            if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                            {
+                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName} " +
                                                 $"for license {licenseNumber}.";
+                                            }
+                                            else
+                                            {
+                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                            }
+
                                             return;
                                         }
                                     }
