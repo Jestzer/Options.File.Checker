@@ -294,12 +294,12 @@ namespace Options.File.Checker
                             {
                                 if (!string.IsNullOrWhiteSpace(licenseNumber))
                                 {
-                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName} " +
+                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {licenseFileProductName} " +
                                     $"for license {licenseNumber}.";
                                 }
                                 else
                                 {
-                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}. ";
+                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {licenseFileProductName}. ";
                                 }
 
                                 return;
@@ -401,7 +401,7 @@ namespace Options.File.Checker
                             // Check that a user has actually been specified.
                             if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                err = $"There is an issue with the selected options file: you have specified a USER to be able to use {productName}, " +
+                                err = $"There is an issue with the selected options file: you have specified a USER to be able to use {licenseFileProductName}, " +
                                 "but you did not define the USER.";
                                 return;
                             }
@@ -417,7 +417,7 @@ namespace Options.File.Checker
                                 }
                                 else
                                 {
-                                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}.";
                                     return;
                                 }
                             }
@@ -429,12 +429,12 @@ namespace Options.File.Checker
                             {
                                 if (!string.IsNullOrWhiteSpace(licenseNumber))
                                 {
-                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName} " +
+                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {licenseFileProductName} " +
                                     $"for license {licenseNumber}, but you did not specify which GROUP.";
                                 }
                                 else
                                 {
-                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.";
+                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
                                 }
 
                                 return;
@@ -466,12 +466,12 @@ namespace Options.File.Checker
                                         {
                                             if (!string.IsNullOrWhiteSpace(licenseNumber))
                                             {
-                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName} " +
+                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName} " +
                                                 $"for license {licenseNumber}.";
                                             }
                                             else
                                             {
-                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}.";
                                             }
 
                                             return;
