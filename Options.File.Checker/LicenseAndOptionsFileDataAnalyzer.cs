@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Options.File.Checker
 {
@@ -247,7 +248,7 @@ namespace Options.File.Checker
                 string licenseFileLicenseNumber = licenseFileData.Item5;
 
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
-                if (productName == licenseFileProductName)
+                if (productName == licenseFileProductName || optionSelected == "INCLUDEALL")
                 {
                     matchingProductFoundInLicenseFile = true;
 
@@ -300,12 +301,100 @@ namespace Options.File.Checker
                                 {
                                     err = $"There is an issue with the selected options file: You have specified too many users to be able to use {productName}. ";
                                 }
-                                
+
                                 return;
                             }
                         }
                     }
-                    else
+                    else if (optionSelected == "INCLUDEALL")
+                    {
+                        if (clientType == "USER")
+                        {
+                            // CNU licenses have unlimited seats.
+                            if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
+                            {
+                                continue;
+                            }
+
+                            // Subtract 1 from seatCount, since you only specified a single user.
+                            licenseFileSeatCount--;
+
+                            // Error out if the seat count is negative.
+                            if (licenseFileSeatCount < 0)
+                            {
+                                if (licenseFileLicenseOffering == "lo=CN")
+                                {
+                                    // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                }
+                                else
+                                {
+                                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                        "Don't forget that you are using at least one INCLUDEALL line.";
+                                    return;
+                                }
+                            }
+                        }
+                        else if (clientType == "GROUP")
+                        {
+                            if (string.IsNullOrWhiteSpace(clientSpecified))
+                            {
+                                err = "There is an issue with the selected options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
+                                return;
+                            }
+
+                            // Subtract from seat count based on the number of users in the GROUP.
+
+
+                            // CNU licenses have unlimited seats.
+                            if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
+                            {
+                                continue;
+                            }
+
+                            foreach (var optionsGroupEntry in groupDictionary)
+                            {
+                                // Load GROUP specifications.
+                                int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                string groupName = optionsGroupData.Item1;
+                                string groupUsers = optionsGroupData.Item2;
+                                int groupUserCount = optionsGroupData.Item3;
+
+                                if (groupName == clientSpecified)
+                                {
+                                    // Subtract the appropriate number of seats.
+                                    licenseFileSeatCount -= groupUserCount;
+
+                                    // Error out if the seat count is negative.
+                                    if (licenseFileSeatCount < 0)
+                                    {
+                                        if (licenseFileLicenseOffering == "lo=CN")
+                                        {
+                                            // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
+                                        }
+                                        else
+                                        {
+                                            err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                                "Don't forget that you are using at least 1 INCLUDEALL line.";
+                                            return;
+                                        }
+                                    }
+                                }
+                            }
+
+                        }
+                        else if (clientType == "HOST_GROUP" || clientType == "HOST" || clientType == "DISPLAY" || clientType == "PROJECT" || clientType == "INTERNET")
+                        {
+                            // There is no math that can be done because you've specified a client type that can be shared between any number of users.
+                        }
+                        else
+                        {
+                            err = "There is an issue with the selected options file: you specified an invalid client type for an INCLUDEALL line.";
+                            return;
+                        }
+                    }
+                    else // optionSelected == INCLUDE
                     {
                         if (clientType == "USER")
                         {
@@ -347,7 +436,7 @@ namespace Options.File.Checker
                                 {
                                     err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {productName}, but you did not specify which GROUP.";
                                 }
-                                    
+
                                 return;
                             }
 
@@ -388,6 +477,7 @@ namespace Options.File.Checker
                                             return;
                                         }
                                     }
+                                    break;
                                 }
                             }
                         }
@@ -399,7 +489,7 @@ namespace Options.File.Checker
             }
 
             // You can't give away what you don't have.
-            if (!matchingProductFoundInLicenseFile)
+            if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
             {
                 err = $"There is an issue with the selected options file: you specified a product, {productName}, but this product is not in your license file. " +
                         $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.";
@@ -407,7 +497,7 @@ namespace Options.File.Checker
             }
 
             // You're likely here because you didn't specify a license number in your specified option and there is no combination of products with seats remaining from any licenses in the license file to subtract from.
-            if (!usableLicenseNumberOrProductKeyFoundInLicenseFile)
+            if (!usableLicenseNumberOrProductKeyFoundInLicenseFile && optionSelected != "INCLUDEALL")
             {
                 if (!string.IsNullOrEmpty(licenseNumber))
                 {

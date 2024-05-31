@@ -432,7 +432,7 @@ public partial class MainWindow : Window
                 }
                 else
                 {
-                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5}");
+                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}.)");
                 }
             }
         }
