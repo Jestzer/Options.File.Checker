@@ -379,7 +379,7 @@ public partial class MainWindow : Window
         // Warn the user if they didn't specify a license number or product key in their seat-subtracting option entries.
         if (unspecifiedLicenseOrProductKey)
         {
-            output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE, INCLUDEALL, or RESERVE lines. This means we will subtract the seat from the first" +
+            output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE, INCLUDEALL, or RESERVE lines. This means we will subtract the seat from the first " +
                 "license the product appears on.\n");
         }
 

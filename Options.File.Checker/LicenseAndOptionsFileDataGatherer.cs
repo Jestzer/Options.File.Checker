@@ -705,6 +705,9 @@ namespace Options.File.Checker
                             lineParts = lineParts.Skip(1).ToArray();
                         }
 
+                        if (line.TrimStart().StartsWith("INCLUDEALL ")) { optionSpecified = "INCLUDEALL"; }
+                        else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { optionSpecified = "EXCLUDEALL"; }
+
                         if (lineParts.Length < 3)
                         {
                             err = $"There is an issue with the selected options file: you have an incorrectly formatted {optionSpecified} line. It is missing necessary information. " +
@@ -719,7 +722,7 @@ namespace Options.File.Checker
                             clientType != "PROJECT" && clientType != "INTERNET")
                         {
                             err = $"There is an issue with the selected options file: you have incorrectly specified the client type on an {optionSpecified} " +
-                                $"line as \"{clientType}\". Please reformat this {optionSpecified} line.";
+                                $"line as \"{clientType}\". Please reformat this {optionSpecified} line's client type to something such as \"USER\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
