@@ -246,16 +246,16 @@ namespace Options.File.Checker
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
 
+                // CNU licenses have unlimited seats.
+                if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
+                {
+                    continue;
+                }
+
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                 if (productName == licenseFileProductName || optionSelected == "INCLUDEALL")
                 {
                     matchingProductFoundInLicenseFile = true;
-
-                    // I'm excluding CN because unlike CNU, CN can never have an "uncounted" seat count.
-                    if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
-                    {
-                        continue; // CNU licenses have unlimited seats, so nothing should be done with them...
-                    }
 
                     if (licenseNumber == licenseFileLicenseNumber || productKey == licenseFileProductKey)
                     {
@@ -307,14 +307,11 @@ namespace Options.File.Checker
                     }
                     else if (optionSelected == "INCLUDEALL")
                     {
+                        // Without this, the recorded product name will be blank.
+                        productName = licenseFileProductName;
+
                         if (clientType == "USER")
                         {
-                            // CNU licenses have unlimited seats.
-                            if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
-                            {
-                                continue;
-                            }
-
                             // Subtract 1 from seatCount, since you only specified a single user.
                             licenseFileSeatCount--;
 
@@ -342,14 +339,6 @@ namespace Options.File.Checker
                             }
 
                             // Subtract from seat count based on the number of users in the GROUP.
-
-
-                            // CNU licenses have unlimited seats.
-                            if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
-                            {
-                                continue;
-                            }
-
                             foreach (var optionsGroupEntry in groupDictionary)
                             {
                                 // Load GROUP specifications.
@@ -484,6 +473,11 @@ namespace Options.File.Checker
 
                     licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
                     licenseFileDictionary[licenseLineIndex] = licenseFileData;
+
+                    if (optionSelected != "INCLUDEALL")
+                    {
+                        break; // We don't need to go through any other products since we've already done seat subtraction.
+                    }
                 }
             }
 
