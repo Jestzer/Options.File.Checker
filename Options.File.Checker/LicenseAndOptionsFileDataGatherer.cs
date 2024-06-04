@@ -88,7 +88,7 @@ namespace Options.File.Checker
                 // Error time again, in case you decided to be sneaky and close the program or manually enter the filepath.
                 if (string.IsNullOrWhiteSpace(optionsFileContents))
                 {
-                    err = "There is an issue with the selected license file: it is either empty or only contains white space.";
+                    err = "There is an issue with the license file: it is either empty or only contains white space.";
                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
@@ -97,26 +97,26 @@ namespace Options.File.Checker
                     && !optionsFileContents.Contains("MAX") && !optionsFileContents.Contains("LINGER") && !optionsFileContents.Contains("LOG") &&
                     !optionsFileContents.Contains("TIMEOUT"))
                 {
-                    err = "There is an issue with the selected options file: it is likely not an options file or contains no usable content.";
+                    err = "There is an issue with the options file: it is likely not an options file or contains no usable content.";
                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 if (!System.IO.File.ReadAllText(licenseFilePath).Contains("INCREMENT"))
                 {
-                    err = "There is an issue with the selected license file: it is either not a license file or is corrupted.";
+                    err = "There is an issue with the license file: it is either not a license file or is corrupted.";
                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 if (licenseFileContents.Contains("lo=IN") || licenseFileContents.Contains("lo=DC") || licenseFileContents.Contains("lo=CIN"))
                 {
-                    err = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                    err = "There is an issue with the license file: it contains an Individual or Designated Computer license, " +
                         "which cannot use an options file.";
                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 if (System.IO.File.ReadAllText(licenseFilePath).Contains("CONTRACT_ID="))
                 {
-                    err = "There is an issue with the selected license file: it is not a MathWorks license file.";
+                    err = "There is an issue with the license file: it is not a MathWorks license file.";
                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
@@ -155,7 +155,7 @@ namespace Options.File.Checker
                         // SERVER lines should come before the product(s).
                         if (productLinesHaveBeenReached)
                         {
-                            err = "There is an issue with the selected license file: your SERVER line(s) are listed after a product.";
+                            err = "There is an issue with the license file: your SERVER line(s) are listed after a product.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                         serverLineCount++;
@@ -166,14 +166,14 @@ namespace Options.File.Checker
 
                         if (serverHostID == "27000" || serverHostID == "27001" || serverHostID == "27002" || serverHostID == "27003" || serverHostID == "27004" || serverHostID == "27005" )
                         {
-                            err = "There is an issue with the selected license file: you have likely omitted your Host ID and attempted to specify a SERVER port number. " +
+                            err = "There is an issue with the license file: you have likely omitted your Host ID and attempted to specify a SERVER port number. " +
                                 "Because you have omitted the Host ID, the port you've attempted to specify will not be used.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (lineParts.Length < 3)
                         {
-                            err = "There is an issue with the selected license file: you are missing information from your SERVER line.";
+                            err = "There is an issue with the license file: you are missing information from your SERVER line.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                         else if (lineParts.Length == 3)
@@ -185,19 +185,19 @@ namespace Options.File.Checker
                             // Check to make sure you're using a port number.
                             if (!int.TryParse(lineParts[3], out int serverPort))
                             {
-                                err = "There is an issue with the selected license file: you have stray information on your SERVER line.";
+                                err = "There is an issue with the license file: you have stray information on your SERVER line.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
 
                             if (serverWord != "SERVER")
                             {
-                                err = "There is an issue with the selected license file: it does not start with the word SERVER.";
+                                err = "There is an issue with the license file: it does not start with the word SERVER.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
 
                             if (!serverHostID.Contains("INTERNET=") && serverHostID.Length != 12)
                             {
-                                err = "There is an issue with the selected license file: you have not specified your Host ID correctly.";
+                                err = "There is an issue with the license file: you have not specified your Host ID correctly.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
 
@@ -211,20 +211,20 @@ namespace Options.File.Checker
                             }
                             else
                             {
-                                err = "There is an issue with the selected license file: you have stray information on your SERVER line.";
+                                err = "There is an issue with the license file: you have stray information on your SERVER line.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
                         }
                         else
                         {
-                            err = "There is an issue with the selected license file: you have stray information on your SERVER line.";
+                            err = "There is an issue with the license file: you have stray information on your SERVER line.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         // There is no situation where you should have more than 3 SERVER lines.
                         if (serverLineCount > 3 || serverLineCount == 2)
                         {
-                            err = "There is an issue with the selected license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
+                            err = "There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -234,7 +234,7 @@ namespace Options.File.Checker
                         // DAEMON line should come before the product(s).
                         if (productLinesHaveBeenReached)
                         {
-                            err = "There is an issue with the selected license file: your DAEMON line is listed after a product.";
+                            err = "There is an issue with the license file: your DAEMON line is listed after a product.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -242,7 +242,7 @@ namespace Options.File.Checker
                         daemonLineCount++;
                         if (daemonLineCount > 1)
                         {
-                            err = "There is an issue with the selected license file: you have more than 1 DAEMON line.";
+                            err = "There is an issue with the license file: you have more than 1 DAEMON line.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -259,25 +259,25 @@ namespace Options.File.Checker
 
                         if (countCommentedBeginLines > 0)
                         {
-                            err = "There is an issue with the selected license file: it has content that is intended to be commented out in your DAEMON line.";
+                            err = "There is an issue with the license file: it has content that is intended to be commented out in your DAEMON line.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (countPortEquals > 1)
                         {
-                            err = "There is an issue with the selected license file: you have specified more than 1 port number for MLM.";
+                            err = "There is an issue with the license file: you have specified more than 1 port number for MLM.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (countOptionsEquals > 1)
                         {
-                            err = "There is an issue with the selected license file: you have specified the path to more than 1 options file.";
+                            err = "There is an issue with the license file: you have specified the path to more than 1 options file.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (countOptionsEquals == 0)
                         {
-                            err = "There is an issue with the selected license file: you did not specify the path to the options file. " +
+                            err = "There is an issue with the license file: you did not specify the path to the options file. " +
                                 "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -288,7 +288,7 @@ namespace Options.File.Checker
                         // Just having the word "DAEMON" isn't enough.
                         if (lineParts.Length == 1)
                         {
-                            err = "There is an issue with the selected license file: you have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.";
+                            err = "There is an issue with the license file: you have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -297,28 +297,28 @@ namespace Options.File.Checker
 
                         if (string.IsNullOrWhiteSpace(daemonVendor))
                         {
-                            err = "There is an issue with the selected license file: there are too many spaces between \"DAEMON\" and \"MLM\".";
+                            err = "There is an issue with the license file: there are too many spaces between \"DAEMON\" and \"MLM\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         // The vendor daemon needs to MLM. Not mlm or anything else.
                         if (daemonVendor != "MLM")
                         {
-                            err = "There is an issue with the selected license file: you have incorrectly specified the vendor daemon MLM.";
+                            err = "There is an issue with the license file: you have incorrectly specified the vendor daemon MLM.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         // Just specifying "DAEMON MLM" isn't enough.
                         if (lineParts.Length == 2)
                         {
-                            err = "There is an issue with the selected license file: you did not specify the path to the vendor daemon MLM.";
+                            err = "There is an issue with the license file: you did not specify the path to the vendor daemon MLM.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         // You're missing your options file path.
                         if (lineParts.Length == 3)
                         {
-                            err = "There is an issue with the selected license file: you did not specify the path to the options file.";
+                            err = "There is an issue with the license file: you did not specify the path to the options file.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -377,7 +377,7 @@ namespace Options.File.Checker
                         }
                         else
                         {
-                            err = $"There is an issue with the selected license file: the license number {licenseNumber} was not found for the product {productName}.";
+                            err = $"There is an issue with the license file: the license number {licenseNumber} was not found for the product {productName}.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -404,14 +404,14 @@ namespace Options.File.Checker
                                 }
                                 else
                                 {
-                                    err = "There is an issue with the selected license file: it is formatted incorrectly. " +
+                                    err = "There is an issue with the license file: it is formatted incorrectly. " +
                                         $"{productName}'s license offering is being read as Total Headcount, but also Network Named User, which doesn't exist.";
                                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                                 }
                             }
                             else
                             {
-                                err = $"There is an issue with the selected license file: the product {productName} has an invalid license offering.";
+                                err = $"There is an issue with the license file: the product {productName} has an invalid license offering.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
                         }
@@ -443,7 +443,7 @@ namespace Options.File.Checker
                             }
                             else
                             {
-                                err = $"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                err = $"There is an issue with the license file: the product {productName} comes from an Individual " +
                                     "or Designated Computer license, which cannot use an options file.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
@@ -452,12 +452,12 @@ namespace Options.File.Checker
                         {
                             if (line.Contains("PLATFORMS=x"))
                             {
-                                err = $"There is an issue with the selected license file: the product {productName} comes from an Individual " +
+                                err = $"There is an issue with the license file: the product {productName} comes from an Individual " +
                                      $"or Designated Computer license generated from a PLP on Windows, which cannot use an options file.";
                             }
                             else
                             {
-                                err = $"There is an issue with the selected license file: the product {productName} has an valid license offering.";
+                                err = $"There is an issue with the license file: the product {productName} has an valid license offering.";
                             }
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -476,7 +476,7 @@ namespace Options.File.Checker
 
                         if (expirationDate < currentDate)
                         {
-                            err = $"There is an issue with the selected license file: The product {productName} on license number " +
+                            err = $"There is an issue with the license file: The product {productName} on license number " +
                                 $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -499,11 +499,11 @@ namespace Options.File.Checker
                         {
                             if ((productVersion <= 18) || (productName.Contains("Polyspace") && productVersion <= 22))
                             {
-                                err = $"There is an issue with the selected license file: it contains a Designated Computer or Individual license, {licenseNumber}.";
+                                err = $"There is an issue with the license file: it contains a Designated Computer or Individual license, {licenseNumber}.";
                             }
                             else
                             {
-                                err = $"There is an issue with the selected license file: it contains a Designated Computer license, {licenseNumber}, " +
+                                err = $"There is an issue with the license file: it contains a Designated Computer license, {licenseNumber}, " +
                                     "that is incorrectly labeled as a Concurrent license.";
                             }
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
@@ -511,40 +511,40 @@ namespace Options.File.Checker
 
                         if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
                         {
-                            err = "There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                            err = "There is an issue with the license file: it contains an Individual or Designated Computer license, " +
                                 $"which cannot use an options file. The license number is question is {licenseNumber}.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (seatCount < 1 && line.Contains("asset_info="))
                         {
-                            err = $"There is an issue with the selected license file: {productName} on license {licenseNumber} is reading with a seat count of zero or less.";
+                            err = $"There is an issue with the license file: {productName} on license {licenseNumber} is reading with a seat count of zero or less.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         // Before proceeding, make sure the values we've collected are valid.
                         if (string.IsNullOrWhiteSpace(productName))
                         {
-                            err = $"There is an issue with the selected license file: a product name is being detected as blank on {licenseNumber}.";
+                            err = $"There is an issue with the license file: a product name is being detected as blank on {licenseNumber}.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
                         {
-                            err = $"There is an issue with the selected license file: an invalid license number, {licenseNumber}, is detected for {productName}.";
+                            err = $"There is an issue with the license file: an invalid license number, {licenseNumber}, is detected for {productName}.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
                         {
-                            err = $"There is an issue with the selected license file: a license offering could not be detected for {productName} " +
+                            err = $"There is an issue with the license file: a license offering could not be detected for {productName} " +
                                 $"on license number {licenseNumber}.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (string.IsNullOrWhiteSpace(productKey))
                         {
-                            err = $"There is an issue with the selected license file: a product key could not be detected for {productName} on license number {licenseNumber}.";
+                            err = $"There is an issue with the license file: a product key could not be detected for {productName} on license number {licenseNumber}.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -576,7 +576,7 @@ namespace Options.File.Checker
 
                         if (lineParts.Length < 4)
                         {
-                            err = $"There is an issue with the selected options file: you have an incorrectly formatted {optionType} line. It is missing necessary information. " +
+                            err = $"There is an issue with the options file: you have an incorrectly formatted {optionType} line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -593,7 +593,7 @@ namespace Options.File.Checker
                             int quoteCount = line.Count(c => c == '"');
                             if (quoteCount % 2 != 0)
                             {
-                                err = $"There is an issue with the selected options file: one of your {optionType} lines has a stray quotation mark. " +
+                                err = $"There is an issue with the options file: one of your {optionType} lines has a stray quotation mark. " +
                                     $"The line in question reads as this: {line}";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
@@ -620,10 +620,10 @@ namespace Options.File.Checker
 
                                 clientType = lineParts[3];
 
-                                if (clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
+                                if (clientType != "USER" && clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
                                 clientType != "PROJECT" && clientType != "INTERNET")
                                 {
-                                    err = $"There is an issue with the selected options file: you have incorrectly specified the client type on a line using {optionType}." +
+                                    err = $"There is an issue with the options file: you have incorrectly specified the client type on a line using {optionType}." +
                                         $"You attempted to use \"{clientType}\". Please reformat this {optionType} line.";
                                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                                 }
@@ -635,7 +635,7 @@ namespace Options.File.Checker
                                 string[] colonParts = productName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    err = $"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.";
+                                    err = $"There is an issue with the options file: one of your {optionType} lines has a stray colon for {productName}.";
                                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                                 }
                                 productName = colonParts[0];
@@ -660,7 +660,7 @@ namespace Options.File.Checker
                             string[] colonParts = productName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                err = $"There is an issue with the selected options file: one of your {optionType} lines has a stray colon for {productName}.";
+                                err = $"There is an issue with the options file: one of your {optionType} lines has a stray colon for {productName}.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
                             productName = colonParts[0];
@@ -710,7 +710,7 @@ namespace Options.File.Checker
 
                         if (lineParts.Length < 3)
                         {
-                            err = $"There is an issue with the selected options file: you have an incorrectly formatted {optionSpecified} line. It is missing necessary information. " +
+                            err = $"There is an issue with the options file: you have an incorrectly formatted {optionSpecified} line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -718,10 +718,10 @@ namespace Options.File.Checker
                         clientType = lineParts[1];
                         clientSpecified = string.Join(" ", lineParts.Skip(2));
 
-                        if (clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
+                        if (clientType != "USER" && clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
                             clientType != "PROJECT" && clientType != "INTERNET")
                         {
-                            err = $"There is an issue with the selected options file: you have incorrectly specified the client type on an {optionSpecified} " +
+                            err = $"There is an issue with the options file: you have incorrectly specified the client type on an {optionSpecified} " +
                                 $"line as \"{clientType}\". Please reformat this {optionSpecified} line's client type to something such as \"USER\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -741,7 +741,7 @@ namespace Options.File.Checker
 
                         if (lineParts.Length < 5)
                         {
-                            err = "There is an issue with the selected options file: you have an incorrectly formatted MAX line. It is missing necessary information. " +
+                            err = "There is an issue with the options file: you have an incorrectly formatted MAX line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -765,7 +765,7 @@ namespace Options.File.Checker
 
                         if (lineParts.Length < 5)
                         {
-                            err = "There is an issue with the selected options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
+                            err = "There is an issue with the options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -774,7 +774,7 @@ namespace Options.File.Checker
                         int quoteCount = line.Count(c => c == '"');
                         if (quoteCount % 2 != 0)
                         {
-                            err = "There is an issue with the selected options file: one of your RESERVE lines has a stray quotation mark. " +
+                            err = "There is an issue with the options file: one of your RESERVE lines has a stray quotation mark. " +
                                 $"The line in question reads as this: {line}";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -793,14 +793,14 @@ namespace Options.File.Checker
                         }
                         else
                         {
-                            err = "There is an issue with the selected options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
+                            err = "There is an issue with the options file: you have incorrectly specified the seat count for one of your RESERVE lines. " +
                                 "You either chose an invalid number or specified something other than a number.";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
                         if (reserveSeatCount <= 0)
                         {
-                            err = "There is an issue with the selected options file: you specified a RESERVE line with a seat count of 0 or less... why?";
+                            err = "There is an issue with the options file: you specified a RESERVE line with a seat count of 0 or less... why?";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
@@ -836,7 +836,7 @@ namespace Options.File.Checker
                                 string[] colonParts = reserveProductName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    err = $"There is an issue with the selected options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
+                                    err = $"There is an issue with the options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
                                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                                 }
                                 reserveProductName = colonParts[0];
@@ -861,7 +861,7 @@ namespace Options.File.Checker
                             string[] colonParts = reserveProductName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                err = $"There is an issue with the selected options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
+                                err = $"There is an issue with the options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
                                 return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                             }
                             reserveProductName = colonParts[0];
@@ -900,7 +900,7 @@ namespace Options.File.Checker
 
                         if (lineParts.Length < 3)
                         {
-                            err = "There is an issue with the selected options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
+                            err = "There is an issue with the options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -923,7 +923,7 @@ namespace Options.File.Checker
 
                         if (lineParts.Length < 3)
                         {
-                            err = "There is an issue with the selected options file: you have an incorrectly formatted HOST_GROUP line. It is missing necessary information. " +
+                            err = "There is an issue with the options file: you have an incorrectly formatted HOST_GROUP line. It is missing necessary information. " +
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
@@ -936,6 +936,18 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
                         caseSensitivity = false;
+                    }                    
+                    else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ") 
+                        || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ") 
+                        || line.TrimStart().StartsWith("DEFAULT ") || line.TrimStart().StartsWith("HIDDEN ") || line.TrimStart().StartsWith("#") || line == "")
+                    {
+                        // Other valid line beginnings that I currently do nothing with.
+                    }
+                    else // This should help spot my stupid typos.
+                    {
+                        err = "There is an issue with the options file: you have started a line with an unrecognized option. Please make sure you didn't make any typos. " +
+                            $"The line in question's contents are: \"{line}\".";
+                        return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
                 }
 

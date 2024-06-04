@@ -154,21 +154,21 @@ public partial class MainWindow : Window
 
                     if (fileSizeInBytes > FiftyMegabytes)
                     {
-                        ShowErrorWindow("There is an issue with the selected license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
+                        ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
                         OptionsFileLocationTextBox.Text = string.Empty;
                         return;
                     }
 
                     if (!fileContents.Contains("INCREMENT"))
                     {
-                        ShowErrorWindow("There is an issue with the selected license file: it is either not a license file or it is corrupted.");
+                        ShowErrorWindow("There is an issue with the license file: it is either not a license file or it is corrupted.");
                         OptionsFileLocationTextBox.Text = string.Empty;
                         return;
                     }
 
                     if (fileContents.Contains("lo=IN") || fileContents.Contains("lo=DC") || fileContents.Contains("lo=CIN"))
                     {
-                        ShowErrorWindow("There is an issue with the selected license file: it contains an Individual or Designated Computer license, " +
+                        ShowErrorWindow("There is an issue with the license file: it contains an Individual or Designated Computer license, " +
                             "which cannot use an options file.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
@@ -176,14 +176,14 @@ public partial class MainWindow : Window
 
                     if (fileContents.Contains("CONTRACT_ID="))
                     {
-                        ShowErrorWindow("There is an issue with the selected license file: it is not a MathWorks license file.");
+                        ShowErrorWindow("There is an issue with the license file: it is not a MathWorks license file.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
 
                     if (!fileContents.Contains("SERVER") || !fileContents.Contains("DAEMON"))
                     {
-                        ShowErrorWindow("There is an issue with the selected license file: it is missing the SERVER and/or DAEMON line.");
+                        ShowErrorWindow("There is an issue with the license file: it is missing the SERVER and/or DAEMON line.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
@@ -288,7 +288,7 @@ public partial class MainWindow : Window
 
                     if (string.IsNullOrWhiteSpace(fileContents))
                     {
-                        ShowErrorWindow("There is an issue with the selected options file: it is either empty or only contains white space.");
+                        ShowErrorWindow("There is an issue with the options file: it is either empty or only contains white space.");
                         OptionsFileLocationTextBox.Text = string.Empty;
                         return;
                     }
@@ -373,7 +373,7 @@ public partial class MainWindow : Window
 
         if (caseSensitivity)
         {
-            output.AppendLine("Warning: case sensitivity is enabled for users define in GROUPs and HOST_GROUPs.\n");
+            output.AppendLine("Warning: case sensitivity is enabled for users defined in GROUPs and HOST_GROUPs.\n");
         }
 
         // Warn the user if they didn't specify a license number or product key in their seat-subtracting option entries.
@@ -432,7 +432,7 @@ public partial class MainWindow : Window
                 }
                 else
                 {
-                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}.)");
+                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).");
                 }
             }
         }
