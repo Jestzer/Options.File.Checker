@@ -234,6 +234,10 @@ namespace Options.File.Checker
             bool matchingProductFoundInLicenseFile = false;
             bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
 
+            // We need to track what INCLUDEALL has already subtracted from. We don't want to subtract from the same product that shows up on the same license multiple times.
+            Dictionary<int, Tuple<string, string>> alreadyCountedIncludeAllDictionary = [];
+            Tuple<string, string> alreadyCountedIncludeAllData;
+
             // Go through each line and subtract seats accordingly.
             foreach (var licenseFileEntry in licenseFileDictionary)
             {
@@ -275,7 +279,8 @@ namespace Options.File.Checker
                             }
                             else
                             {
-                                unspecifiedLicenseOrProductKey = true;
+                                if (optionSelected != "INCLUDEALL") unspecifiedLicenseOrProductKey = true;
+                                
                                 usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                             }
                         }
@@ -318,6 +323,19 @@ namespace Options.File.Checker
                         // Without this, the recorded product name will be blank.
                         productName = licenseFileProductName;
 
+                        // Check to make sure we didn't already subtract from this product and license combo.
+                        bool alreadyProcessed = false;
+                        foreach (var entry in alreadyCountedIncludeAllDictionary)
+                        {
+                            if (entry.Value.Item1 == licenseFileProductName && entry.Value.Item2 == licenseFileLicenseNumber)
+                            {
+                                alreadyProcessed = true;
+                                break;
+                            }
+                        }
+
+                        if (alreadyProcessed) continue;
+
                         if (clientType == "USER")
                         {
                             // Subtract 1 from seatCount, since you only specified a single user.
@@ -350,6 +368,8 @@ namespace Options.File.Checker
                                     return;
                                 }
                             }
+                            alreadyCountedIncludeAllData = Tuple.Create(productName, licenseFileLicenseNumber);
+                            alreadyCountedIncludeAllDictionary[licenseLineIndex] = alreadyCountedIncludeAllData;
                         }
                         else if (clientType == "GROUP")
                         {
@@ -402,10 +422,11 @@ namespace Options.File.Checker
                                             return;
                                         }
                                     }
+                                    alreadyCountedIncludeAllData = Tuple.Create(productName, licenseFileLicenseNumber);
+                                    alreadyCountedIncludeAllDictionary[licenseLineIndex] = alreadyCountedIncludeAllData;
                                     break;
                                 }
                             }
-
                         }
                         else if (clientType == "HOST_GROUP" || clientType == "HOST" || clientType == "DISPLAY" || clientType == "PROJECT" || clientType == "INTERNET")
                         {
