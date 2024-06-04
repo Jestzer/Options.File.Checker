@@ -155,14 +155,14 @@ public partial class MainWindow : Window
                     if (fileSizeInBytes > FiftyMegabytes)
                     {
                         ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
-                        OptionsFileLocationTextBox.Text = string.Empty;
+                        LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
 
                     if (!fileContents.Contains("INCREMENT"))
                     {
                         ShowErrorWindow("There is an issue with the license file: it is either not a license file or it is corrupted.");
-                        OptionsFileLocationTextBox.Text = string.Empty;
+                        LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
 
