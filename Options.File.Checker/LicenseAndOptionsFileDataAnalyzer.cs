@@ -291,16 +291,24 @@ namespace Options.File.Checker
                         {
                             if (licenseFileLicenseOffering != "lo=CN")
                             {
-                                if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                {
-                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {licenseFileProductName} " +
-                                    $"for license {licenseNumber}.";
-                                }
-                                else
-                                {
-                                    err = $"There is an issue with the selected options file: You have specified too many users to be able to use {licenseFileProductName}. ";
-                                }
+                                // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
+                                int remainingSeatCount = licenseFileSeatCount;
+                                licenseFileSeatCount = 0;
+                                licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                                licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
+                                if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                {
+                                    if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                    {
+                                        err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
+                                        $"for license {licenseNumber}.";
+                                    }
+                                    else
+                                    {
+                                        err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                    }
+                                }
                                 return;
                             }
                         }
@@ -318,14 +326,27 @@ namespace Options.File.Checker
                             // Error out if the seat count is negative.
                             if (licenseFileSeatCount < 0)
                             {
-                                if (licenseFileLicenseOffering == "lo=CN")
+                                if (licenseFileLicenseOffering != "lo=CN")
                                 {
-                                    // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                                }
-                                else
-                                {
-                                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}. " +
-                                        "Don't forget that you are using at least one INCLUDEALL line.";
+                                    // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
+                                    int remainingSeatCount = licenseFileSeatCount;
+                                    licenseFileSeatCount = 0;
+                                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                                    licenseFileDictionary[licenseLineIndex] = licenseFileData;
+
+                                    if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                        {
+                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
+                                            $"for license {licenseNumber}. Don't forget you're using at least 1 INCLUDEALL line.";
+                                        }
+                                        else
+                                        {
+                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                                "Don't forget you're using at least 1 INCLUDEALL line.";
+                                        }
+                                    }
                                     return;
                                 }
                             }
@@ -334,7 +355,7 @@ namespace Options.File.Checker
                         {
                             if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                err = "There is an issue with the selected options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
+                                err = "There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
                                 return;
                             }
 
@@ -357,17 +378,31 @@ namespace Options.File.Checker
                                     // Error out if the seat count is negative.
                                     if (licenseFileSeatCount < 0)
                                     {
-                                        if (licenseFileLicenseOffering == "lo=CN")
+                                        if (licenseFileLicenseOffering != "lo=CN")
                                         {
-                                            // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                                        }
-                                        else
-                                        {
-                                            err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}. " +
-                                                "Don't forget that you are using at least 1 INCLUDEALL line.";
+                                            // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
+                                            int remainingSeatCount = licenseFileSeatCount;
+                                            licenseFileSeatCount = 0;
+                                            licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                                            licenseFileDictionary[licenseLineIndex] = licenseFileData;
+
+                                            if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                            {
+                                                if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                                {
+                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
+                                                    $"for license {licenseNumber}. Don't forget you're using at least 1 INCLUDEALL line.";
+                                                }
+                                                else
+                                                {
+                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                                        "Don't forget you're using at least 1 INCLUDEALL line.";
+                                                }
+                                            }
                                             return;
                                         }
                                     }
+                                    break;
                                 }
                             }
 
@@ -378,7 +413,7 @@ namespace Options.File.Checker
                         }
                         else
                         {
-                            err = "There is an issue with the selected options file: you specified an invalid client type for an INCLUDEALL line.";
+                            err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
                             return;
                         }
                     }
@@ -389,7 +424,7 @@ namespace Options.File.Checker
                             // Check that a user has actually been specified.
                             if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                err = $"There is an issue with the selected options file: you have specified a USER to be able to use {licenseFileProductName}, " +
+                                err = $"There is an issue with the options file: you have specified a USER to be able to use {licenseFileProductName}, " +
                                 "but you did not define the USER.";
                                 return;
                             }
@@ -399,13 +434,26 @@ namespace Options.File.Checker
                             // Error out if the seat count is negative.
                             if (licenseFileSeatCount < 0)
                             {
-                                if (licenseFileLicenseOffering == "lo=CN")
+                                if (licenseFileLicenseOffering != "lo=CN")
                                 {
-                                    // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                                }
-                                else
-                                {
-                                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                    // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
+                                    int remainingSeatCount = licenseFileSeatCount;
+                                    licenseFileSeatCount = 0;
+                                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                                    licenseFileDictionary[licenseLineIndex] = licenseFileData;
+
+                                    if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                        {
+                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
+                                            $"for license {licenseNumber}.";
+                                        }
+                                        else
+                                        {
+                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                        }
+                                    }
                                     return;
                                 }
                             }
@@ -417,12 +465,12 @@ namespace Options.File.Checker
                             {
                                 if (!string.IsNullOrWhiteSpace(licenseNumber))
                                 {
-                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {licenseFileProductName} " +
+                                    err = $"There is an issue with the options file: You have specified a GROUP to be able to use {licenseFileProductName} " +
                                     $"for license {licenseNumber}, but you did not specify which GROUP.";
                                 }
                                 else
                                 {
-                                    err = $"There is an issue with the selected options file: You have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
+                                    err = $"There is an issue with the options file: You have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
                                 }
 
                                 return;
@@ -446,22 +494,26 @@ namespace Options.File.Checker
                                     // Error out if the seat count is negative.
                                     if (licenseFileSeatCount < 0)
                                     {
-                                        if (licenseFileLicenseOffering == "lo=CN")
+                                        if (licenseFileLicenseOffering != "lo=CN")
                                         {
-                                            // Continue and print out a warning later on since technically you can specify more users than you have seats for on CN.
-                                        }
-                                        else
-                                        {
-                                            if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                            {
-                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                                $"for license {licenseNumber}.";
-                                            }
-                                            else
-                                            {
-                                                err = $"There is an issue with the selected options file: you have specified too many users to be able to use {licenseFileProductName}.";
-                                            }
+                                            // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
+                                            int remainingSeatCount = licenseFileSeatCount;
+                                            licenseFileSeatCount = 0 ;
+                                            licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                                            licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
+                                            if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                            {
+                                                if (!string.IsNullOrWhiteSpace(licenseNumber))
+                                                {
+                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
+                                                    $"for license {licenseNumber}.";
+                                                }
+                                                else
+                                                {
+                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                                }
+                                            }
                                             return;
                                         }
                                     }
@@ -484,7 +536,7 @@ namespace Options.File.Checker
             // You can't give away what you don't have.
             if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
             {
-                err = $"There is an issue with the selected options file: you specified a product, {productName}, but this product is not in your license file. " +
+                err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
                         $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.";
                 return;
             }
@@ -494,15 +546,15 @@ namespace Options.File.Checker
             {
                 if (!string.IsNullOrEmpty(licenseNumber))
                 {
-                    err = $"There is an issue with the selected options file: you have specified a license number, {licenseNumber}, which does not exist in the license file.";
+                    err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file.";
                 }
                 else if (!string.IsNullOrEmpty(productKey))
                 {
-                    err = $"There is an issue with the selected options file: you have specified a product key, {productKey}, which does not exist in the license file.";
+                    err = $"There is an issue with the options file: you have specified a product key, {productKey}, which does not exist in the license file.";
                 }
                 else
                 {
-                    err = $"There is an issue with the selected options file: you have specified too many users to be able to use {productName}.";
+                    err = $"There is an issue with the options file: you have specified too many users to be able to use {productName}.";
                 }
 
                 return;
@@ -566,11 +618,57 @@ namespace Options.File.Checker
                 {
                     aOrAn = "an";
                 }
-                string err = $"There is an issue with the selected options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
                    $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
                 return err;
             }
             return null;
+        }
+
+        private static bool SubtractFromDuplicateProducts (string optionsLicenseNumber, string optionsProductName, int seatsToSubtract, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary)
+        {
+            bool successfullySubtracted = false;
+
+            // Search the license for a matching product and license number, if specified.
+            foreach (var licenseFileEntry in licenseFileDictionary)
+            {
+                int licenseLineIndex = licenseFileEntry.Key;
+                Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                string licenseFileProductName = licenseFileData.Item1;
+                int licenseFileSeatCount = licenseFileData.Item2;
+                string licenseFileLicenseNumber = licenseFileData.Item5;
+
+                if (licenseFileProductName == optionsProductName)
+                {
+                    // Disqualify the match if a license number is being used and doesn't match.
+                    if (string.IsNullOrEmpty(optionsLicenseNumber) || optionsLicenseNumber == licenseFileLicenseNumber)
+                    {
+                        // Correct the seatsToSubtract to be positive integer.
+                        int positiveSeatCount = Math.Abs(seatsToSubtract);
+
+                        licenseFileSeatCount -= positiveSeatCount;
+
+                        if (licenseFileSeatCount < 0)
+                        {
+                            // Look for another match to subtract remaining seats.
+                            seatsToSubtract = licenseFileSeatCount;
+
+                            licenseFileSeatCount = 0;
+                        }
+                        else
+                        {
+                            successfullySubtracted = true;
+                        }
+
+                        licenseFileData = Tuple.Create(optionsProductName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
+                        licenseFileDictionary[licenseLineIndex] = licenseFileData;
+
+                        if (successfullySubtracted) break;
+                    }
+                }
+            }
+            return successfullySubtracted;
         }
     }
 }
