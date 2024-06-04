@@ -387,6 +387,7 @@ public partial class MainWindow : Window
         if (licenseFileDictionary != null)
         {
             bool overdraftCNWarningHit = false;
+            bool includeAllNNUWarningHit = false;
             bool alreadyYelledToCNUAboutPORTFormat = false;
 
             foreach (var item in licenseFileDictionary)
@@ -429,9 +430,24 @@ public partial class MainWindow : Window
                     {
                         output.AppendLine($"You have specified more users on Concurrent license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for (technically counting at {item.Value.Item2} seats.)");
                     }
-                }
+                }               
                 else
                 {
+                    if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
+                    {
+                        if (!includeAllNNUWarningHit)
+                        {
+                            if (includeAllDictionary != null)
+                            {
+                                if (includeAllDictionary.Any())
+                                {
+                                    output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
+                                }
+                            }
+                            includeAllNNUWarningHit = true;
+                        }
+                    }
+                    // Finally, print the stuff we want to see!
                     output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).");
                 }
             }

@@ -234,10 +234,6 @@ namespace Options.File.Checker
             bool matchingProductFoundInLicenseFile = false;
             bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
 
-            // We need to track what INCLUDEALL has already subtracted from. We don't want to subtract from the same product that shows up on the same license multiple times.
-            Dictionary<int, Tuple<string, string>> alreadyCountedIncludeAllDictionary = [];
-            Tuple<string, string> alreadyCountedIncludeAllData;
-
             // Go through each line and subtract seats accordingly.
             foreach (var licenseFileEntry in licenseFileDictionary)
             {
@@ -280,7 +276,7 @@ namespace Options.File.Checker
                             else
                             {
                                 if (optionSelected != "INCLUDEALL") unspecifiedLicenseOrProductKey = true;
-                                
+
                                 usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                             }
                         }
@@ -323,119 +319,71 @@ namespace Options.File.Checker
                         // Without this, the recorded product name will be blank.
                         productName = licenseFileProductName;
 
-                        // Check to make sure we didn't already subtract from this product and license combo.
-                        bool alreadyProcessed = false;
-                        foreach (var entry in alreadyCountedIncludeAllDictionary)
+                        if (licenseFileLicenseOffering != "NNU") // You can't use INCLUDEALL with NNU.
                         {
-                            if (entry.Value.Item1 == licenseFileProductName && entry.Value.Item2 == licenseFileLicenseNumber)
+                            if (clientType == "USER")
                             {
-                                alreadyProcessed = true;
-                                break;
-                            }
-                        }
+                                // Subtract 1 from seatCount, since you only specified a single user.
+                                licenseFileSeatCount--;
 
-                        if (alreadyProcessed) continue;
-
-                        if (clientType == "USER")
-                        {
-                            // Subtract 1 from seatCount, since you only specified a single user.
-                            licenseFileSeatCount--;
-
-                            // Error out if the seat count is negative.
-                            if (licenseFileSeatCount < 0)
-                            {
-                                if (licenseFileLicenseOffering != "lo=CN")
+                                // Error out if the seat count is negative and not CN.
+                                if (licenseFileSeatCount < 0)
                                 {
-                                    // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
-                                    int remainingSeatCount = licenseFileSeatCount;
-                                    licenseFileSeatCount = 0;
-                                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
-                                    licenseFileDictionary[licenseLineIndex] = licenseFileData;
-
-                                    if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                    if (licenseFileLicenseOffering != "lo=CN")
                                     {
-                                        if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                        {
-                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                            $"for license {licenseNumber}. Don't forget you're using at least 1 INCLUDEALL line.";
-                                        }
-                                        else
-                                        {
-                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
-                                                "Don't forget you're using at least 1 INCLUDEALL line.";
-                                        }
+                                        err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                            "Don't forget that you are using at least 1 INCLUDEALL line.";
+                                        return;
                                     }
+                                }
+                            }
+                            else if (clientType == "GROUP")
+                            {
+                                if (string.IsNullOrWhiteSpace(clientSpecified))
+                                {
+                                    err = "There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
                                     return;
                                 }
-                            }
-                            alreadyCountedIncludeAllData = Tuple.Create(productName, licenseFileLicenseNumber);
-                            alreadyCountedIncludeAllDictionary[licenseLineIndex] = alreadyCountedIncludeAllData;
-                        }
-                        else if (clientType == "GROUP")
-                        {
-                            if (string.IsNullOrWhiteSpace(clientSpecified))
-                            {
-                                err = "There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
-                                return;
-                            }
 
-                            // Subtract from seat count based on the number of users in the GROUP.
-                            foreach (var optionsGroupEntry in groupDictionary)
-                            {
-                                // Load GROUP specifications.
-                                int optionsGroupLineIndex = optionsGroupEntry.Key;
-                                Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-
-                                string groupName = optionsGroupData.Item1;
-                                string groupUsers = optionsGroupData.Item2;
-                                int groupUserCount = optionsGroupData.Item3;
-
-                                if (groupName == clientSpecified)
+                                // Subtract from seat count based on the number of users in the GROUP.
+                                foreach (var optionsGroupEntry in groupDictionary)
                                 {
-                                    // Subtract the appropriate number of seats.
-                                    licenseFileSeatCount -= groupUserCount;
+                                    // Load GROUP specifications.
+                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
 
-                                    // Error out if the seat count is negative.
-                                    if (licenseFileSeatCount < 0)
+                                    string groupName = optionsGroupData.Item1;
+                                    string groupUsers = optionsGroupData.Item2;
+                                    int groupUserCount = optionsGroupData.Item3;
+
+                                    if (groupName == clientSpecified)
                                     {
-                                        if (licenseFileLicenseOffering != "lo=CN")
-                                        {
-                                            // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
-                                            int remainingSeatCount = licenseFileSeatCount;
-                                            licenseFileSeatCount = 0;
-                                            licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
-                                            licenseFileDictionary[licenseLineIndex] = licenseFileData;
+                                        // Subtract the appropriate number of seats.
+                                        licenseFileSeatCount -= groupUserCount;
 
-                                            if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
+                                        // Error out if the seat count is negative.
+                                        if (licenseFileSeatCount < 0)
+                                        {
+                                            if (licenseFileLicenseOffering != "lo=CN")
                                             {
-                                                if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                                {
-                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                                    $"for license {licenseNumber}. Don't forget you're using at least 1 INCLUDEALL line.";
-                                                }
-                                                else
-                                                {
-                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
-                                                        "Don't forget you're using at least 1 INCLUDEALL line.";
-                                                }
+                                                err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                                    "Don't forget that you are using at least 1 INCLUDEALL line.";
+                                                return;
                                             }
-                                            return;
                                         }
                                     }
-                                    alreadyCountedIncludeAllData = Tuple.Create(productName, licenseFileLicenseNumber);
-                                    alreadyCountedIncludeAllDictionary[licenseLineIndex] = alreadyCountedIncludeAllData;
-                                    break;
                                 }
+
                             }
-                        }
-                        else if (clientType == "HOST_GROUP" || clientType == "HOST" || clientType == "DISPLAY" || clientType == "PROJECT" || clientType == "INTERNET")
-                        {
-                            // There is no math that can be done because you've specified a client type that can be shared between any number of users.
-                        }
-                        else
-                        {
-                            err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
-                            return;
+                            else if (clientType == "HOST_GROUP" || clientType == "HOST" || clientType == "DISPLAY" || clientType == "PROJECT" || clientType == "INTERNET")
+                            {
+                                // There is no subtraction that can be done because you've specified a client type that can be shared between any number of users.
+                            }
+                            else
+                            {
+                                err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
+                                return;
+                            }
                         }
                     }
                     else // optionSelected == INCLUDE
@@ -519,7 +467,7 @@ namespace Options.File.Checker
                                         {
                                             // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
                                             int remainingSeatCount = licenseFileSeatCount;
-                                            licenseFileSeatCount = 0 ;
+                                            licenseFileSeatCount = 0;
                                             licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5);
                                             licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
@@ -646,7 +594,7 @@ namespace Options.File.Checker
             return null;
         }
 
-        private static bool SubtractFromDuplicateProducts (string optionsLicenseNumber, string optionsProductName, int seatsToSubtract, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary)
+        private static bool SubtractFromDuplicateProducts(string optionsLicenseNumber, string optionsProductName, int seatsToSubtract, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary)
         {
             bool successfullySubtracted = false;
 
