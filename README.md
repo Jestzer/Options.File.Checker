@@ -13,7 +13,7 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 
 To do:
+- Confirm how FlexLM actually handles RESERVE lines with NNU licenses and if needed, change code appropriately.
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
-- Make an options file creator/editor.
-- Allow for non-GUI use.
+- Make an options file creator/editor (now a separate project, see its GitHub page for more information.)
