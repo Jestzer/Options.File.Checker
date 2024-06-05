@@ -1,10 +1,11 @@
-﻿// License file prompts.
-using Options.File.Checker;
+﻿// Command-line only version of the program. .NET and Avalonia don't seem to support bundling this into a single executable. Sorry!
+using Options.File.Checker; // I'm not bundling this separately and this will make updating the gatherer and analyzer classes easier.
 
 bool validLicenseFileGiven = false;
 string? licenseFilePath = string.Empty;
 string? optionsFilePath = string.Empty;
 
+// License file prompts.
 while (!validLicenseFileGiven)
 {
     Console.WriteLine("Please enter the full path of your license file. You may or may not use quotes around your path.");
@@ -128,6 +129,26 @@ while (!validOptionsFileGiven)
     {
         ErrorMessage("There is an issue with the options file: it is either empty or only contains white space.");
         continue;
+    }
+
+    // You've made it this far, but I still don't trust you didn't select a pptx.
+    static bool ContainsNonPlaintext(string fileContents)
+    {
+        foreach (char c in fileContents)
+        {
+            // Check if the character is non-printable/control character (excluding newline and tab) or beyond the ASCII range.
+            if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t' || c > 127)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    if (ContainsNonPlaintext(fileContents))
+    {
+        ErrorMessage("There is an issue with the options file: it contains non-plaintext characters and therefore, is likely not an options file.");
+        return;
     }
 
     validOptionsFileGiven = true;

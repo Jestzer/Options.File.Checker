@@ -238,7 +238,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-           ShowErrorWindow($"You managed to break something. How? Here's the automatic message: {ex.Message}");
+            ShowErrorWindow($"You managed to break something. How? Here's the automatic message: {ex.Message}");
         }
     }
 
@@ -289,6 +289,36 @@ public partial class MainWindow : Window
                     if (string.IsNullOrWhiteSpace(fileContents))
                     {
                         ShowErrorWindow("There is an issue with the options file: it is either empty or only contains white space.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (!fileContents.Contains("INCLUDE") && !fileContents.Contains("EXCLUDE") && !fileContents.Contains("GROUP") && !fileContents.Contains("LOG") &&
+                        !fileContents.Contains("MAX") && !fileContents.Contains("TIMEOUT") && !fileContents.Contains("RESERVE") && !fileContents.Contains("BORROW") &&
+                        !fileContents.Contains("LINGER") && !fileContents.Contains("DEFAULT") && !fileContents.Contains("HIDDEN"))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it contains no recognized options.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    // You've made it this far, but I still don't trust you didn't select a pptx.
+                    static bool ContainsNonPlaintext(string fileContents)
+                    {
+                        foreach (char c in fileContents)
+                        {
+                            // Check if the character is non-printable/control character (excluding newline and tab) or beyond the ASCII range.
+                            if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t' || c > 127)
+                            {
+                                return true;
+                            }
+                        }
+                        return false;
+                    }
+
+                    if (ContainsNonPlaintext(fileContents))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it contains non-plaintext characters and therefore, is likely not an options file.");
                         OptionsFileLocationTextBox.Text = string.Empty;
                         return;
                     }
@@ -430,7 +460,7 @@ public partial class MainWindow : Window
                     {
                         output.AppendLine($"You have specified more users on Concurrent license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for (technically counting at {item.Value.Item2} seats.)");
                     }
-                }               
+                }
                 else
                 {
                     if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
