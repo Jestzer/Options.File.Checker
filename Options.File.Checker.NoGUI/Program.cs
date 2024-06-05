@@ -69,6 +69,41 @@ while (!validOptionsFileGiven)
 {
     Console.WriteLine("Please enter the full path of your options file:");
     Console.Write("> ");
-    string optionsFilePath = Console.ReadLine();
+    string? optionsFilePath = Console.ReadLine();
+
+    if (optionsFilePath == null)
+    {
+        Console.WriteLine("There is an issue with the license file: it is either not a license file or it is corrupted.");
+        continue;
+    }
+
+    // Read the file contents.
+    string fileContents;
+    try
+    {
+        fileContents = File.ReadAllText(optionsFilePath);
+    }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"There was an error reading the license file: {ex.Message}");
+        continue;
+    }
+
+    // Check the file size indirectly via its content length.
+    long fileSizeInBytes = fileContents.Length;
+    const long FiftyMegabytes = 50L * 1024L * 1024L;
+
+    if (fileSizeInBytes > FiftyMegabytes)
+    {
+        Console.WriteLine("The selected file is over 50 MB, which is unexpectedly large for an options file. I will assume is this not an options file.");
+        continue;
+    }
+
+    if (string.IsNullOrWhiteSpace(fileContents))
+    {
+        Console.WriteLine("There is an issue with the options file: it is either empty or only contains white space.");
+        continue;
+    }
+
     Console.WriteLine($"You entered: {optionsFilePath}");
 }
