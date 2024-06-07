@@ -1,25 +1,20 @@
 ﻿
-Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 17
-VisualStudioVersion = 17.10.34928.147
-MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Options.File.Checker.XP", "Options.File.Checker.XP.csproj", "{7B5F18C5-778A-42F2-A685-DBA583428C5F}"
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Options.File.Checker.XP", "Options.File.Checker.XP\Options.File.Checker.XP.csproj", "{F64BDFEC-52B9-4456-937E-20070BBAA13C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Debug|Any CPU = Debug|Any CPU
-		Release|Any CPU = Release|Any CPU
+		Debug|x86 = Debug|x86
+		Release|x86 = Release|x86
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{7B5F18C5-778A-42F2-A685-DBA583428C5F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{7B5F18C5-778A-42F2-A685-DBA583428C5F}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{7B5F18C5-778A-42F2-A685-DBA583428C5F}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{7B5F18C5-778A-42F2-A685-DBA583428C5F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F64BDFEC-52B9-4456-937E-20070BBAA13C}.Debug|x86.ActiveCfg = Debug|x86
+		{F64BDFEC-52B9-4456-937E-20070BBAA13C}.Debug|x86.Build.0 = Debug|x86
+		{F64BDFEC-52B9-4456-937E-20070BBAA13C}.Release|x86.ActiveCfg = Release|x86
+		{F64BDFEC-52B9-4456-937E-20070BBAA13C}.Release|x86.Build.0 = Release|x86
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
-	EndGlobalSection
-	GlobalSection(ExtensibilityGlobals) = postSolution
-		SolutionGuid = {C910B39A-2246-41FC-8143-BAE2A9D30859}
 	EndGlobalSection
 EndGlobal
