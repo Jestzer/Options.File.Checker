@@ -39,6 +39,7 @@
             this.LicenseFileLocationLabel = new System.Windows.Forms.Label();
             this.OptionsFileLocationLabel = new System.Windows.Forms.Label();
             this.VersionLabel = new System.Windows.Forms.Label();
+            this.CheckForUpdateButton = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
             // LicenseFileBrowseButton
@@ -77,6 +78,9 @@
             // 
             // OutputTextBlock
             // 
+            this.OutputTextBlock.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
             this.OutputTextBlock.Location = new System.Drawing.Point(21, 133);
             this.OutputTextBlock.Name = "OutputTextBlock";
             this.OutputTextBlock.ReadOnly = true;
@@ -125,18 +129,31 @@
             // 
             // VersionLabel
             // 
+            this.VersionLabel.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
             this.VersionLabel.AutoSize = true;
-            this.VersionLabel.Location = new System.Drawing.Point(2, 380);
+            this.VersionLabel.Location = new System.Drawing.Point(3, 376);
             this.VersionLabel.Name = "VersionLabel";
-            this.VersionLabel.Size = new System.Drawing.Size(68, 13);
+            this.VersionLabel.Size = new System.Drawing.Size(40, 13);
             this.VersionLabel.TabIndex = 10;
-            this.VersionLabel.Text = "VersionLabel";
+            this.VersionLabel.Text = "VLabel";
+            // 
+            // CheckForUpdateButton
+            // 
+            this.CheckForUpdateButton.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.CheckForUpdateButton.Location = new System.Drawing.Point(58, 370);
+            this.CheckForUpdateButton.Name = "CheckForUpdateButton";
+            this.CheckForUpdateButton.Size = new System.Drawing.Size(119, 23);
+            this.CheckForUpdateButton.TabIndex = 11;
+            this.CheckForUpdateButton.Text = "Check for updates";
+            this.CheckForUpdateButton.UseVisualStyleBackColor = true;
+            this.CheckForUpdateButton.Click += new System.EventHandler(this.CheckForUpdateButton_Click);
             // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(737, 397);
+            this.ClientSize = new System.Drawing.Size(737, 396);
+            this.Controls.Add(this.CheckForUpdateButton);
             this.Controls.Add(this.VersionLabel);
             this.Controls.Add(this.OptionsFileLocationLabel);
             this.Controls.Add(this.LicenseFileLocationLabel);
@@ -148,6 +165,7 @@
             this.Controls.Add(this.OptionsFileBrowseButton);
             this.Controls.Add(this.LicenseFileBrowseButton);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
+            this.MinimumSize = new System.Drawing.Size(745, 430);
             this.Name = "MainWindow";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Options File Checker";
@@ -168,6 +186,7 @@
         private System.Windows.Forms.Label LicenseFileLocationLabel;
         private System.Windows.Forms.Label OptionsFileLocationLabel;
         private System.Windows.Forms.Label VersionLabel;
+        private System.Windows.Forms.Button CheckForUpdateButton;
     }
 }
 
