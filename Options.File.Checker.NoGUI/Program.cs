@@ -65,7 +65,7 @@ while (!validLicenseFileGiven)
 
     if (fileContents.Contains("CONTRACT_ID="))
     {
-        ErrorMessage("There is an issue with the license file: it is not a MathWorks license file.");
+        ErrorMessage("There is an issue with the license file: it contains at least 1 non-MathWorks product.");
         continue;
     }
 

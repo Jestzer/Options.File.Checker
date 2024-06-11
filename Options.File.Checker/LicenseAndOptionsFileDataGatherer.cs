@@ -125,7 +125,7 @@ namespace Options.File.Checker
 
                 if (System.IO.File.ReadAllText(licenseFilePath).Contains("CONTRACT_ID="))
                 {
-                    err = "There is an issue with the license file: it is not a MathWorks license file.";
+                    err = "There is an issue with the license file: it contains at least 1 non-MathWorks product.";
                     return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 

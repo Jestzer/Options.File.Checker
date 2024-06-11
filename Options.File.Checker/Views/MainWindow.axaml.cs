@@ -176,7 +176,7 @@ public partial class MainWindow : Window
 
                     if (fileContents.Contains("CONTRACT_ID="))
                     {
-                        ShowErrorWindow("There is an issue with the license file: it is not a MathWorks license file.");
+                        ShowErrorWindow("There is an issue with the license file: it contains at least 1 non-MathWorks product.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
