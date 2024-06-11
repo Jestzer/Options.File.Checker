@@ -14,6 +14,7 @@ Notes for user:
 
 To do:
 - Confirm how FlexLM actually handles RESERVE lines with NNU licenses and if needed, change code appropriately.
+- Throw an error if the ISSUED date preceeds your computer's date.
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
 - Make an options file creator/editor (now a separate project, see its GitHub page for more information.)

@@ -71,8 +71,17 @@ namespace Options.File.Checker
                 string optionsFileContents = string.Join(Environment.NewLine, optionsFileContentsLines);
                 string licenseFileContents = string.Join(Environment.NewLine, licenseFileContentsLines);
 
+                // Remove Windows line breaks.
                 string lineBreaksToRemove = "\\\r\n\t";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
+                // Remove Unix line breaks.
+                lineBreaksToRemove = "\\\r\n";
+                licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
+                // Remove empty space that will likely appear on Unix systems.
+                string emptySpaceToRemove = "        ";
+                licenseFileContents = licenseFileContents.Replace(emptySpaceToRemove, string.Empty);
 
                 // Put it back together!
                 licenseFileContentsLines = licenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
