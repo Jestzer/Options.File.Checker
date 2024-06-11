@@ -180,9 +180,16 @@ namespace Options.File.Checker.XP
 
         private void CheckForUpdateButton_Click(object sender, EventArgs e)
         {
-            var updateWindow = new UpdateWindow();
-            updateWindow.StartPosition = FormStartPosition.CenterParent;
-            updateWindow.ShowDialog(this);
+            try
+            {
+                System.Diagnostics.Process.Start("https://api.github.com/repos/Jestzer/options.file.checker/releases/latest");
+            }
+            catch (Exception ex)
+            {
+                // Handle the exception if the browser cannot be opened.
+                // For example, show a message box with the error.
+                MessageBox.Show("Unable to open the URL: " + ex.Message);
+            }
         }
 
         private void AnalyzerButton_Click(object sender, EventArgs e)
