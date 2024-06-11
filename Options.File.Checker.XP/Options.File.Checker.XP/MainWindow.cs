@@ -182,7 +182,7 @@ namespace Options.File.Checker.XP
         {
             try
             {
-                System.Diagnostics.Process.Start("https://api.github.com/repos/Jestzer/options.file.checker/releases/latest");
+                System.Diagnostics.Process.Start("https://github.com/Jestzer/options.file.checker/releases/latest");
             }
             catch (Exception ex)
             {
