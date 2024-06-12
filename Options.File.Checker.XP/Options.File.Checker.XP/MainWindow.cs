@@ -194,7 +194,31 @@ namespace Options.File.Checker.XP
 
         private void AnalyzerButton_Click(object sender, EventArgs e)
         {
+            string licenseFilePath = string.Empty;
+            string optionsFilePath = string.Empty; // Thank you for the lousy suggestion to remove this Visual Studio.
 
-        }     
+            if (!string.IsNullOrEmpty(LicenseFileLocationTextBox.Text))
+            {
+                licenseFilePath = LicenseFileLocationTextBox.Text;
+            }
+            else
+            {
+                MessageBox.Show("You did not specify a path to a license file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            if (!string.IsNullOrEmpty(OptionsFileLocationTextBox.Text))
+            {
+                optionsFilePath = OptionsFileLocationTextBox.Text;
+            }
+            else
+            {
+                MessageBox.Show("You did not specify a path to an options file.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                return;
+            }
+
+            AnalyzeDataResult result = LicenseAndOptionsFileDataAnalyzer.AnalyzeData(licenseFilePath, optionsFilePath);
+
+        }
     }
 }
