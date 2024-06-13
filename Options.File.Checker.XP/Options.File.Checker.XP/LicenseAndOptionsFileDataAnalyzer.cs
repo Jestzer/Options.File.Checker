@@ -5,54 +5,42 @@ namespace Options.File.Checker
 {
     public partial class LicenseAndOptionsFileDataAnalyzer
     {
-        public static (
-            bool serverLineHasPort,
-            bool daemonLineHasPort,
-            bool daemonPortIsCNUFriendly,
-            bool caseSensitivity,
-            bool unspecifiedLicenseOrProductKey,
-            Dictionary<int, Tuple<string, int, string, string, string>>? licenseFileDictionary,
-            Dictionary<int, Tuple<string, string, string, string, string>>? includeDictionary,
-            Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
-            Dictionary<int, Tuple<string, string>>? includeAllDictionary,
-            Dictionary<int, Tuple<string, string, string, string, string>>? excludeDictionary,
-            Dictionary<int, Tuple<string, string, string, string, string>>? excludeBorrowDictionary,
-            Dictionary<int, Tuple<string, string>>? excludeAllDictionary,
-            Dictionary<int, Tuple<int, string, string, string, string, string>>? reserveDictionary,
-            Dictionary<string, Tuple<int, string, string>>? maxDictionary,
-            Dictionary<int, Tuple<string, string, int>>? groupDictionary,
-            Dictionary<int, Tuple<string, string>>? hostGroupDictionary,
-            string? err)
+        public static bool serverLineHasPort;
+        public static bool daemonLineHasPort;
+        public static bool daemonPortIsCNUFriendly;
+        public static bool caseSensitivity;
+        public static bool unspecifiedLicenseOrProductKey;
+        public static Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
+        public static Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
+        public static Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary;
+        public static Dictionary<int, Tuple<string, string>>? includeAllDictionary;
+        public static Dictionary<int, Tuple<string, string, string, string, string>>? excludeDictionary;
+        public static Dictionary<int, Tuple<string, string, string, string, string>>? excludeBorrowDictionary;
+        public static Dictionary<int, Tuple<string, string>>? excludeAllDictionary;
+        public static Dictionary<int, Tuple<int, string, string, string, string, string>>? reserveDictionary;
+        public static Dictionary<string, Tuple<int, string, string>>? maxDictionary;
+        public static Dictionary<int, Tuple<string, string, int>>? groupDictionary;
+        public static Dictionary<int, Tuple<string, string>>? hostGroupDictionary;
+        public static string? err
 
-            AnalyzeData(string licenseFilePath, string optionsFilePath)
+        public static AnalyzeDataResult AnalyzeData(string licenseFilePath, string optionsFilePath)
         {
+            AnalyzeDataResult result = new AnalyzeDataResult();
+            result.Success = true;
+
             // I'm putting this here so that we can print its contents if we hit a generic error message.
             string line = string.Empty;
 
             // Gather the data from the license and options files first.
-            var (serverLineHasPort,
-                daemonLineHasPort,
-                daemonPortIsCNUFriendly,
-                caseSensitivity,
-                licenseFileDictionary,
-                includeDictionary,
-                includeBorrowDictionary,
-                includeAllDictionary,
-                excludeDictionary,
-                excludeBorrowDictionary,
-                excludeAllDictionary,
-                reserveDictionary,
-                maxDictionary,
-                groupDictionary,
-                hostGroupDictionary,
-                err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
+            GatherDataResult gatherResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);        
 
             bool unspecifiedLicenseOrProductKey = false;
 
             // Don't proceed if you've got an error.
             if (err != null)
             {
-                return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                result.Success = false;
+                return result;
             }
 
             string optionSelected = string.Empty;
@@ -70,7 +58,8 @@ namespace Options.File.Checker
                         err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
 
@@ -79,7 +68,8 @@ namespace Options.File.Checker
                         err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
 
@@ -88,7 +78,8 @@ namespace Options.File.Checker
                         err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
 
@@ -97,7 +88,8 @@ namespace Options.File.Checker
                         err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
 
@@ -106,14 +98,16 @@ namespace Options.File.Checker
                         err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
                         if (!string.IsNullOrEmpty(err))
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
-                    return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    result.Success = false;
+                    return result;
                 }
 
                 // Subtract seats now.
@@ -126,7 +120,8 @@ namespace Options.File.Checker
 
                         if (err != null)
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
                     foreach (var includeAllEntry in includeAllDictionary)
@@ -136,7 +131,8 @@ namespace Options.File.Checker
 
                         if (err != null)
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
 
@@ -147,33 +143,19 @@ namespace Options.File.Checker
 
                         if (err != null)
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            result.Success = false;
+                            return result;
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
-                    return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    result.Success = false;
+                    return result;
                 }
 
-                return (serverLineHasPort,
-                    daemonLineHasPort,
-                    daemonPortIsCNUFriendly,
-                    caseSensitivity,
-                    unspecifiedLicenseOrProductKey,
-                    licenseFileDictionary,
-                    includeDictionary,
-                    includeBorrowDictionary,
-                    includeAllDictionary,
-                    excludeDictionary,
-                    excludeBorrowDictionary,
-                    excludeAllDictionary,
-                    reserveDictionary,
-                    maxDictionary,
-                    groupDictionary,
-                    hostGroupDictionary,
-                    null);
+                return result;
             }
             catch (Exception ex)
             {
@@ -190,7 +172,8 @@ namespace Options.File.Checker
                     err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
                 }
 
-                return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                result.Success = false;
+                return result;
             }
         }
 
@@ -639,5 +622,21 @@ namespace Options.File.Checker
             }
             return successfullySubtracted;
         }
+    }
+}
+public class GatherDataResult
+{
+    public bool ServerLineHasPort { get; set; }
+    public bool DaemonLineHasPort { get; set; }
+    // Add other properties...
+    public Dictionary<int, Tuple<string, int, string, string, string>> LicenseFileDictionary { get; set; }
+    // Initialize other dictionary properties...
+    public string Err { get; set; }
+
+    public GatherDataResult()
+    {
+        LicenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
+        // Initialize other dictionaries...
+        Err = string.Empty;
     }
 }
