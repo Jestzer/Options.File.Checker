@@ -236,7 +236,7 @@ namespace Options.File.Checker
                 }
 
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
-                if (productName == licenseFileProductName || optionSelected == "INCLUDEALL")
+                if (string.Equals(productName, licenseFileProductName, StringComparison.OrdinalIgnoreCase) || optionSelected == "INCLUDEALL")
                 {
                     matchingProductFoundInLicenseFile = true;
 
@@ -489,7 +489,7 @@ namespace Options.File.Checker
             if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
             {
                 err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
-                        $"Product names must match the ones found in the license file after the word INCREMENT and they are case-sensitive.";
+                        $"Product names must match the ones found in the license file after the word INCREMENT. Typos will result in this error message appearing.";
                 return;
             }
 
