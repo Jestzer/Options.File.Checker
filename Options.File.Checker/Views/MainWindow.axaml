@@ -117,7 +117,7 @@
             VerticalAlignment="Top"
             Width="75"
             Foreground="White"
-            IsEnabled=""
+            IsEnabled="False"
             Click="AnalyzerButton_Click">
       <Button.Styles>
         <Style Selector="Button">
