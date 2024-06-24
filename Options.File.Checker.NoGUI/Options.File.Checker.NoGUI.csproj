@@ -2,6 +2,8 @@
 
   <PropertyGroup>
     <PublishAot>true</PublishAot>
+    <TrimMode>link</TrimMode>
+    <SelfContained>true</SelfContained>
     <OutputType>Exe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -9,7 +11,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Options.File.Checker\Options.File.Checker.csproj" />
+    <Compile Include="..\Options.File.Checker\LicenseAndOptionsFileDataAnalyzer.cs" />
+    <Compile Include="..\Options.File.Checker\LicenseAndOptionsFileDataGatherer.cs" />
   </ItemGroup>
 
 </Project>
