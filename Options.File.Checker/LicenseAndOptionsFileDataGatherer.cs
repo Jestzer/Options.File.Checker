@@ -78,6 +78,10 @@ namespace Options.File.Checker
                 // Remove Unix line breaks.
                 lineBreaksToRemove = "\\\r\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+                
+                // Remove more Unix line breaks...
+                lineBreaksToRemove = "\\\n\t";
+                licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove empty space that will likely appear on Unix systems.
                 string emptySpaceToRemove = "        ";

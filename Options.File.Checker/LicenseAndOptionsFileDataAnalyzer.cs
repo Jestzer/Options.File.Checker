@@ -453,7 +453,7 @@ namespace Options.File.Checker
                                 Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
 
                                 string groupName = optionsGroupData.Item1;
-                                string groupUsers = optionsGroupData.Item2;
+                                //string groupUsers = optionsGroupData.Item2;
                                 int groupUserCount = optionsGroupData.Item3;
 
                                 if (groupName == clientSpecified)

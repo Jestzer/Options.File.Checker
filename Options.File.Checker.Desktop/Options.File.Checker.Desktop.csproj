@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+      <PublishAot>true</PublishAot>
     <OutputType>WinExe</OutputType>
 	  <AssemblyName>Options File Checker</AssemblyName>
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
