@@ -62,6 +62,10 @@ namespace Options.File.Checker
                 lineBreaksToRemove = "\\\r\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
 
+                // Remove more Unix line breaks...
+                lineBreaksToRemove = "\\\n\t";
+                licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
                 // Remove empty space that will likely appear on Unix systems.
                 string emptySpaceToRemove = "        ";
                 licenseFileContents = licenseFileContents.Replace(emptySpaceToRemove, string.Empty);
