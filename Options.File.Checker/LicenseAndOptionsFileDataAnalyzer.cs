@@ -554,7 +554,7 @@ namespace Options.File.Checker
                     if (!groupFound)
                     {
                         // No matching group found.
-                        string aOrAn = lineType == "RESERVE" ? "a" : "an";
+                        string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
                         string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
                                      $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
                         return err;
