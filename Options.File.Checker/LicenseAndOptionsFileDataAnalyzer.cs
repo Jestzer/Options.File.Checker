@@ -65,54 +65,40 @@ namespace Options.File.Checker
                 // In words of all shitty programmers, the situation where any of these are null "sHoUlD nEvEr hApPeN" but I am trying to be the better man and give some kind of error if they don't.
                 if (includeDictionary != null && groupDictionary != null && hostGroupDictionary != null && excludeDictionary != null && reserveDictionary != null && includeAllDictionary != null && excludeAllDictionary != null)
                 {
-                    foreach (var optionsIncludeEntry in includeDictionary)
+
+                    err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
+                    if (!string.IsNullOrEmpty(err))
                     {
-                        err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
-                        if (!string.IsNullOrEmpty(err))
-                        {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
-                    foreach (var optionsExcludeEntry in excludeDictionary)
+                    err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
+                    if (!string.IsNullOrEmpty(err))
                     {
-                        err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
-                        if (!string.IsNullOrEmpty(err))
-                        {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
-                    foreach (var optionsReserveEntry in reserveDictionary)
+                    err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
+                    if (!string.IsNullOrEmpty(err))
                     {
-                        err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
-                        if (!string.IsNullOrEmpty(err))
-                        {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
-                    foreach (var optionsIncludeAllEntry in includeAllDictionary)
+                    err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
+                    if (!string.IsNullOrEmpty(err))
                     {
-                        err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
-                        if (!string.IsNullOrEmpty(err))
-                        {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
-                    foreach (var optionsExcludeAllEntry in excludeAllDictionary)
+                    err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
+                    if (!string.IsNullOrEmpty(err))
                     {
-                        err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
-                        if (!string.IsNullOrEmpty(err))
-                        {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
                 }
                 else
                 {
-                    err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
+                    err = "Apparently one of the dictionaries in the Analyzer is null and therefore, the code in it cannot proceed. Please submit an issue for this on GitHub.";
                     return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
@@ -153,7 +139,7 @@ namespace Options.File.Checker
                 }
                 else
                 {
-                    err = "Apparently one of the dictionaries in the Analyzer is empty and therefore, the code in it cannot proceed.";
+                    err = "Apparently one of the dictionaries in the Analyzer is null and therefore, the code in it cannot proceed. Please submit an issue for this on GitHub.";
                     return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
@@ -534,11 +520,13 @@ namespace Options.File.Checker
         // Method to check if the groups you're specifying in your options have also been defined.
         // Define a delegate that takes a tuple and returns the groupType and specified strings.
         public delegate (string groupType, string specified) TupleExtractor<in TTuple>(TTuple tuple);
-        private static string? PerformGroupCheck<TKey, TTuple>(Dictionary<TKey, TTuple> optionsIndex,
-                                                     Dictionary<TKey, Tuple<string, string, int>> groupIndex,
-                                                     Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
-                                                     TupleExtractor<TTuple> extractor,
-                                                     string lineType) where TKey : notnull
+
+        private static string? PerformGroupCheck<TKey, TTuple>(
+            Dictionary<TKey, TTuple> optionsIndex,
+            Dictionary<TKey, Tuple<string, string, int>> groupIndex,
+            Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
+            TupleExtractor<TTuple> extractor,
+            string lineType) where TKey : notnull
         {
             foreach (var entry in optionsIndex)
             {
@@ -546,8 +534,11 @@ namespace Options.File.Checker
 
                 // Use the extractor to get the groupType and specified strings.
                 (string groupType, string specified) = extractor(tuple);
+
                 if (groupType == "GROUP")
                 {
+                    bool groupFound = false;
+
                     foreach (var optionsGroupEntry in groupIndex)
                     {
                         Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
@@ -555,12 +546,24 @@ namespace Options.File.Checker
 
                         if (groupName == specified)
                         {
-                            return null; // Matching GROUP found.
+                            groupFound = true;
+                            break; // Matching GROUP found, exit the loop.
                         }
+                    }
+
+                    if (!groupFound)
+                    {
+                        // No matching group found.
+                        string aOrAn = lineType == "RESERVE" ? "a" : "an";
+                        string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                                     $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                        return err;
                     }
                 }
                 else if (groupType == "HOST_GROUP")
                 {
+                    bool hostGroupFound = false;
+
                     foreach (var optionsHostGroupEntry in hostGroupIndex)
                     {
                         Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
@@ -568,29 +571,24 @@ namespace Options.File.Checker
 
                         if (hostGroupName == specified)
                         {
-                            return null; // Matching HOST_GROUP found.
+                            hostGroupFound = true;
+                            break; // Matching HOST_GROUP found, exit the loop.
                         }
+                    }
+
+                    if (!hostGroupFound)
+                    {
+                        // No matching host group found.
+                        string aOrAn = lineType == "RESERVE" ? "a" : "an";
+                        string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                                     $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                        return err;
                     }
                 }
                 else
                 {
-                    return null; // No need to do this for other client types.
+                    continue; // No need to do this for other client types.
                 }
-
-                // No matching group found.                
-                string aOrAn; // Grammar is important, kids!
-
-                if (lineType == "RESERVE")
-                {
-                    aOrAn = "a";
-                }
-                else
-                {
-                    aOrAn = "an";
-                }
-                string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                   $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
-                return err;
             }
             return null;
         }
