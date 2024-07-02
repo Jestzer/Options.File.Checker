@@ -21,7 +21,7 @@ namespace Options.File.Checker
         public static Dictionary<string, Tuple<int, string, string>>? maxDictionary;
         public static Dictionary<int, Tuple<string, string, int>>? groupDictionary;
         public static Dictionary<int, Tuple<string, string>>? hostGroupDictionary;
-        public static string? err
+        public static string? err;
 
         public static AnalyzeDataResult AnalyzeData(string licenseFilePath, string optionsFilePath)
         {
@@ -150,11 +150,11 @@ namespace Options.File.Checker
                 }
                 else if (ex.Message == "Index was outside the bounds of the array.")
                 {
-                    err = $"There is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"";
+                    err = "There is a formatting issue in your license/options file. This is the line in question's contents: " + line;
                 }
                 else
                 {
-                    err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
+                    err = "You managed to break something. How? Here's the automatic message: " + ex.Message;
                 }
 
                 result.Success = false;
@@ -270,12 +270,12 @@ namespace Options.File.Checker
                                 {
                                     if (!string.IsNullOrWhiteSpace(licenseNumber))
                                     {
-                                        err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                        $"for license {licenseNumber}.";
+                                        err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName +
+                                        "for license " + licenseNumber + ".";
                                     }
                                     else
                                     {
-                                        err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                        err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName + ".";
                                     }
                                 }
                                 return;
@@ -299,7 +299,7 @@ namespace Options.File.Checker
                                 {
                                     if (licenseFileLicenseOffering != "lo=CN")
                                     {
-                                        err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                        err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName + ". " +
                                             "Don't forget that you are using at least 1 INCLUDEALL line.";
                                         return;
                                     }
@@ -334,7 +334,7 @@ namespace Options.File.Checker
                                         {
                                             if (licenseFileLicenseOffering != "lo=CN")
                                             {
-                                                err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
+                                                err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName + ". " +
                                                     "Don't forget that you are using at least 1 INCLUDEALL line.";
                                                 return;
                                             }
@@ -361,7 +361,7 @@ namespace Options.File.Checker
                             // Check that a user has actually been specified.
                             if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                err = $"There is an issue with the options file: you have specified a USER to be able to use {licenseFileProductName}, " +
+                                err = "There is an issue with the options file: you have specified a USER to be able to use " + licenseFileProductName+ ", " +
                                 "but you did not define the USER.";
                                 return;
                             }
@@ -383,12 +383,12 @@ namespace Options.File.Checker
                                     {
                                         if (!string.IsNullOrWhiteSpace(licenseNumber))
                                         {
-                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                            $"for license {licenseNumber}.";
+                                            err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName +
+                                            " for license " + licenseNumber + ".";
                                         }
                                         else
                                         {
-                                            err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                            err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName + ".";
                                         }
                                     }
                                     return;
@@ -402,12 +402,12 @@ namespace Options.File.Checker
                             {
                                 if (!string.IsNullOrWhiteSpace(licenseNumber))
                                 {
-                                    err = $"There is an issue with the options file: You have specified a GROUP to be able to use {licenseFileProductName} " +
-                                    $"for license {licenseNumber}, but you did not specify which GROUP.";
+                                    err = "There is an issue with the options file: You have specified a GROUP to be able to use " + licenseFileProductName +
+                                    " for license {licenseNumber}, but you did not specify which GROUP.";
                                 }
                                 else
                                 {
-                                    err = $"There is an issue with the options file: You have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
+                                    err = "There is an issue with the options file: You have specified a GROUP to be able to use " + licenseFileProductName + ", but you did not specify which GROUP.";
                                 }
 
                                 return;
@@ -443,12 +443,12 @@ namespace Options.File.Checker
                                             {
                                                 if (!string.IsNullOrWhiteSpace(licenseNumber))
                                                 {
-                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                                    $"for license {licenseNumber}.";
+                                                    err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName +
+                                                    " for license " + licenseNumber + ".";
                                                 }
                                                 else
                                                 {
-                                                    err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
+                                                    err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName + ".";
                                                 }
                                             }
                                             return;
@@ -473,8 +473,8 @@ namespace Options.File.Checker
             // You can't give away what you don't have.
             if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
             {
-                err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
-                        $"Product names must match the ones found in the license file after the word INCREMENT. Typos will result in this error message appearing.";
+                err = "There is an issue with the options file: you specified a product, " + productName + ", but this product is not in your license file. " +
+                        "Product names must match the ones found in the license file after the word INCREMENT. Typos will result in this error message appearing.";
                 return;
             }
 
@@ -483,15 +483,15 @@ namespace Options.File.Checker
             {
                 if (!string.IsNullOrEmpty(licenseNumber))
                 {
-                    err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file.";
+                    err = "There is an issue with the options file: you have specified a license number, " + licenseNumber + ", which does not exist in the license file.";
                 }
                 else if (!string.IsNullOrEmpty(productKey))
                 {
-                    err = $"There is an issue with the options file: you have specified a product key, {productKey}, which does not exist in the license file.";
+                    err = "There is an issue with the options file: you have specified a product key, " + productKey + ", which does not exist in the license file.";
                 }
                 else
                 {
-                    err = $"There is an issue with the options file: you have specified too many users to be able to use {productName}.";
+                    err = "There is an issue with the options file: you have specified too many users to be able to use " + productName + ".";
                 }
 
                 return;
@@ -536,8 +536,8 @@ namespace Options.File.Checker
                     {
                         // No matching group found.
                         string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
-                        string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                                     $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                        string err = "There is an issue with the options file: you specified a " + groupType + " on " + aOrAn + " " + lineType + " line named " + specified + ", " +
+                                     "but this " + groupType + " does not exist in your options file. Please check your " + groupType + "s for any typos. HOST_GROUP and GROUP are separate.";
                         return err;
                     }
                 }
@@ -561,8 +561,8 @@ namespace Options.File.Checker
                     {
                         // No matching host group found.
                         string aOrAn = lineType == "RESERVE" ? "a" : "an";
-                        string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                                     $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                        string err = "There is an issue with the options file: you specified a " + groupType + " on " + aOrAn + " " + lineType + " line named " + specified + ", " +
+                                     "but this " + groupType + " does not exist in your options file. Please check your " + groupType + "s for any typos. HOST_GROUP and GROUP are separate.";
                         return err;
                     }
                 }
