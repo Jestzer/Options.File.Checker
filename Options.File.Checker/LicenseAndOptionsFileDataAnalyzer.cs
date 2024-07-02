@@ -493,7 +493,7 @@ namespace Options.File.Checker
             if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
             {
                 err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
-                        $"Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.";
+                        "Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.";
                 return;
             }
 
