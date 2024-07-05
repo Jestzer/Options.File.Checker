@@ -22,5 +22,29 @@ namespace Options.File.Checker.XP.Properties {
                 return defaultInstance;
             }
         }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string LicenseFilePathSetting {
+            get {
+                return ((string)(this["LicenseFilePathSetting"]));
+            }
+            set {
+                this["LicenseFilePathSetting"] = value;
+            }
+        }
+        
+        [global::System.Configuration.UserScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("")]
+        public string OptionsFilePathSetting {
+            get {
+                return ((string)(this["OptionsFilePathSetting"]));
+            }
+            set {
+                this["OptionsFilePathSetting"] = value;
+            }
+        }
     }
 }

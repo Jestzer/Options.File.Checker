@@ -3,6 +3,12 @@ using System.Collections.Generic;
 
 namespace Options.File.Checker
 {
+    public class AnalyzeDataResult
+    {
+        public bool Success { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
     public partial class LicenseAndOptionsFileDataAnalyzer
     {
         public static bool serverLineHasPort;
@@ -12,16 +18,16 @@ namespace Options.File.Checker
         public static bool unspecifiedLicenseOrProductKey;
         public static Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
         public static Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
-        public static Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary;
-        public static Dictionary<int, Tuple<string, string>>? includeAllDictionary;
-        public static Dictionary<int, Tuple<string, string, string, string, string>>? excludeDictionary;
-        public static Dictionary<int, Tuple<string, string, string, string, string>>? excludeBorrowDictionary;
-        public static Dictionary<int, Tuple<string, string>>? excludeAllDictionary;
-        public static Dictionary<int, Tuple<int, string, string, string, string, string>>? reserveDictionary;
-        public static Dictionary<string, Tuple<int, string, string>>? maxDictionary;
-        public static Dictionary<int, Tuple<string, string, int>>? groupDictionary;
-        public static Dictionary<int, Tuple<string, string>>? hostGroupDictionary;
-        public static string? err;
+        public static Dictionary<int, Tuple<string, string, string, string, string>> includeBorrowDictionary;
+        public static Dictionary<int, Tuple<string, string>> includeAllDictionary;
+        public static Dictionary<int, Tuple<string, string, string, string, string>> excludeDictionary;
+        public static Dictionary<int, Tuple<string, string, string, string, string>> excludeBorrowDictionary;
+        public static Dictionary<int, Tuple<string, string>> excludeAllDictionary;
+        public static Dictionary<int, Tuple<int, string, string, string, string, string>> reserveDictionary;
+        public static Dictionary<string, Tuple<int, string, string>> maxDictionary;
+        public static Dictionary<int, Tuple<string, string, int>> groupDictionary;
+        public static Dictionary<int, Tuple<string, string>> hostGroupDictionary;
+        public static string err;
 
         public static AnalyzeDataResult AnalyzeData(string licenseFilePath, string optionsFilePath)
         {
@@ -32,7 +38,7 @@ namespace Options.File.Checker
             string line = string.Empty;
 
             // Gather the data from the license and options files first.
-            GatherDataResult gatherResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);        
+            GatherDataResult gatherResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
             bool unspecifiedLicenseOrProductKey = false;
 
@@ -51,37 +57,46 @@ namespace Options.File.Checker
                 // Make sure that any GROUPs or HOST_GROUPs specified actually exist.
                 // It'll be more efficient if we do this all at once, rather than repeatedly in the foreach loop below.
                 // In words of all shitty programmers, the situation where any of these are null "sHoUlD nEvEr hApPeN" but I am trying to be the better man and give some kind of error if they don't.
+                // Ensure that dictionaries are non-nullable
+                var nonNullIncludeDictionary = includeDictionary ?? new Dictionary<int, Tuple<string, string, string, string, string>>();
+                var nonNullExcludeDictionary = excludeDictionary ?? new Dictionary<int, Tuple<string, string, string, string, string>>();
+                var nonNullReserveDictionary = reserveDictionary ?? new Dictionary<int, Tuple<int, string, string, string, string, string>>();
+                var nonNullIncludeAllDictionary = includeAllDictionary ?? new Dictionary<int, Tuple<string, string>>();
+                var nonNullExcludeAllDictionary = excludeAllDictionary ?? new Dictionary<int, Tuple<string, string>>();
+                var nonNullGroupDictionary = groupDictionary ?? new Dictionary<int, Tuple<string, string, int>>();
+                var nonNullHostGroupDictionary = hostGroupDictionary ?? new Dictionary<int, Tuple<string, string>>();
+
                 if (includeDictionary != null && groupDictionary != null && hostGroupDictionary != null && excludeDictionary != null && reserveDictionary != null && includeAllDictionary != null && excludeAllDictionary != null)
                 {
-                    err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-                    
-                    err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
+                    err = PerformGroupCheck(nonNullIncludeDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item4, tuple.Item5), "INCLUDE");
                     if (!string.IsNullOrEmpty(err))
                     {
                         result.Success = false;
                         return result;
                     }
 
-                    err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
+                    err = PerformGroupCheck(nonNullExcludeDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item4, tuple.Item5), "EXCLUDE");
                     if (!string.IsNullOrEmpty(err))
                     {
                         result.Success = false;
                         return result;
                     }
 
-                    err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
+                    err = PerformGroupCheck(nonNullReserveDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item5, tuple.Item6), "RESERVE");
                     if (!string.IsNullOrEmpty(err))
                     {
                         result.Success = false;
                         return result;
                     }
 
-                    err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
+                    err = PerformGroupCheck(nonNullIncludeAllDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item1, tuple.Item2), "INCLUDEALL");
+                    if (!string.IsNullOrEmpty(err))
+                    {
+                        result.Success = false;
+                        return result;
+                    }
+
+                    err = PerformGroupCheck(nonNullExcludeAllDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item1, tuple.Item2), "EXCLUDEALL");
                     if (!string.IsNullOrEmpty(err))
                     {
                         result.Success = false;
@@ -120,16 +135,18 @@ namespace Options.File.Checker
                             return result;
                         }
                     }
-
-                    foreach (var reserveEntry in reserveDictionary)
+                    if (reserveDictionary != null)
                     {
-                        optionSelected = "RESERVE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
-
-                        if (err != null)
+                        foreach (var reserveEntry in reserveDictionary)
                         {
-                            result.Success = false;
-                            return result;
+                            optionSelected = "RESERVE";
+                            SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
+
+                            if (err != null)
+                            {
+                                result.Success = false;
+                                return result;
+                            }
                         }
                     }
                 }
@@ -162,7 +179,7 @@ namespace Options.File.Checker
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string err)
         {
             // These need to be defined outside the if statements below so they can be used across them.
             int reserveSeatCount = 0;
@@ -271,7 +288,7 @@ namespace Options.File.Checker
                                     if (!string.IsNullOrWhiteSpace(licenseNumber))
                                     {
                                         err = "There is an issue with the options file: you have specified too many users to be able to use " + licenseFileProductName +
-                                        "for license " + licenseNumber + ".";
+                                        " for license " + licenseNumber + ".";
                                     }
                                     else
                                     {
@@ -361,7 +378,7 @@ namespace Options.File.Checker
                             // Check that a user has actually been specified.
                             if (string.IsNullOrWhiteSpace(clientSpecified))
                             {
-                                err = "There is an issue with the options file: you have specified a USER to be able to use " + licenseFileProductName+ ", " +
+                                err = "There is an issue with the options file: you have specified a USER to be able to use " + licenseFileProductName + ", " +
                                 "but you did not define the USER.";
                                 return;
                             }
@@ -497,24 +514,26 @@ namespace Options.File.Checker
                 return;
             }
         }
+      
+        // Define a delegate that takes a tuple and returns the groupType and specified strings.
+        public delegate Tuple<string, string> TupleExtractor<TTuple>(TTuple tuple);
 
         // Method to check if the groups you're specifying in your options have also been defined.
-        // Define a delegate that takes a tuple and returns the groupType and specified strings.
-        public delegate (string groupType, string specified) TupleExtractor<in TTuple>(TTuple tuple);
-
-        private static string? PerformGroupCheck<TKey, TTuple>(
-            Dictionary<TKey, TTuple> optionsIndex,
-            Dictionary<TKey, Tuple<string, string, int>> groupIndex,
-            Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
-            TupleExtractor<TTuple> extractor,
-            string lineType) where TKey : notnull
+        private static string PerformGroupCheck<TKey, TTuple>(
+    Dictionary<TKey, TTuple> optionsIndex,
+    Dictionary<TKey, Tuple<string, string, int>> groupIndex,
+    Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
+    TupleExtractor<TTuple> extractor,
+    string lineType)
         {
             foreach (var entry in optionsIndex)
             {
                 TTuple tuple = entry.Value;
 
                 // Use the extractor to get the groupType and specified strings.
-                (string groupType, string specified) = extractor(tuple);
+                Tuple<string, string> extracted = extractor(tuple);
+                string groupType = extracted.Item1;
+                string specified = extracted.Item2;
 
                 if (groupType == "GROUP")
                 {
