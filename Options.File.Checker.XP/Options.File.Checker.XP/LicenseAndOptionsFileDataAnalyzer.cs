@@ -7,6 +7,21 @@ namespace Options.File.Checker
     {
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
+        public bool ServerLineHasPort { get; set; }
+        public bool DaemonLineHasPort { get; set; }
+        public bool DaemonPortIsCNUFriendly { get; set; }
+        public bool CaseSensitivity { get; set; }
+        public Dictionary<int, Tuple<string, int, string, string, string>> LicenseFileDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> IncludeDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> IncludeBorrowDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string>> IncludeAllDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> ExcludeDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> ExcludeBorrowDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string>> ExcludeAllDictionary { get; set; }
+        public Dictionary<int, Tuple<int, string, string, string, string, string>> ReserveDictionary { get; set; }
+        public Dictionary<string, Tuple<int, string, string>> MaxDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, int>> GroupDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string>> HostGroupDictionary { get; set; }
     }
 
     public partial class LicenseAndOptionsFileDataAnalyzer
@@ -16,17 +31,6 @@ namespace Options.File.Checker
         public static bool daemonPortIsCNUFriendly;
         public static bool caseSensitivity;
         public static bool unspecifiedLicenseOrProductKey;
-        public static Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
-        public static Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
-        public static Dictionary<int, Tuple<string, string, string, string, string>> includeBorrowDictionary;
-        public static Dictionary<int, Tuple<string, string>> includeAllDictionary;
-        public static Dictionary<int, Tuple<string, string, string, string, string>> excludeDictionary;
-        public static Dictionary<int, Tuple<string, string, string, string, string>> excludeBorrowDictionary;
-        public static Dictionary<int, Tuple<string, string>> excludeAllDictionary;
-        public static Dictionary<int, Tuple<int, string, string, string, string, string>> reserveDictionary;
-        public static Dictionary<string, Tuple<int, string, string>> maxDictionary;
-        public static Dictionary<int, Tuple<string, string, int>> groupDictionary;
-        public static Dictionary<int, Tuple<string, string>> hostGroupDictionary;
         public static string err;
 
         public static AnalyzeDataResult AnalyzeData(string licenseFilePath, string optionsFilePath)
@@ -43,11 +47,29 @@ namespace Options.File.Checker
             bool unspecifiedLicenseOrProductKey = false;
 
             // Don't proceed if you've got an error.
-            if (err != null)
+            if (!gatherResult.Success)
             {
                 result.Success = false;
+                result.ErrorMessage = gatherResult.ErrorMessage;
                 return result;
             }
+
+            // Use the gathered data.
+            result.ServerLineHasPort = gatherResult.serverLineHasPort;
+            result.DaemonLineHasPort = gatherResult.daemonLineHasPort;
+            result.DaemonPortIsCNUFriendly = gatherResult.daemonPortIsCNUFriendly;
+            result.CaseSensitivity = gatherResult.caseSensitivity;
+            result.LicenseFileDictionary = gatherResult.LicenseFileDictionary;
+            result.IncludeDictionary = gatherResult.IncludeDictionary;
+            result.IncludeBorrowDictionary = gatherResult.IncludeBorrowDictionary;
+            result.IncludeAllDictionary = gatherResult.IncludeAllDictionary;
+            result.ExcludeDictionary = gatherResult.ExcludeDictionary;
+            result.ExcludeBorrowDictionary = gatherResult.ExcludeBorrowDictionary;
+            result.ExcludeAllDictionary = gatherResult.ExcludeAllDictionary;
+            result.ReserveDictionary = gatherResult.ReserveDictionary;
+            result.MaxDictionary = gatherResult.MaxDictionary;
+            result.GroupDictionary = gatherResult.GroupDictionary;
+            result.HostGroupDictionary = gatherResult.HostGroupDictionary;
 
             string optionSelected = string.Empty;
 
@@ -57,104 +79,90 @@ namespace Options.File.Checker
                 // Make sure that any GROUPs or HOST_GROUPs specified actually exist.
                 // It'll be more efficient if we do this all at once, rather than repeatedly in the foreach loop below.
                 // In words of all shitty programmers, the situation where any of these are null "sHoUlD nEvEr hApPeN" but I am trying to be the better man and give some kind of error if they don't.
-                // Ensure that dictionaries are non-nullable
-                var nonNullIncludeDictionary = includeDictionary ?? new Dictionary<int, Tuple<string, string, string, string, string>>();
-                var nonNullExcludeDictionary = excludeDictionary ?? new Dictionary<int, Tuple<string, string, string, string, string>>();
-                var nonNullReserveDictionary = reserveDictionary ?? new Dictionary<int, Tuple<int, string, string, string, string, string>>();
-                var nonNullIncludeAllDictionary = includeAllDictionary ?? new Dictionary<int, Tuple<string, string>>();
-                var nonNullExcludeAllDictionary = excludeAllDictionary ?? new Dictionary<int, Tuple<string, string>>();
-                var nonNullGroupDictionary = groupDictionary ?? new Dictionary<int, Tuple<string, string, int>>();
-                var nonNullHostGroupDictionary = hostGroupDictionary ?? new Dictionary<int, Tuple<string, string>>();
-
-                if (includeDictionary != null && groupDictionary != null && hostGroupDictionary != null && excludeDictionary != null && reserveDictionary != null && includeAllDictionary != null && excludeAllDictionary != null)
+                // Ensure that dictionaries are non-nullable.
+                var nonNullIncludeDictionary = result.IncludeDictionary ?? new Dictionary<int, Tuple<string, string, string, string, string>>();
+                var nonNullExcludeDictionary = result.ExcludeDictionary ?? new Dictionary<int, Tuple<string, string, string, string, string>>();
+                var nonNullReserveDictionary = result.ReserveDictionary ?? new Dictionary<int, Tuple<int, string, string, string, string, string>>();
+                var nonNullIncludeAllDictionary = result.IncludeAllDictionary ?? new Dictionary<int, Tuple<string, string>>();
+                var nonNullExcludeAllDictionary = result.ExcludeAllDictionary ?? new Dictionary<int, Tuple<string, string>>();
+                var nonNullGroupDictionary = result.GroupDictionary ?? new Dictionary<int, Tuple<string, string, int>>();
+                var nonNullHostGroupDictionary = result.HostGroupDictionary ?? new Dictionary<int, Tuple<string, string>>();
+                err = PerformGroupCheck(nonNullIncludeDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item4, tuple.Item5), "INCLUDE");
+                if (!string.IsNullOrEmpty(err))
                 {
-                    err = PerformGroupCheck(nonNullIncludeDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item4, tuple.Item5), "INCLUDE");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-
-                    err = PerformGroupCheck(nonNullExcludeDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item4, tuple.Item5), "EXCLUDE");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-
-                    err = PerformGroupCheck(nonNullReserveDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item5, tuple.Item6), "RESERVE");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-
-                    err = PerformGroupCheck(nonNullIncludeAllDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item1, tuple.Item2), "INCLUDEALL");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-
-                    err = PerformGroupCheck(nonNullExcludeAllDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item1, tuple.Item2), "EXCLUDEALL");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        result.Success = false;
-                        return result;
-                    }
-                }
-                else
-                {
-                    err = "Apparently one of the dictionaries in the Analyzer is null and therefore, the code in it cannot proceed. Please submit an issue for this on GitHub.";
                     result.Success = false;
+                    result.ErrorMessage = err;
+                    return result;
+                }
+
+                err = PerformGroupCheck(nonNullExcludeDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item4, tuple.Item5), "EXCLUDE");
+                if (!string.IsNullOrEmpty(err))
+                {
+                    result.Success = false;
+                    result.ErrorMessage = err;
+                    return result;
+                }
+
+                err = PerformGroupCheck(nonNullReserveDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item5, tuple.Item6), "RESERVE");
+                if (!string.IsNullOrEmpty(err))
+                {
+                    result.Success = false;
+                    result.ErrorMessage = err;
+                    return result;
+                }
+
+                err = PerformGroupCheck(nonNullIncludeAllDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item1, tuple.Item2), "INCLUDEALL");
+                if (!string.IsNullOrEmpty(err))
+                {
+                    result.Success = false;
+                    result.ErrorMessage = err;
+                    return result;
+                }
+
+                err = PerformGroupCheck(nonNullExcludeAllDictionary, nonNullGroupDictionary, nonNullHostGroupDictionary, tuple => Tuple.Create(tuple.Item1, tuple.Item2), "EXCLUDEALL");
+                if (!string.IsNullOrEmpty(err))
+                {
+                    result.Success = false;
+                    result.ErrorMessage = err;
                     return result;
                 }
 
                 // Subtract seats now.
-                if (includeDictionary != null && includeAllDictionary != null && licenseFileDictionary != null && groupDictionary != null)
+                foreach (var includeEntry in nonNullIncludeDictionary)
                 {
-                    foreach (var includeEntry in includeDictionary)
-                    {
-                        optionSelected = "INCLUDE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
+                    optionSelected = "INCLUDE";
+                    SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), result.LicenseFileDictionary, result.GroupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
 
-                        if (err != null)
-                        {
-                            result.Success = false;
-                            return result;
-                        }
-                    }
-                    foreach (var includeAllEntry in includeAllDictionary)
+                    if (err != null)
                     {
-                        optionSelected = "INCLUDEALL";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
-
-                        if (err != null)
-                        {
-                            result.Success = false;
-                            return result;
-                        }
-                    }
-                    if (reserveDictionary != null)
-                    {
-                        foreach (var reserveEntry in reserveDictionary)
-                        {
-                            optionSelected = "RESERVE";
-                            SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
-
-                            if (err != null)
-                            {
-                                result.Success = false;
-                                return result;
-                            }
-                        }
+                        result.Success = false;
+                        result.ErrorMessage = err;
+                        return result;
                     }
                 }
-                else
+                foreach (var includeAllEntry in nonNullIncludeAllDictionary)
                 {
-                    err = "Apparently one of the dictionaries in the Analyzer is null and therefore, the code in it cannot proceed. Please submit an issue for this on GitHub.";
-                    result.Success = false;
-                    return result;
+                    optionSelected = "INCLUDEALL";
+                    SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), result.LicenseFileDictionary, result.GroupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
+
+                    if (err != null)
+                    {
+                        result.Success = false;
+                        result.ErrorMessage = err;
+                        return result;
+                    }
+                }
+                foreach (var reserveEntry in nonNullReserveDictionary)
+                {
+                    optionSelected = "RESERVE";
+                    SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), result.LicenseFileDictionary, result.GroupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
+
+                    if (err != null)
+                    {
+                        result.Success = false;
+                        result.ErrorMessage = err;
+                        return result;
+                    }
                 }
 
                 return result;
@@ -175,6 +183,7 @@ namespace Options.File.Checker
                 }
 
                 result.Success = false;
+                result.ErrorMessage = err;
                 return result;
             }
         }
@@ -514,7 +523,7 @@ namespace Options.File.Checker
                 return;
             }
         }
-      
+
         // Define a delegate that takes a tuple and returns the groupType and specified strings.
         public delegate Tuple<string, string> TupleExtractor<TTuple>(TTuple tuple);
 
