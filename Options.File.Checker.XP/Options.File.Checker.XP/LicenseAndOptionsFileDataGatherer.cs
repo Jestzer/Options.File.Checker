@@ -10,6 +10,21 @@ namespace Options.File.Checker
     {
         public bool Success { get; set; }
         public string ErrorMessage { get; set; }
+        public bool serverLineHasPort { get; set; }
+        public bool daemonLineHasPort { get; set; }
+        public bool daemonPortIsCNUFriendly { get; set; }
+        public bool caseSensitivity { get; set; }
+        public Dictionary<int, Tuple<string, int, string, string, string>> LicenseFileDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> IncludeDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> IncludeBorrowDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string>> IncludeAllDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> ExcludeDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, string, string, string>> ExcludeBorrowDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string>> ExcludeAllDictionary { get; set; }
+        public Dictionary<int, Tuple<int, string, string, string, string, string>> ReserveDictionary { get; set; }
+        public Dictionary<string, Tuple<int, string, string>> MaxDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string, int>> GroupDictionary { get; set; }
+        public Dictionary<int, Tuple<string, string>> HostGroupDictionary { get; set; }
     }
 
     public partial class LicenseAndOptionsFileDataGatherer
@@ -21,17 +36,6 @@ namespace Options.File.Checker
         private static Regex keyEqualsRegex = new Regex("key=", RegexOptions.IgnoreCase);
         private static Regex assetInfoRegex = new Regex("asset_info=", RegexOptions.IgnoreCase);
 
-        private static readonly Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeBorrowDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string>> includeAllDictionary = new Dictionary<int, Tuple<string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string, string, string, string>> excludeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string, string, string, string>> excludeBorrowDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string>> excludeAllDictionary = new Dictionary<int, Tuple<string, string>>();
-        private static readonly Dictionary<int, Tuple<int, string, string, string, string, string>> reserveDictionary = new Dictionary<int, Tuple<int, string, string, string, string, string>>();
-        private static readonly Dictionary<string, Tuple<int, string, string>> maxDictionary = new Dictionary<string, Tuple<int, string, string>>();
-        private static readonly Dictionary<int, Tuple<string, string, int>> groupDictionary = new Dictionary<int, Tuple<string, string, int>>();
-        private static readonly Dictionary<int, Tuple<string, string>> hostGroupDictionary = new Dictionary<int, Tuple<string, string>>();
         private static string ErrorMessage = string.Empty;
 
         public static bool serverLineHasPort { get; set; }
@@ -41,8 +45,21 @@ namespace Options.File.Checker
 
         public static GatherDataResult GatherData(string licenseFilePath, string optionsFilePath)
         {
-           GatherDataResult result = new GatherDataResult();
-           result.Success = true;
+            GatherDataResult result = new GatherDataResult
+            {
+                Success = true,
+                LicenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>(),
+                IncludeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>(),
+                IncludeBorrowDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>(),
+                IncludeAllDictionary = new Dictionary<int, Tuple<string, string>>(),
+                ExcludeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>(),
+                ExcludeBorrowDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>(),
+                ExcludeAllDictionary = new Dictionary<int, Tuple<string, string>>(),
+                ReserveDictionary = new Dictionary<int, Tuple<int, string, string, string, string, string>>(),
+                MaxDictionary = new Dictionary<string, Tuple<int, string, string>>(),
+                GroupDictionary = new Dictionary<int, Tuple<string, string, int>>(),
+                HostGroupDictionary = new Dictionary<int, Tuple<string, string>>()
+            };
 
             // I'm putting this here so that we can print its contents if we hit a generic error message.
             string line = string.Empty;
@@ -97,7 +114,7 @@ namespace Options.File.Checker
                     && !optionsFileContents.Contains("MAX") && !optionsFileContents.Contains("LINGER") && !optionsFileContents.Contains("LOG") &&
                     !optionsFileContents.Contains("TIMEOUT"))
                 {
-                    result.ErrorMessage = "There is an issue with the options file: it is likely not an options file or contains no usable content.";                    
+                    result.ErrorMessage = "There is an issue with the options file: it is likely not an options file or contains no usable content.";
                     result.Success = false;
                     return result;
                 }
@@ -127,17 +144,17 @@ namespace Options.File.Checker
                 // Reset everything!
                 serverLineHasPort = true;
                 daemonLineHasPort = false;
-                licenseFileDictionary.Clear();
-                includeDictionary.Clear();
-                includeBorrowDictionary.Clear();
-                includeAllDictionary.Clear();
-                excludeDictionary.Clear();
-                excludeBorrowDictionary.Clear();
-                excludeAllDictionary.Clear();
-                reserveDictionary.Clear();
-                maxDictionary.Clear();
-                groupDictionary.Clear();
-                hostGroupDictionary.Clear();
+                result.LicenseFileDictionary.Clear();
+                result.IncludeDictionary.Clear();
+                result.IncludeBorrowDictionary.Clear();
+                result.IncludeAllDictionary.Clear();
+                result.ExcludeDictionary.Clear();
+                result.ExcludeBorrowDictionary.Clear();
+                result.ExcludeAllDictionary.Clear();
+                result.ReserveDictionary.Clear();
+                result.MaxDictionary.Clear();
+                result.GroupDictionary.Clear();
+                result.HostGroupDictionary.Clear();
                 result.ErrorMessage = string.Empty;
 
                 // Stuff that the class won't output.
@@ -168,7 +185,7 @@ namespace Options.File.Checker
                         string serverWord = lineParts[0];
                         string serverHostID = lineParts[2];
 
-                        if (serverHostID == "27000" || serverHostID == "27001" || serverHostID == "27002" || serverHostID == "27003" || serverHostID == "27004" || serverHostID == "27005" )
+                        if (serverHostID == "27000" || serverHostID == "27001" || serverHostID == "27002" || serverHostID == "27003" || serverHostID == "27004" || serverHostID == "27005")
                         {
                             result.ErrorMessage = "There is an issue with the license file: you have likely omitted your Host ID and attempted to specify a SERVER port number. " +
                                 "Because you have omitted the Host ID, the port you've attempted to specify will not be used.";
@@ -586,7 +603,7 @@ namespace Options.File.Checker
                             return result;
                         }
 
-                        licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
+                        result.LicenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
                 }
 
@@ -696,7 +713,7 @@ namespace Options.File.Checker
                                 clientType = lineParts[2];
                                 clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                             }
-                        }                        
+                        }
                         else if (productName.Contains(':')) // In case you decided to use a : instead of ""...
                         {
                             string[] colonParts = productName.Split(':');
@@ -730,10 +747,10 @@ namespace Options.File.Checker
                             productKey = string.Empty;
                         }
 
-                        if (line.TrimStart().StartsWith("INCLUDE ")) { includeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
-                        else if (line.TrimStart().StartsWith("INCLUDE_BORROW ")) { includeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
-                        else if (line.TrimStart().StartsWith("EXCLUDE ")) { excludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
-                        else if (line.TrimStart().StartsWith("EXCLUDE_BORROW ")) { excludeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
+                        if (line.TrimStart().StartsWith("INCLUDE ")) { result.IncludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
+                        else if (line.TrimStart().StartsWith("INCLUDE_BORROW ")) { result.IncludeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
+                        else if (line.TrimStart().StartsWith("EXCLUDE ")) { result.ExcludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
+                        else if (line.TrimStart().StartsWith("EXCLUDE_BORROW ")) { result.ExcludeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                     }
                     else if (line.TrimStart().StartsWith("INCLUDEALL ") || line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
@@ -771,8 +788,8 @@ namespace Options.File.Checker
                             return result;
                         }
 
-                        if (line.TrimStart().StartsWith("INCLUDEALL ")) { includeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
-                        else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { excludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
+                        if (line.TrimStart().StartsWith("INCLUDEALL ")) { result.IncludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
+                        else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { result.ExcludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                     }
                     else if (line.TrimStart().StartsWith("MAX "))
                     {
@@ -797,7 +814,7 @@ namespace Options.File.Checker
                         string maxClientType = lineParts[3];
                         string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
 
-                        maxDictionary[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
+                        result.MaxDictionary[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
                     }
                     else if (line.TrimStart().StartsWith("RESERVE "))
                     {
@@ -940,7 +957,7 @@ namespace Options.File.Checker
                             reserveLicenseNumber = string.Empty;
                             reserveProductKey = string.Empty;
                         }
-                        reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
+                        result.ReserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                     }
                     else if (line.TrimStart().StartsWith("GROUP "))
                     {
@@ -964,7 +981,7 @@ namespace Options.File.Checker
                         string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
                         int groupUserCount = groupUsers.Split(' ').Length;
 
-                        groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                        result.GroupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
@@ -987,14 +1004,14 @@ namespace Options.File.Checker
                         string hostGroupName = lineParts[1];
                         string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
 
-                        hostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
+                        result.HostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
                         caseSensitivity = false;
-                    }                    
-                    else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ") 
-                        || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ") 
+                    }
+                    else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ")
+                        || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ")
                         || line.TrimStart().StartsWith("DEFAULT ") || line.TrimStart().StartsWith("HIDDEN ") || line.TrimStart().StartsWith("#") || line == "")
                     {
                         // Other valid line beginnings that I currently do nothing with.
@@ -1008,7 +1025,7 @@ namespace Options.File.Checker
                     }
                 }
 
-                return result; // Success!
+                return result; // Pass along the result to the Analyzer.
             }
             catch (Exception ex)
             {
