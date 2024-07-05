@@ -195,7 +195,7 @@ namespace Options.File.Checker.XP
         private void AnalyzerButton_Click(object sender, EventArgs e)
         {
             string licenseFilePath = string.Empty;
-            string optionsFilePath = string.Empty; // Thank you for the lousy suggestion to remove this Visual Studio.
+            string optionsFilePath = string.Empty;
 
             if (!string.IsNullOrEmpty(LicenseFileLocationTextBox.Text))
             {
@@ -218,6 +218,116 @@ namespace Options.File.Checker.XP
             }
 
             AnalyzeDataResult result = LicenseAndOptionsFileDataAnalyzer.AnalyzeData(licenseFilePath, optionsFilePath);
+
+            // Check if there was an error.
+    if (!result.Success)
+    {
+        MessageBox.Show(result.ErrorMessage ?? "An unknown error occurred.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
+
+    // Process the returned data.
+    StringBuilder output = new StringBuilder();
+
+    if (!LicenseAndOptionsFileDataAnalyzer.serverLineHasPort)
+    {
+        output.AppendLine("Warning: you did not specify a port number on your SERVER line.\n");
+    }
+
+    if (!LicenseAndOptionsFileDataAnalyzer.daemonLineHasPort)
+    {
+        output.AppendLine("Warning: you did not specify a port number on your DAEMON line. This means a random port will be chosen each time you restart FlexLM.\n");
+    }
+
+    if (LicenseAndOptionsFileDataAnalyzer.caseSensitivity)
+    {
+        output.AppendLine("Warning: case sensitivity is enabled for users defined in GROUPs and HOST_GROUPs.\n");
+    }
+
+    // Warn the user if they didn't specify a license number or product key in their seat-subtracting option entries.
+    if (LicenseAndOptionsFileDataAnalyzer.unspecifiedLicenseOrProductKey)
+    {
+        output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
+            "license the product appears on.\n");
+    }
+
+    // Print seatCount.
+    if (LicenseAndOptionsFileDataAnalyzer.licenseFileDictionary != null)
+    {
+        bool overdraftCNWarningHit = false;
+        bool includeAllNNUWarningHit = false;
+        bool alreadyYelledToCNUAboutPORTFormat = false;
+
+        foreach (var item in LicenseAndOptionsFileDataAnalyzer.licenseFileDictionary)
+        {
+            string seatOrSeats; // Grammar is important, I guess.
+
+            if (item.Value.Item2 == 1)
+            {
+                seatOrSeats = "seat";
+            }
+            else
+            {
+                seatOrSeats = "seats";
+            }
+
+            if (!LicenseAndOptionsFileDataAnalyzer.daemonPortIsCNUFriendly && LicenseAndOptionsFileDataAnalyzer.daemonLineHasPort && item.Value.Item4.Contains("CNU"))
+            {
+                if (!alreadyYelledToCNUAboutPORTFormat)
+                {
+                    output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
+                    alreadyYelledToCNUAboutPORTFormat = true;
+                }
+            }
+
+            if (item.Value.Item4.Contains("CNU") && item.Value.Item2 == 9999999)
+            {
+                output.AppendLine(item.Value.Item1 + " has unlimited seats on license " + item.Value.Item5 + "\n");
+            }
+            else if (item.Value.Item4.Contains("CN") && item.Value.Item2 < 0)
+            {
+                if (!overdraftCNWarningHit)
+                {
+                    output.AppendLine("\r\nWARNING: you have specified more users on license " + item.Value.Item5 + " for the product " + item.Value.Item1 + " than you have seats for. " +
+                        "If every user included was using the product at once then the seat count would technically be at " + item.Value.Item2 + ". " +
+                        "This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
+                        "access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE FOR THIS SINGLE PRODUCT.\r\n");
+                    overdraftCNWarningHit = true;
+                }
+                else
+                {
+                    output.AppendLine("You have specified more users on Concurrent license " + item.Value.Item5 + " for the product " + item.Value.Item1 + " than you have seats for (technically counting at " + item.Value.Item2 + " seats.)");
+                }
+            }
+            else
+            {
+                if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
+                {
+                    if (!includeAllNNUWarningHit)
+                    {
+                        if (LicenseAndOptionsFileDataAnalyzer.includeAllDictionary != null)
+                        {
+                            if (LicenseAndOptionsFileDataAnalyzer.includeAllDictionary.Count == 0)
+                            {
+                                output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
+                            }
+                        }
+                        includeAllNNUWarningHit = true;
+                    }
+                }
+                // Finally, print the stuff we want to see!
+                output.AppendLine(item.Value.Item1 + " has " + item.Value.Item2 + " unassigned " + seatOrSeats + " on license number " + item.Value.Item5 + " (product key " + item.Value.Item3 + ").");
+            }
+        }
+    }
+    else
+    {
+        MessageBox.Show("The license file dictionary is null. Please report this error on GitHub.", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        return;
+    }
+
+    // Show us the goods, since we didn't hit any critical errors.
+    OutputTextBlock.Text = output.ToString();
 
         }
     }

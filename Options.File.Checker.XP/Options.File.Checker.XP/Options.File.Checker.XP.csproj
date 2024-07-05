@@ -50,6 +50,8 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="LicenseAndOptionsFileDataAnalyzer.cs" />
+    <Compile Include="LicenseAndOptionsFileDataGatherer.cs" />
     <Compile Include="MainWindow.cs">
       <SubType>Form</SubType>
     </Compile>

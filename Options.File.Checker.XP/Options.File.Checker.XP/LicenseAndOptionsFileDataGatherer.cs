@@ -6,19 +6,21 @@ using System.Text.RegularExpressions;
 
 namespace Options.File.Checker
 {
+    public class GatherDataResult
+    {
+        public bool Success { get; set; }
+        public string ErrorMessage { get; set; }
+    }
+
     public partial class LicenseAndOptionsFileDataGatherer
     {
         // Do Regex stuff now to be efficient and stuff blah blah blah.
         private static Regex countPortEqualsRegex = new Regex("port=", RegexOptions.IgnoreCase);
-        private static Regex countOptionsEquals = new Regex("options=", RegexOptions.IgnoreCase);
-        private static Regex countCommentedBeginLines = new Regex("# BEGIN--------------", RegexOptions.IgnoreCase);
-        private static Regex keyEquals = new Regex("key=", RegexOptions.IgnoreCase);
-        private static Regex assetInfo = new Regex("asset_info=", RegexOptions.IgnoreCase);
+        private static Regex countOptionsEqualsRegex = new Regex("options=", RegexOptions.IgnoreCase);
+        private static Regex countCommentedBeginLinesRegex = new Regex("# BEGIN--------------", RegexOptions.IgnoreCase);
+        private static Regex keyEqualsRegex = new Regex("key=", RegexOptions.IgnoreCase);
+        private static Regex assetInfoRegex = new Regex("asset_info=", RegexOptions.IgnoreCase);
 
-        private static bool serverLineHasPort = true;
-        private static bool daemonLineHasPort = false;
-        private static bool daemonPortIsCNUFriendly = false;
-        private static bool caseSensitivity = true;
         private static readonly Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeBorrowDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>();
@@ -30,7 +32,7 @@ namespace Options.File.Checker
         private static readonly Dictionary<string, Tuple<int, string, string>> maxDictionary = new Dictionary<string, Tuple<int, string, string>>();
         private static readonly Dictionary<int, Tuple<string, string, int>> groupDictionary = new Dictionary<int, Tuple<string, string, int>>();
         private static readonly Dictionary<int, Tuple<string, string>> hostGroupDictionary = new Dictionary<int, Tuple<string, string>>();
-        private static string? ErrorMessage = string.Empty;
+        private static string ErrorMessage = string.Empty;
 
         public static bool serverLineHasPort { get; set; }
         public static bool daemonLineHasPort { get; set; }
@@ -261,9 +263,9 @@ namespace Options.File.Checker
                         }
 
                         // port= and options= should only appear once.
-                        int countPortEquals = countPortEqualsRegex().Matches(line).Count;
-                        int countOptionsEquals = LicenseAndOptionsFileDataGatherer.countOptionsEquals().Matches(line).Count;
-                        int countCommentedBeginLines = LicenseAndOptionsFileDataGatherer.countCommentedBeginLines().Matches(line).Count;
+                        int countPortEquals = countPortEqualsRegex.Matches(line).Count;
+                        int countOptionsEquals = countOptionsEqualsRegex.Matches(line).Count;
+                        int countCommentedBeginLines = countCommentedBeginLinesRegex.Matches(line).Count;
 
                         // For the CNU kids.
                         if (line.Contains("PORT="))
@@ -361,7 +363,7 @@ namespace Options.File.Checker
                         string productKey = lineParts[6];
                         string licenseOffering = string.Empty;
                         string licenseNumber = string.Empty;
-                        _ = int.TryParse(lineParts[5], out seatCount);
+                        bool parseResult = int.TryParse(lineParts[5], out seatCount);
                         string rawSeatCount = lineParts[5];
 
                         // License number.
@@ -453,7 +455,7 @@ namespace Options.File.Checker
                                 {
                                     if (containsPLP && !line.Contains("asset_info="))
                                     {
-                                        licenseOffering = "lo=DC"; // See PLP-era explaination below.
+                                        licenseOffering = "lo=DC"; // See PLP-era explanation below.
                                     }
                                     else
                                     {
@@ -479,12 +481,12 @@ namespace Options.File.Checker
                         {
                             if (line.Contains("PLATFORMS=x"))
                             {
-                                result.ErrorMessage = "There is an issue with the license file: the product" + productName + " comes from an Individual " +
+                                result.ErrorMessage = "There is an issue with the license file: the product " + productName + " comes from an Individual " +
                                      "or Designated Computer license generated from a PLP on Windows, which cannot use an options file.";
                             }
                             else
                             {
-                                result.ErrorMessage = "There is an issue with the license file: the product" + productName + " has an valid license offering.";
+                                result.ErrorMessage = "There is an issue with the license file: the product " + productName + " has an valid license offering.";
                             }
                             result.Success = false;
                             return result;
@@ -504,8 +506,8 @@ namespace Options.File.Checker
 
                         if (expirationDate < currentDate)
                         {
-                            result.ErrorMessage = "There is an issue with the license file: The product" + productName + " on license number " +
-                                + licenseNumber + " expired on " + productExpirationDate + ". Please update your license file appropriately before proceeding.";
+                            result.ErrorMessage = "There is an issue with the license file: The product " + productName + " on license number " +
+                                licenseNumber + " expired on " + productExpirationDate + ". Please update your license file appropriately before proceeding.";
                             result.Success = false;
                             return result;
                         }
@@ -532,7 +534,7 @@ namespace Options.File.Checker
                             }
                             else
                             {
-                                result.ErrorMessage = "There is an issue with the license file: it contains a Designated Computer license" + licenseNumber + " , " +
+                                result.ErrorMessage = "There is an issue with the license file: it contains a Designated Computer license " + licenseNumber + " , " +
                                     "that is incorrectly labeled as a Concurrent license.";
                             }
                             result.Success = false;
@@ -564,15 +566,15 @@ namespace Options.File.Checker
 
                         if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
                         {
-                            result.ErrorMessage = "There is an issue with the license file: an invalid license number" + licenseNumber + " , is detected for " + productName + ".";
+                            result.ErrorMessage = "There is an issue with the license file: an invalid license number " + licenseNumber + " , is detected for " + productName + ".";
                             result.Success = false;
                             return result;
                         }
 
                         if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
                         {
-                            result.ErrorMessage = "There is an issue with the license file: a license offering could not be detected for " + productName + " " +
-                                "on license number " + licenseNumber + ".";
+                            result.ErrorMessage = "There is an issue with the license file: a license offering could not be detected for " + productName +
+                                " on license number " + licenseNumber + ".";
                             result.Success = false;
                             return result;
                         }
@@ -640,18 +642,18 @@ namespace Options.File.Checker
                             licenseNumber = lineParts[2];
                             if (!productName.Contains(':'))
                             {
-                                if (licenseNumber.Contains("key=", StringComparison.CurrentCultureIgnoreCase))
+                                if (licenseNumber.IndexOf("key=", StringComparison.CurrentCultureIgnoreCase) >= 0)
                                 {
                                     productKey = lineParts[2];
                                     string unfixedProductKey = productKey;
-                                    string quotedProductKey = KeyEquals().Replace(unfixedProductKey, "");
+                                    string quotedProductKey = keyEqualsRegex.Replace(unfixedProductKey, "");
                                     productKey = quotedProductKey.Replace("\"", "");
                                     licenseNumber = string.Empty;
                                 }
                                 else // asset_info=
                                 {
                                     string unfixedLicenseNumber = licenseNumber;
-                                    string quoteLicenseNumber = AssetInfo().Replace(unfixedLicenseNumber, "");
+                                    string quoteLicenseNumber = assetInfoRegex.Replace(unfixedLicenseNumber, "");
                                     licenseNumber = quoteLicenseNumber.Replace("\"", "");
                                     productKey = string.Empty;
                                 }
@@ -671,7 +673,7 @@ namespace Options.File.Checker
                             }
                             else // If you have " and :
                             {
-                                string[] colonParts = productName.Split(":");
+                                string[] colonParts = productName.Split(':');
                                 if (colonParts.Length != 2)
                                 {
                                     result.ErrorMessage = "There is an issue with the options file: one of your " + optionType + " lines has a stray colon for " + productName + ".";
@@ -697,7 +699,7 @@ namespace Options.File.Checker
                         }                        
                         else if (productName.Contains(':')) // In case you decided to use a : instead of ""...
                         {
-                            string[] colonParts = productName.Split(":");
+                            string[] colonParts = productName.Split(':');
                             if (colonParts.Length != 2)
                             {
                                 result.ErrorMessage = "There is an issue with the options file: one of your " + optionType + " lines has a stray colon for " + productName + ".";
@@ -883,7 +885,7 @@ namespace Options.File.Checker
                             // If you have " and :
                             else
                             {
-                                string[] colonParts = reserveProductName.Split(":");
+                                string[] colonParts = reserveProductName.Split(':');
                                 if (colonParts.Length != 2)
                                 {
                                     result.ErrorMessage = "There is an issue with the options file: one of your RESERVE lines has a stray colon for " + reserveProductName + ".";
@@ -909,7 +911,7 @@ namespace Options.File.Checker
                         // In case you decided to use a : instead of ""...
                         else if (reserveProductName.Contains(':'))
                         {
-                            string[] colonParts = reserveProductName.Split(":");
+                            string[] colonParts = reserveProductName.Split(':');
                             if (colonParts.Length != 2)
                             {
                                 result.ErrorMessage = "There is an issue with the options file: one of your RESERVE lines has a stray colon for " + reserveProductName + ".";
