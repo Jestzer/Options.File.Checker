@@ -23,7 +23,7 @@ To do:
 Keep in mind that the information below is just relevant to the Releases I've made. Platforms "tested on" work, unless it is in the incompatible section. Just because a certain setup wasn't tested, doesn't mean it won't work.
 | v0.2.3 Release Info | Desktop           | Non-GUI  | XP Edition   |
 |---------------------|-------------------|----------|--------------|
-| .NET version        | 7.0 & 8.0         | 8        | Framework 4.0|
+| .NET version        | 7.0 & 8.0         | 8.0      | Framework 4.0|
 | GUI Framework       | Avalonia          | —        | WinForms     |
 | AOT?                | Yes               | Yes      | No           |
 | Self-contained?     | Yes               | Yes      | No           |
