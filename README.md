@@ -25,7 +25,7 @@ Keep in mind that the information below is just relevant to the Releases I've ma
 |---------------------|-------------------|----------|--------------|
 | .NET version        | 7.0 & 8.0         | 8.0      | Framework 4.0|
 | GUI Framework       | Avalonia          | —        | WinForms     |
-| AOT?                | Yes               | Yes      | No           |
+| AOT?                | Yes (No for macOS)               | Yes      | No           |
 | Self-contained?     | Yes               | Yes      | No           |
 | Architecture        | x64, ARM (macOS)  | x64      | x86, works on x64 |
 | Linux Distros tested on | Arch, Debian 12, CentOS 7.9, Ubuntu 18.04 | Debian 12 | —      |
