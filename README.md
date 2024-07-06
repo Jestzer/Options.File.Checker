@@ -28,6 +28,6 @@ Keep in mind that the information below is just relevant to the Releases I've ma
 | AOT?                | Yes               | Yes      | No           |
 | Self-contained?     | Yes               | Yes      | No           |
 | Architecture        | x64, ARM (macOS)  | x64      | x86, works on x64 |
-| Linux Distros tested on | Debian 12, CentOS 7.9 | Debian 12 | —      |
+| Linux Distros tested on | Debian 12, CentOS 7.9, Ubuntu 18.04 | Debian 12 | —      |
 | Windows version tested on | Windows 11 | None     | XP, 11      |
 | macOS versions tested on | Sonoma       | None     | —            |
