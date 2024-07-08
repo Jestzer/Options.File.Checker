@@ -18,6 +18,7 @@ To do:
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
 - Make an options file creator/editor (now a separate project, see its GitHub page for more information.)
+- Add the ability to check the version number on the non-GUI version.
 
 ## Release Breakdown
 Keep in mind that the information below is just relevant to the Releases I've made. Platforms "tested on" work, unless it is in the incompatible section. Just because a certain setup wasn't tested, doesn't mean it won't work.
