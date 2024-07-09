@@ -117,7 +117,7 @@ public partial class MainWindow : Window
 
     private async void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
     {
-        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+        if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
         {
             var mainWindow = desktop.MainWindow;
 
@@ -205,7 +205,7 @@ public partial class MainWindow : Window
     {
         try
         {
-            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop && desktop.MainWindow != null)
+            if (Application.Current?.ApplicationLifetime is IClassicDesktopStyleApplicationLifetime { MainWindow: not null } desktop)
             {
                 var mainWindow = desktop.MainWindow;
 
