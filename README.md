@@ -14,6 +14,8 @@ Notes for user:
 
 To do:
 - Confirm how FlexLM actually handles RESERVE lines with NNU licenses and if needed, change code appropriately.
+- Make GROUPs with the same name merge into one (at least, I don't think it already does this.)
+- Make sure users in a GROUP that are defined with quotation marks count as a single user.
 - Throw an error if the ISSUED date preceeds your computer's date.
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
