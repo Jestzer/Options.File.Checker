@@ -1,23 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-      <PublishAot>true</PublishAot>
+    <PublishAot>true</PublishAot>
     <OutputType>WinExe</OutputType>
-	  <AssemblyName>Options File Checker</AssemblyName>
+    <AssemblyName>Options File Checker</AssemblyName>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-	  <ApplicationIcon>icon.ico</ApplicationIcon>
-	  <PackageIcon>icon.png</PackageIcon>
+    <ApplicationIcon>icon.ico</ApplicationIcon>
+    <PackageIcon>icon.png</PackageIcon>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="Avalonia.Desktop" Version="11.0.10" />
   </ItemGroup>
 
-	<ItemGroup>
-		<AvaloniaResource Include="Assets\**" />
-	</ItemGroup>
+  <ItemGroup>
+    <AvaloniaResource Include="Assets\**" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Options.File.Checker\Options.File.Checker.csproj" />
