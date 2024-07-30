@@ -14,6 +14,7 @@ Notes for user:
 
 To do:
 - Confirm how FlexLM actually handles RESERVE lines with NNU licenses and if needed, change code appropriately.
+- Produce an error if an NNU-exclusive license has not valid INCLUDE lines.
 - Make GROUPs with the same name merge into one (at least, I don't think it already does this.)
 - Make sure users in a GROUP that are defined with quotation marks count as a single user.
 - Throw an error if the ISSUED date preceeds your computer's date.
