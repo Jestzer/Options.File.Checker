@@ -144,6 +144,9 @@ namespace Options.File.Checker
                 }
 
                 // If you're only using NNU license(s), we need to make sure you've included at LEAST one INCLUDE line.
+                // We'll first check if you're using an NNU only license. If you are, then we'll see if you have any INCLUDE lines.
+                // If you do, then we'll make sure at least one of those INCLUDE lines uses a GROUP or USER.
+                bool nnuExclusiveLicense = true;
                 foreach (var licenseFileEntry in licenseFileDictionary)
                 {
                     int licenseLineIndex = licenseFileEntry.Key;
@@ -157,32 +160,39 @@ namespace Options.File.Checker
 
                     if (licenseFileLicenseOffering != "NNU")
                     {
+                        nnuExclusiveLicense = false;
                         break;
                     }
-
+                }
+                if (nnuExclusiveLicense)
+                {
                     if (includeDictionary.Count == 0)
                     {
                         err = "There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.";
                         return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
-                    else
+                    
+                    bool foundValidIncludeLine = false;
+                    foreach (var includeEntry in includeDictionary)
                     {
-                        foreach (var includeEntry in includeDictionary)
-                        {
-                            Tuple<string, string, string, string, string> includeData = includeEntry.Value;
-                            string productName = includeData.Item1;
-                            string licenseNumber = includeData.Item2;
-                            string productKey = includeData.Item3;
-                            string clientType = includeData.Item4;
-                            string clientSpecified = includeData.Item5;
+                        Tuple<string, string, string, string, string> includeData = includeEntry.Value;
+                        string productName = includeData.Item1;
+                        string licenseNumber = includeData.Item2;
+                        string productKey = includeData.Item3;
+                        string clientType = includeData.Item4;
+                        string clientSpecified = includeData.Item5;
 
-                            if (clientType != "USER")
-                            {
-                                break;
-                            }
+                        if (clientType == "USER" || clientType == "GROUP")
+                        {
+                            foundValidIncludeLine = true;
+                            break;
                         }
                     }
-
+                    if (!foundValidIncludeLine) 
+                    {
+                        err = "There is an issue with the options file: you have no INCLUDE lines with a USER or GROUP. You need these to use an NNU license.";
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
                 }
 
                 return (serverLineHasPort,
