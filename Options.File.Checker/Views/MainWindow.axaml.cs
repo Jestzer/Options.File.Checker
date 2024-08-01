@@ -469,7 +469,7 @@ public partial class MainWindow : Window
                         {
                             if (includeAllDictionary != null)
                             {
-                                if (includeAllDictionary.Count == 0)
+                                if (includeAllDictionary.Count != 0)
                                 {
                                     output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
                                 }

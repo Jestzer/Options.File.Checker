@@ -263,7 +263,7 @@ if (licenseFilePath != null && optionsFilePath != null)
                     {
                         if (includeAllDictionary != null)
                         {
-                            if (includeAllDictionary.Count == 0)
+                            if (includeAllDictionary.Count != 0)
                             {
                                 WarningMessage("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
                             }
