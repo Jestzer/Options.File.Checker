@@ -143,6 +143,42 @@ namespace Options.File.Checker
                     return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
+                // If you're only using NNU license(s), we need to make sure you've included at LEAST one INCLUDE line.
+                foreach (var licenseFileEntry in licenseFileDictionary)
+                {
+                    int licenseLineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
+
+                    string licenseFileProductName = licenseFileData.Item1;
+                    int licenseFileSeatCount = licenseFileData.Item2;
+                    string licenseFileProductKey = licenseFileData.Item3;
+                    string licenseFileLicenseOffering = licenseFileData.Item4;
+                    string licenseFileLicenseNumber = licenseFileData.Item5;
+
+                    if (licenseFileLicenseOffering != "NNU")
+                    {
+                        break;
+                    }
+
+                    if (includeDictionary.Count == 0)
+                    {
+                        err = "There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.";
+                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
+                    else
+                    {
+                        foreach (var includeEntry in includeDictionary)
+                        {
+                            productName = optionsData.Item1;
+                            licenseNumber = optionsData.Item2;
+                            productKey = optionsData.Item3;
+                            clientType = optionsData.Item4;
+                            clientSpecified = optionsData.Item5;
+                        }
+                    }
+
+                }
+
                 return (serverLineHasPort,
                     daemonLineHasPort,
                     daemonPortIsCNUFriendly,
