@@ -324,7 +324,7 @@ namespace Options.File.Checker.XP
                             {
                                 if (analyzeResult.IncludeAllDictionary != null)
                                 {
-                                    if (analyzeResult.IncludeAllDictionary.Count == 0)
+                                    if (analyzeResult.IncludeAllDictionary.Count != 0)
                                     {
                                         output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
                                     }
