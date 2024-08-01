@@ -3,7 +3,7 @@ A simple program designed to help you spot obvious errors in your options file u
 
 Notes for user:
 - This tool is not created by nor associated with MathWorks.
-- Supports Windows, macOS, and Linux. Compiled builds in the releases section exist for Windows XP-11, Debian 12.5, macOS Sonoma (ARM), and macOS Catalina (x64).
+- Supports Windows, macOS, and Linux. Compiled builds in the releases section exist for Windows XP-11, Linux x64, macOS ARM and x64.
 - Desktop version uses both .NET 7.0 and 8.0. Non-GUI version uses .NET 8.0. "XP Edition" uses .NET Framework 4.0.
 - Desktop and non-GUI releases are self-contained, meaning you shouldn't need to install anything before using the program. XP Edition needs .NET Framework 4.0 installed beforehand.
 - Yes, options= and port= aren't technically needed on the DAEMON line, but MathWorks says you should use them.
@@ -13,9 +13,6 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 
 To do:
-- Confirm how FlexLM actually handles RESERVE lines with NNU licenses and if needed, change code appropriately.
-- Fix NNU + INCLUDEALL warning message being seemingly reversed.
-- Produce an error if an NNU-exclusive license has not valid INCLUDE lines.
 - Make GROUPs with the same name merge into one (at least, I don't think it already does this.)
 - Make sure users in a GROUP that are defined with quotation marks count as a single user.
 - Throw an error if the ISSUED date preceeds your computer's date.
