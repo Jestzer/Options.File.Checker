@@ -169,11 +169,17 @@ namespace Options.File.Checker
                     {
                         foreach (var includeEntry in includeDictionary)
                         {
-                            productName = optionsData.Item1;
-                            licenseNumber = optionsData.Item2;
-                            productKey = optionsData.Item3;
-                            clientType = optionsData.Item4;
-                            clientSpecified = optionsData.Item5;
+                            Tuple<string, string, string, string, string> includeData = includeEntry.Value;
+                            string productName = includeData.Item1;
+                            string licenseNumber = includeData.Item2;
+                            string productKey = includeData.Item3;
+                            string clientType = includeData.Item4;
+                            string clientSpecified = includeData.Item5;
+
+                            if (clientType != "USER")
+                            {
+                                break;
+                            }
                         }
                     }
 
