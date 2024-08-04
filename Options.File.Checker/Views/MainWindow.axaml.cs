@@ -46,16 +46,16 @@ public partial class MainWindow : Window
     {
         var options = new JsonSerializerOptions { WriteIndented = true };
         string jsonString = JsonSerializer.Serialize(settings, options);
-        System.IO.File.WriteAllText("settings.json", jsonString);
+        System.IO.File.WriteAllText("settings-opt-file-checker.json", jsonString);
     }
 
     public static Settings LoadSettings()
     {
-        if (!System.IO.File.Exists("settings.json"))
+        if (!System.IO.File.Exists("settings-opt-file-checker.json"))
         {
             return new Settings(); // Return default settings if file not found.
         }
-        string jsonString = System.IO.File.ReadAllText("settings.json");
+        string jsonString = System.IO.File.ReadAllText("settings-opt-file-checker.json");
         return JsonSerializer.Deserialize<Settings>(jsonString) ?? new Settings();
     }
 
