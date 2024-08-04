@@ -61,7 +61,11 @@ public partial class MainWindow : Window
             Directory.CreateDirectory(directoryPath);
         }
 
-        Console.WriteLine("Warning: your settings' directory path is null or empty. Settings may not work correctly.");
+        if (string.IsNullOrEmpty(directoryPath))
+        {
+            Console.WriteLine("Warning: your settings' directory path is null or empty. Settings may not work correctly.");
+        }
+
         return settingsPath;
     }
 
