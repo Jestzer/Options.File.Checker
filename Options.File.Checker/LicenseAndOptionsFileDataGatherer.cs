@@ -354,6 +354,14 @@ namespace Options.File.Checker
                         _ = int.TryParse(lineParts[5], out seatCount);
                         string rawSeatCount = lineParts[5];
 
+                        // Product Key validation
+                        if (productKey.Length > 12)
+                        {
+                            err = "There is an issue with the license file: one of your product keys is greater that 12 characters long. This means it's likely been " +
+                            $"tampered with. This is what the product key is being read as: {productKey}.";
+                            return (false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+
                         // License number.
                         string pattern = @"asset_info=([^\s]+)";
 

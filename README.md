@@ -14,7 +14,6 @@ Notes for user:
 
 To do:
 - Change where settings are saved.
-- Validate the length of the product key.
 - Make GROUPs with the same name merge into one (at least, I don't think it already does this.)
 - Make sure users in a GROUP that are defined with quotation marks count as a single user.
 - Throw an error if the ISSUED date preceeds your computer's date.
