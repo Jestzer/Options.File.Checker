@@ -10,6 +10,7 @@ using System.Text.Json.Serialization;
 using System.IO;
 using System.Text;
 using System;
+using Microsoft.CodeAnalysis;
 
 namespace Options.File.Checker.Views;
 
@@ -33,36 +34,52 @@ public partial class MainWindow : Window
         Closing += MainWindow_Closing;
     }
 
-    public static string PackageVersion
+    public static string SettingsPath()
     {
-        get
+        string settingsPath;
+
+        if (OperatingSystem.IsWindows())
         {
-            var assembly = System.Reflection.Assembly.GetExecutingAssembly();
-            if (assembly != null)
-            {
-                var version = assembly.GetName().Version;
-                if (version != null)
-                {
-                    return version.ToString();
-                }
-            }
-            return "Error getting version number.";
+            string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+            settingsPath = System.IO.Path.Combine(appDataPath, "Jestzer.Programs", "Options.File.Checker", "settings-opt-file-checker.json");
         }
+        else if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
+        {
+            string homePath = Environment.GetEnvironmentVariable("HOME") ?? "/tmp";
+            settingsPath = System.IO.Path.Combine(homePath, ".Jestzer.Programs", "Options.File.Checker", "settings-opt-file-checker.json");
+        }
+        else
+        {
+            settingsPath = "settings-opt-file-checker.json";
+            Console.WriteLine("Warning: your operating system has been detected as something other than Windows, Linux, or macOS. " +
+            "Your settings will be saved in your current directory.");
+        }
+
+        string directoryPath = Path.GetDirectoryName(settingsPath) ?? "";
+        if (!string.IsNullOrEmpty(directoryPath) && !Directory.Exists(directoryPath))
+        {
+            Directory.CreateDirectory(directoryPath);
+        }
+
+        Console.WriteLine("Warning: your settings' directory path is null or empty. Settings may not work correctly.");
+        return settingsPath;
     }
 
     public static void SaveSettings(Settings settings)
     {
+        string settingsPath = SettingsPath();
         string jsonString = JsonSerializer.Serialize(settings, SourceGenerationContext.Default.Settings);
-        System.IO.File.WriteAllText("settings-opt-file-checker.json", jsonString);
+        System.IO.File.WriteAllText(settingsPath, jsonString);
     }
 
     public static Settings LoadSettings()
     {
-        if (!System.IO.File.Exists("settings-opt-file-checker.json"))
+        string settingsPath = SettingsPath();
+        if (!System.IO.File.Exists(settingsPath))
         {
             return new Settings(); // Return default settings if file not found.
         }
-        string jsonString = System.IO.File.ReadAllText("settings-opt-file-checker.json");
+        string jsonString = System.IO.File.ReadAllText(settingsPath);
         return JsonSerializer.Deserialize(jsonString, SourceGenerationContext.Default.Settings) ?? new Settings();
     }
 
