@@ -6,11 +6,18 @@ using Avalonia.Controls.ApplicationLifetimes;
 using Avalonia.Platform.Storage;
 using Avalonia;
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.IO;
 using System.Text;
 using System;
 
 namespace Options.File.Checker.Views;
+
+// Need this and the partial class below so we can use our Json goodies in AOT.
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(Settings))]
+
+internal partial class SourceGenerationContext : JsonSerializerContext { }
 
 public partial class MainWindow : Window
 {
@@ -42,10 +49,10 @@ public partial class MainWindow : Window
             return "Error getting version number.";
         }
     }
+
     public static void SaveSettings(Settings settings)
     {
-        var options = new JsonSerializerOptions { WriteIndented = true };
-        string jsonString = JsonSerializer.Serialize(settings, options);
+        string jsonString = JsonSerializer.Serialize(settings, SourceGenerationContext.Default.Settings);
         System.IO.File.WriteAllText("settings-opt-file-checker.json", jsonString);
     }
 
@@ -56,7 +63,7 @@ public partial class MainWindow : Window
             return new Settings(); // Return default settings if file not found.
         }
         string jsonString = System.IO.File.ReadAllText("settings-opt-file-checker.json");
-        return JsonSerializer.Deserialize<Settings>(jsonString) ?? new Settings();
+        return JsonSerializer.Deserialize(jsonString, SourceGenerationContext.Default.Settings) ?? new Settings();
     }
 
     private void LicenseFileLocationTextBox_TextChanged(object sender, TextChangedEventArgs e)
