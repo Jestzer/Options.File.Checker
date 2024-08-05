@@ -41,12 +41,12 @@ public partial class MainWindow : Window
         if (OperatingSystem.IsWindows())
         {
             string appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-            settingsPath = System.IO.Path.Combine(appDataPath, "Jestzer.Programs", "Options.File.Checker", "settings-opt-file-checker.json");
+            settingsPath = Path.Combine(appDataPath, "Jestzer.Programs", "Options.File.Checker", "settings-opt-file-checker.json");
         }
         else if (OperatingSystem.IsMacOS() || OperatingSystem.IsLinux())
         {
             string homePath = Environment.GetEnvironmentVariable("HOME") ?? "/tmp";
-            settingsPath = System.IO.Path.Combine(homePath, ".Jestzer.Programs", "Options.File.Checker", "settings-opt-file-checker.json");
+            settingsPath = Path.Combine(homePath, ".config", "Jestzer.Programs", "Options.File.Checker", "settings-opt-file-checker.json");
         }
         else
         {
