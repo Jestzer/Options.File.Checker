@@ -78,7 +78,7 @@ namespace Options.File.Checker
                 // Remove Unix line breaks.
                 lineBreaksToRemove = "\\\r\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
-                
+
                 // Remove more Unix line breaks...
                 lineBreaksToRemove = "\\\n\t";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
@@ -177,7 +177,7 @@ namespace Options.File.Checker
                         string serverWord = lineParts[0];
                         string serverHostID = lineParts[2];
 
-                        if (serverHostID == "27000" || serverHostID == "27001" || serverHostID == "27002" || serverHostID == "27003" || serverHostID == "27004" || serverHostID == "27005" )
+                        if (serverHostID == "27000" || serverHostID == "27001" || serverHostID == "27002" || serverHostID == "27003" || serverHostID == "27004" || serverHostID == "27005")
                         {
                             err = "There is an issue with the license file: you have likely omitted your Host ID and attempted to specify a SERVER port number. " +
                                 "Because you have omitted the Host ID, the port you've attempted to specify will not be used.";
@@ -675,7 +675,7 @@ namespace Options.File.Checker
                                 clientType = lineParts[2];
                                 clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                             }
-                        }                        
+                        }
                         else if (productName.Contains(':')) // In case you decided to use a : instead of ""...
                         {
                             string[] colonParts = productName.Split(":");
@@ -930,7 +930,24 @@ namespace Options.File.Checker
                         string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
                         int groupUserCount = groupUsers.Split(' ').Length;
 
-                        groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                        // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
+                        var existingEntry = groupDictionary.Values.FirstOrDefault(g => g.Item1 == groupName);
+                        if (existingEntry != null)
+                        {
+                            string combinedUsers = existingEntry.Item2 + " " + groupUsers;
+                            int combinedUserCount = existingEntry.Item3 + groupUserCount;
+
+                            // Find the key of the existing entry.
+                            var existingKey = groupDictionary.FirstOrDefault(x => x.Value.Item1 == groupName).Key;
+
+                            // Update the existing entry in the dictionary.
+                            groupDictionary[existingKey] = Tuple.Create(groupName, combinedUsers, combinedUserCount);
+                        }
+                        else
+                        {
+                            // Otherwise, just proceed as usual.
+                            groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                        }
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
@@ -950,16 +967,27 @@ namespace Options.File.Checker
                         }
 
                         string hostGroupName = lineParts[1];
-                        string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
+                        string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2)).TrimEnd();
 
-                        hostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
+                        // Same as GROUP, combine HOST_GROUPs with duplicate names and treat them as one.
+                        var existingEntry = hostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
+                        if (existingEntry != null)
+                        {
+                            string combinedUsers = existingEntry.Item2 + " " + hostGroupClientSpecified;
+                            var existingKey = hostGroupDictionary.FirstOrDefault(x => x.Value.Item1 == hostGroupName).Key;
+                            hostGroupDictionary[existingKey] = Tuple.Create(hostGroupName, combinedUsers);
+                        }
+                        else
+                        {
+                            hostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
+                        }
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
                         caseSensitivity = false;
-                    }                    
-                    else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ") 
-                        || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ") 
+                    }
+                    else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ")
+                        || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ")
                         || line.TrimStart().StartsWith("DEFAULT ") || line.TrimStart().StartsWith("HIDDEN ") || line.TrimStart().StartsWith('#') || string.IsNullOrWhiteSpace(line))
                     {
                         // Other valid line beginnings that I currently do nothing with.
