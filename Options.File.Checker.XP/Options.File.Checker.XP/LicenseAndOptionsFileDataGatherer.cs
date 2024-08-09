@@ -981,7 +981,24 @@ namespace Options.File.Checker
                         string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
                         int groupUserCount = groupUsers.Split(' ').Length;
 
-                        result.GroupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                        // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
+                        var existingEntry = groupDictionary.Values.FirstOrDefault(g => g.Item1 == groupName);
+                        if (existingEntry != null)
+                        {
+                            string combinedUsers = existingEntry.Item2 + " " + groupUsers;
+                            int combinedUserCount = existingEntry.Item3 + groupUserCount;
+
+                            // Find the key of the existing entry.
+                            var existingKey = groupDictionary.FirstOrDefault(x => x.Value.Item1 == groupName).Key;
+
+                            // Update the existing entry in the dictionary.
+                            result.GroupDictionary[existingKey] = Tuple.Create(groupName, combinedUsers, combinedUserCount);
+                        }
+                        else
+                        {
+                            // Otherwise, just proceed as usual.
+                            result.GroupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
+                        }
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
@@ -1002,9 +1019,20 @@ namespace Options.File.Checker
                         }
 
                         string hostGroupName = lineParts[1];
-                        string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2));
+                        string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2)).TrimEnd();
 
-                        result.HostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
+                        // Same as GROUP, combine HOST_GROUPs with duplicate names and treat them as one.
+                        var existingEntry = hostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
+                        if (existingEntry != null)
+                        {
+                            string combinedUsers = existingEntry.Item2 + " " + hostGroupClientSpecified;
+                            var existingKey = hostGroupDictionary.FirstOrDefault(x => x.Value.Item1 == hostGroupName).Key;
+                            result.HostGroupDictionary[existingKey] = Tuple.Create(hostGroupName, combinedUsers);
+                        }
+                        else
+                        {
+                            result.HostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
+                        }
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
