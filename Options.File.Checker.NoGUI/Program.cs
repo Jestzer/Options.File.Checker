@@ -1,6 +1,12 @@
 ﻿// Command-line only version of the program. .NET and Avalonia don't seem to support bundling this into a single executable. Sorry!
 using Options.File.Checker; // I'm not bundling this separately and this will make updating the gatherer and analyzer classes easier.
 
+if (args.Contains("-version"))
+{
+    Console.WriteLine("Version 0.2.4");
+    Environment.Exit(0);
+}
+
 bool validLicenseFileGiven = false;
 string? licenseFilePath = string.Empty;
 string? optionsFilePath = string.Empty;
@@ -153,7 +159,7 @@ while (!validOptionsFileGiven)
 
     validOptionsFileGiven = true;
 }
-if (licenseFilePath != null && optionsFilePath != null) 
+if (licenseFilePath != null && optionsFilePath != null)
 {
     // Call the AnalyzeFiles method. I'm leaving these unused variables in case I want to use them later. You're welcome future me.
     var (serverLineHasPort,
@@ -173,7 +179,7 @@ if (licenseFilePath != null && optionsFilePath != null)
         groupDictionary,
         hostGroupDictionary,
         err) = LicenseAndOptionsFileDataAnalyzer.AnalyzeData(licenseFilePath, optionsFilePath);
-    
+
     // Space out output and options file path.
     Console.WriteLine();
 
