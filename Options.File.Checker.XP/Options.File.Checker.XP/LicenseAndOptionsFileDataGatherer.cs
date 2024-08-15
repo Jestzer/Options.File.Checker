@@ -756,6 +756,15 @@ namespace Options.File.Checker
                             productKey = string.Empty;
                         }
 
+                        // Validate your clientType.
+                        if (clientType != "USER" || clientType != "HOST" || clientType != "DISPLAY" || clientType != "GROUP" || clientType != "HOST_GROUP" || clientType != "INTERNET")
+                        {
+                            result.ErrorMessage = "There is an issue with the options file: you have an incorrectly formatted client type. It would typically be something like USER or GROUP, but yours is being detected " +
+                            "as " + clientType +". Please make sure you have formatted the line with client type correctly. The line in question reads as \"" + line + "\"";
+                            result.Success = false;
+                            return result;
+                        }
+
                         if (line.TrimStart().StartsWith("INCLUDE ")) { result.IncludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("INCLUDE_BORROW ")) { result.IncludeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("EXCLUDE ")) { result.ExcludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
