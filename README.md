@@ -13,7 +13,6 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 
 To do:
-- Make sure users in a GROUP that are defined with quotation marks count as a single user (verify this actually works in FlexLM?)
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
 - Make an options file creator/editor (now a separate project, see its GitHub page for more information.)
