@@ -383,6 +383,15 @@ namespace Options.File.Checker
                         bool parseResult = int.TryParse(lineParts[5], out seatCount);
                         string rawSeatCount = lineParts[5];
 
+                        // Product Key validation.
+                        if (productKey.Length > 20)
+                        {
+                            result.ErrorMessage = "There is an issue with the license file: one of your product keys is greater that 20 characters long. This means it's likely been " +
+                            $"tampered with. This is what the product key is being read as: " + productKey + ".";
+                            result.Success = false;
+                            return result;
+                        }
+
                         // License number.
                         string pattern = @"asset_info=([^\s]+)";
 
