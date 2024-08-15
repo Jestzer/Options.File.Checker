@@ -757,7 +757,7 @@ namespace Options.File.Checker
                         }
 
                         // Validate your clientType.
-                        if (clientType != "USER" || clientType != "HOST" || clientType != "DISPLAY" || clientType != "GROUP" || clientType != "HOST_GROUP" || clientType != "INTERNET")
+                        if (clientType != "USER" && clientType != "HOST" && clientType != "DISPLAY" && clientType != "GROUP" && clientType != "HOST_GROUP" && clientType != "INTERNET")
                         {
                             result.ErrorMessage = "There is an issue with the options file: you have an incorrectly formatted client type. It would typically be something like USER or GROUP, but yours is being detected " +
                             "as " + clientType +". Please make sure you have formatted the line with client type correctly. The line in question reads as \"" + line + "\"";
