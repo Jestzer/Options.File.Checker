@@ -1,2 +1,2 @@
-GROUP ratcrab_users jestzer funky_monkey
+GROUP ratcrab_users "jestzer chester" funky_monkey
 INCLUDE MATLAB GROUP ratcrab_users
