@@ -11,6 +11,9 @@ namespace Options.File.Checker
             bool daemonPortIsCNUFriendly,
             bool caseSensitivity,
             bool unspecifiedLicenseOrProductKey,
+            bool optionsFileUsesMatlabParallelServer,
+            bool wildcardsAreUsed,
+            bool ipAddressesAreUsed,
             Dictionary<int, Tuple<string, int, string, string, string>>? licenseFileDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
@@ -34,6 +37,9 @@ namespace Options.File.Checker
                 daemonLineHasPort,
                 daemonPortIsCNUFriendly,
                 caseSensitivity,
+                optionsFileUsesMatlabParallelServer,
+                wildcardsAreUsed,
+                ipAddressesAreUsed,
                 licenseFileDictionary,
                 includeDictionary,
                 includeBorrowDictionary,
@@ -52,7 +58,7 @@ namespace Options.File.Checker
             // Don't proceed if you've got an error.
             if (err != null)
             {
-                return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
 
             string optionSelected = string.Empty;
@@ -69,37 +75,37 @@ namespace Options.File.Checker
                     err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
                     if (!string.IsNullOrEmpty(err))
                     {
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
                     err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
                     if (!string.IsNullOrEmpty(err))
                     {
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
                     err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
                     if (!string.IsNullOrEmpty(err))
                     {
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
                     err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
                     if (!string.IsNullOrEmpty(err))
                     {
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
 
                     err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
                     if (!string.IsNullOrEmpty(err))
                     {
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is null and therefore, the code in it cannot proceed. Please submit an issue for this on GitHub.";
-                    return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 // Subtract seats now.
@@ -112,7 +118,7 @@ namespace Options.File.Checker
 
                         if (err != null)
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                     foreach (var includeAllEntry in includeAllDictionary)
@@ -122,7 +128,7 @@ namespace Options.File.Checker
 
                         if (err != null)
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
 
@@ -133,14 +139,14 @@ namespace Options.File.Checker
 
                         if (err != null)
                         {
-                            return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
                 }
                 else
                 {
                     err = "Apparently one of the dictionaries in the Analyzer is null and therefore, the code in it cannot proceed. Please submit an issue for this on GitHub.";
-                    return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 // If you're only using NNU license(s), we need to make sure you've included at LEAST one INCLUDE line.
@@ -169,7 +175,7 @@ namespace Options.File.Checker
                     if (includeDictionary.Count == 0)
                     {
                         err = "There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.";
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
                     
                     bool foundValidIncludeLine = false;
@@ -191,7 +197,7 @@ namespace Options.File.Checker
                     if (!foundValidIncludeLine) 
                     {
                         err = "There is an issue with the options file: you have no INCLUDE lines with a USER or GROUP. You need these to use an NNU license.";
-                        return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
                 }
 
@@ -200,6 +206,9 @@ namespace Options.File.Checker
                     daemonPortIsCNUFriendly,
                     caseSensitivity,
                     unspecifiedLicenseOrProductKey,
+                    optionsFileUsesMatlabParallelServer,
+                    wildcardsAreUsed,
+                    ipAddressesAreUsed,
                     licenseFileDictionary,
                     includeDictionary,
                     includeBorrowDictionary,
@@ -228,7 +237,7 @@ namespace Options.File.Checker
                     err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
                 }
 
-                return (false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
         }
 

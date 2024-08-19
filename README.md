@@ -1,32 +1,18 @@
 # Options File Checker
 A simple program designed to help you spot obvious errors in your options file used for MathWorks Products.
 
+You may find some precompiled builds in the Releases section of this page. Non-compiled builds include versions that will work on Windows XP and on computers that can only use a CLI. Ask for them, if needed.
+
 Notes for user:
 - This tool is not created by nor associated with MathWorks.
-- Supports Windows, macOS, and Linux. Compiled builds in the releases section exist for Windows XP-11, Linux x64, macOS ARM and x64.
-- Desktop version uses both .NET 7.0 and 8.0. Non-GUI version uses .NET 8.0. "XP Edition" uses .NET Framework 4.0.
-- Desktop and non-GUI releases are self-contained, meaning you shouldn't need to install anything before using the program. XP Edition needs .NET Framework 4.0 installed beforehand.
-- Yes, options= and port= aren't technically needed on the DAEMON line, but MathWorks says you should use them.
 - Not all errors can be accounted for. If you're getting an error -38, there isn't a way for this to detect that (or at least, not any good way IMO.)
 - Seat count calculations ignore HOST, GROUP_HOST, INTERNET, PROJECT, and DISPLAY on non-RESERVE lines. Multiple people could be coming from these client types, so there's no way to calculate seat count with these.
+- Yes, options= and port= aren't technically needed on the DAEMON line, but MathWorks says you should use them.
 - I _think_ it's possible in the options file to specify new entries (ex: INCLUDE MATLAB USER rob) without creating a line break. This program does not support this type of formatting and probably never will.
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
+- Latest release uses .NET 8.0.
 
 To do:
 - Print warnings when wild cards & IP addresses are used.
 - Print warning for MATLAB Parallel Server.
 - Make an options file creator/editor (now a separate project, see its GitHub page for more information.)
-
-## Release Breakdown
-Keep in mind that the information below is just relevant to the Releases I've made. Platforms "tested on" work, unless it is in the incompatible section. Just because a certain setup wasn't tested, doesn't mean it won't work.
-| v0.2.3 Release Info | Desktop           | Non-GUI  | XP Edition   |
-|---------------------|-------------------|----------|--------------|
-| .NET version        | 7.0 & 8.0         | 8.0      | Framework 4.0|
-| GUI Framework       | Avalonia          | —        | WinForms     |
-| AOT?                | Yes (No for macOS)               | Yes      | No           |
-| Self-contained?     | Yes (No for macOS x64)               | Yes      | No           |
-| Architecture        | x64, ARM (macOS)  | x64      | x86, works on x64 |
-| Linux Distros tested on | Arch, Debian 12, CentOS 7.9, Ubuntu 18.04 | Debian 12 | —      |
-| Windows version tested on | Windows 11 | None     | XP, 11      |
-| macOS versions tested on | Sonoma (ARM), Catalina (x64)       | None     | —            |
-| Incompatible platforms tested on | Ubuntu 6.06.2
