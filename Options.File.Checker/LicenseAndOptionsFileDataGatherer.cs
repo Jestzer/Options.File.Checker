@@ -728,6 +728,9 @@ namespace Options.File.Checker
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
                         if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
 
+                        // Listen, we all have bad ideas.
+                        if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
+
                         if (line.TrimStart().StartsWith("INCLUDE ")) { includeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("INCLUDE_BORROW ")) { includeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("EXCLUDE ")) { excludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
@@ -767,6 +770,12 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
                         if (line.TrimStart().StartsWith("INCLUDEALL ")) { includeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { excludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                     }
@@ -791,6 +800,14 @@ namespace Options.File.Checker
                         string maxProductName = lineParts[2];
                         string maxClientType = lineParts[3];
                         string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
+
+                        // Check for wild cards and IP addresses.
+                        if (maxClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(maxClientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
+                        if (maxProductName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
                         maxDictionary[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
                     }
@@ -927,6 +944,15 @@ namespace Options.File.Checker
                             reserveLicenseNumber = string.Empty;
                             reserveProductKey = string.Empty;
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (reserveClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(reserveClientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
+                        if (reserveProductName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
+
                         reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                     }
                     else if (line.TrimStart().StartsWith("GROUP "))
@@ -968,6 +994,12 @@ namespace Options.File.Checker
                             // Otherwise, just proceed as usual.
                             groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (groupUsers.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(groupUsers, ipAddressPattern)) { ipAddressesAreUsed = true; }
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
@@ -1001,6 +1033,12 @@ namespace Options.File.Checker
                         {
                             hostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (hostGroupClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(hostGroupClientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
