@@ -1,2 +1,2 @@
 GROUP ratcrab_users "jestzer chester" funky_monkey
-INCLUDE MATLAB GROUP ratcrab_users
+INCLUDE MATLAB_Distrib_Comp_Engine GROUP ratcrab_users

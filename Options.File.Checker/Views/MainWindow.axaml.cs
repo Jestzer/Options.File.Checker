@@ -396,6 +396,9 @@ public partial class MainWindow : Window
             daemonPortIsCNUFriendly,
             caseSensitivity,
             unspecifiedLicenseOrProductKey,
+            optionsFileUsesMatlabParallelServer,
+            wildcardsAreUsed,
+            ipAddressesAreUsed,
             licenseFileDictionary,
             includeDictionary,
             includeBorrowDictionary,
@@ -440,6 +443,14 @@ public partial class MainWindow : Window
             output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
                 "license the product appears on.\n");
         }
+
+        if (optionsFileUsesMatlabParallelServer)
+        {
+            output.AppendLine("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
+            "This does not prevent users from accessing the cluster.");
+        }
+
+        if (wildcardsAreUsed)
 
         // Print seatCount.
         if (licenseFileDictionary != null)
