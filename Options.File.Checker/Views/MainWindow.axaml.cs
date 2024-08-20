@@ -447,10 +447,18 @@ public partial class MainWindow : Window
         if (optionsFileUsesMatlabParallelServer)
         {
             output.AppendLine("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
-            "This does not prevent users from accessing the cluster.");
+            "This does not prevent users from accessing the cluster.\n");
         }
 
         if (wildcardsAreUsed)
+        {
+            output.AppendLine("Warning: you are using at least 1 wild card in your options file. These may be unreliable or cause other issues.\n");
+        }
+
+        if (ipAddressesAreUsed)
+        {
+            output.AppendLine("Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n");
+        }
 
         // Print seatCount.
         if (licenseFileDictionary != null)

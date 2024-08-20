@@ -52,7 +52,8 @@ namespace Options.File.Checker
                 groupDictionary,
                 hostGroupDictionary,
                 err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
-
+            
+            // Only thing that needs to be cleared here since it's not in the Gatherer.
             bool unspecifiedLicenseOrProductKey = false;
 
             // Don't proceed if you've got an error.

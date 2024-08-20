@@ -142,6 +142,11 @@ namespace Options.File.Checker
                 // Reset everything!
                 serverLineHasPort = true;
                 daemonLineHasPort = false;
+                daemonPortIsCNUFriendly = false;
+                caseSensitivity = false;
+                optionsFileUsesMatlabParallelServer = false;
+                wildcardsAreUsed = false;
+                ipAddressesAreUsed = false;
                 licenseFileDictionary.Clear();
                 includeDictionary.Clear();
                 includeBorrowDictionary.Clear();
