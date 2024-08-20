@@ -3,5 +3,4 @@
 .DS_Store
 bin/
 obj/
-settings.json
-settings-opt-file-checker.json
+*.zip
