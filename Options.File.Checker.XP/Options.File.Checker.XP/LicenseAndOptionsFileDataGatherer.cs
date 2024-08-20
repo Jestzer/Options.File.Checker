@@ -14,6 +14,9 @@ namespace Options.File.Checker
         public bool daemonLineHasPort { get; set; }
         public bool daemonPortIsCNUFriendly { get; set; }
         public bool caseSensitivity { get; set; }
+        public bool optionsFileUsesMatlabParallelServer { get; set; }
+        public bool wildcardsAreUsed { get; set; }
+        public bool ipAddressesAreUsed { get; set; }
         public Dictionary<int, Tuple<string, int, string, string, string>> LicenseFileDictionary { get; set; }
         public Dictionary<int, Tuple<string, string, string, string, string>> IncludeDictionary { get; set; }
         public Dictionary<int, Tuple<string, string, string, string, string>> IncludeBorrowDictionary { get; set; }
@@ -42,6 +45,9 @@ namespace Options.File.Checker
         public static bool daemonLineHasPort { get; set; }
         public static bool daemonPortIsCNUFriendly { get; set; }
         public static bool caseSensitivity { get; set; }
+        public static bool optionsFileUsesMatlabParallelServer { get; set; }
+        public static bool wildcardsAreUsed { get; set; }
+        public static bool ipAddressesAreUsed { get; set; }
 
         public static GatherDataResult GatherData(string licenseFilePath, string optionsFilePath)
         {
@@ -144,6 +150,11 @@ namespace Options.File.Checker
                 // Reset everything!
                 serverLineHasPort = true;
                 daemonLineHasPort = false;
+                daemonPortIsCNUFriendly = false;
+                caseSensitivitydaemonPortIsCNUFriendly = false;
+                optionsFileUsesMatlabParallelServerdaemonPortIsCNUFriendly = false;
+                wildcardsAreUseddaemonPortIsCNUFriendly = false;
+                ipAddressesAreUseddaemonPortIsCNUFriendly = false;
                 result.LicenseFileDictionary.Clear();
                 result.IncludeDictionary.Clear();
                 result.IncludeBorrowDictionary.Clear();
@@ -760,10 +771,19 @@ namespace Options.File.Checker
                         if (clientType != "USER" && clientType != "HOST" && clientType != "DISPLAY" && clientType != "GROUP" && clientType != "HOST_GROUP" && clientType != "INTERNET")
                         {
                             result.ErrorMessage = "There is an issue with the options file: you have an incorrectly formatted client type. It would typically be something like USER or GROUP, but yours is being detected " +
-                            "as " + clientType +". Please make sure you have formatted the line with client type correctly. The line in question reads as \"" + line + "\"";
+                            "as " + clientType + ". Please make sure you have formatted the line with client type correctly. The line in question reads as \"" + line + "\"";
                             result.Success = false;
                             return result;
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
+                        // Listen, we all have bad ideas.
+                        if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
                         if (line.TrimStart().StartsWith("INCLUDE ")) { result.IncludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("INCLUDE_BORROW ")) { result.IncludeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
@@ -806,6 +826,12 @@ namespace Options.File.Checker
                             return result;
                         }
 
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
                         if (line.TrimStart().StartsWith("INCLUDEALL ")) { result.IncludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { result.ExcludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                     }
@@ -831,6 +857,15 @@ namespace Options.File.Checker
                         string maxProductName = lineParts[2];
                         string maxClientType = lineParts[3];
                         string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
+
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
+                        // Listen, we all have bad ideas.
+                        if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
                         result.MaxDictionary[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
                     }
@@ -975,6 +1010,16 @@ namespace Options.File.Checker
                             reserveLicenseNumber = string.Empty;
                             reserveProductKey = string.Empty;
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
+                        // Listen, we all have bad ideas.
+                        if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
+
                         result.ReserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                     }
                     else if (line.TrimStart().StartsWith("GROUP "))
@@ -1017,6 +1062,13 @@ namespace Options.File.Checker
                             // Otherwise, just proceed as usual.
                             result.GroupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
@@ -1051,6 +1103,13 @@ namespace Options.File.Checker
                         {
                             result.HostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
                         }
+
+                        // Check for wild cards and IP addresses.
+                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+                        
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
