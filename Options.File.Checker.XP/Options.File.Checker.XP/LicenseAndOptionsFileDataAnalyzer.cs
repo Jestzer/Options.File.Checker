@@ -11,6 +11,10 @@ namespace Options.File.Checker
         public bool DaemonLineHasPort { get; set; }
         public bool DaemonPortIsCNUFriendly { get; set; }
         public bool CaseSensitivity { get; set; }
+        public bool UnspecifiedLicenseOrProductKey { get; set; }
+        public bool OptionsFileUsesMatlabParallelServer { get; set; }
+        public bool WildcardsAreUsed { get; set; }
+        public bool IpAddressesAreUsed { get; set; }
         public Dictionary<int, Tuple<string, int, string, string, string>> LicenseFileDictionary { get; set; }
         public Dictionary<int, Tuple<string, string, string, string, string>> IncludeDictionary { get; set; }
         public Dictionary<int, Tuple<string, string, string, string, string>> IncludeBorrowDictionary { get; set; }
@@ -31,6 +35,9 @@ namespace Options.File.Checker
         public static bool daemonPortIsCNUFriendly;
         public static bool caseSensitivity;
         public static bool unspecifiedLicenseOrProductKey;
+        public static bool optionsFileUsesMatlabParallelServer;
+        public static bool wildcardsAreUsed;
+        public static bool ipAddressesAreUsed;
         public static string err;
 
         public static AnalyzeDataResult AnalyzeData(string licenseFilePath, string optionsFilePath)
@@ -44,6 +51,7 @@ namespace Options.File.Checker
             // Gather the data from the license and options files first.
             GatherDataResult gatherResult = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
 
+            // Only thing that needs to be cleared here since it's not in the Gatherer.
             bool unspecifiedLicenseOrProductKey = false;
 
             // Don't proceed if you've got an error.
@@ -59,6 +67,10 @@ namespace Options.File.Checker
             result.DaemonLineHasPort = gatherResult.daemonLineHasPort;
             result.DaemonPortIsCNUFriendly = gatherResult.daemonPortIsCNUFriendly;
             result.CaseSensitivity = gatherResult.caseSensitivity;
+            result.UnspecifiedLicenseOrProductKey = gatherResult.unspecifiedLicenseOrProductKey;
+            result.OptionsFileUsesMatlabParallelServer = gatherResult.optionsFileUsesMatlabParallelServer;
+            result.WildcardsAreUsed = gatherResult.wildcardsAreUsed;
+            result.IpAddressesAreUsed = gatherResult.ipAddressesAreUsed;
             result.LicenseFileDictionary = gatherResult.LicenseFileDictionary;
             result.IncludeDictionary = gatherResult.IncludeDictionary;
             result.IncludeBorrowDictionary = gatherResult.IncludeBorrowDictionary;

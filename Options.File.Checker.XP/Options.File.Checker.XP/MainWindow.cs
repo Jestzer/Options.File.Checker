@@ -28,7 +28,7 @@ namespace Options.File.Checker.XP
         }
 
         private void MainForm_Load(object sender, EventArgs e)
-        {            
+        {
             LicenseFileLocationTextBox.Text = Properties.Settings.Default.LicenseFilePathSetting;
             OptionsFileLocationTextBox.Text = Properties.Settings.Default.OptionsFilePathSetting;
         }
@@ -266,6 +266,22 @@ namespace Options.File.Checker.XP
             {
                 output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
                     "license the product appears on.\n");
+            }
+
+            if (LicenseAndOptionsFileDataAnalyzer.optionsFileUsesMatlabParallelServer)
+            {
+                output.AppendLine("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
+            "This does not prevent users from accessing the cluster.\n");
+            }
+
+            if (LicenseAndOptionsFileDataAnalyzer.wildcardsAreUsed)
+            {
+                output.AppendLine("Warning: you are using at least 1 wild card in your options file. These may be unreliable or cause other issues.\n");
+            }
+
+            if (!LicenseAndOptionsFileDataAnalyzer.ipAddressesAreUsed)
+            {
+                output.AppendLine("Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n");
             }
 
             // Print seatCount.
