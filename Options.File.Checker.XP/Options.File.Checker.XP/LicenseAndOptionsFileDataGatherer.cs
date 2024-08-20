@@ -13,6 +13,7 @@ namespace Options.File.Checker
         public bool serverLineHasPort { get; set; }
         public bool daemonLineHasPort { get; set; }
         public bool daemonPortIsCNUFriendly { get; set; }
+        public bool unspecifiedLicenseOrProductKey { get; set; }
         public bool caseSensitivity { get; set; }
         public bool optionsFileUsesMatlabParallelServer { get; set; }
         public bool wildcardsAreUsed { get; set; }
@@ -44,6 +45,7 @@ namespace Options.File.Checker
         public static bool serverLineHasPort { get; set; }
         public static bool daemonLineHasPort { get; set; }
         public static bool daemonPortIsCNUFriendly { get; set; }
+        public static bool unspecifiedLicenseOrProductKey { get; set; }
         public static bool caseSensitivity { get; set; }
         public static bool optionsFileUsesMatlabParallelServer { get; set; }
         public static bool wildcardsAreUsed { get; set; }
@@ -54,6 +56,14 @@ namespace Options.File.Checker
             GatherDataResult result = new GatherDataResult
             {
                 Success = true,
+                serverLineHasPort = true,
+                daemonLineHasPort = false,
+                daemonPortIsCNUFriendly = false,
+                unspecifiedLicenseOrProductKey = false,
+                caseSensitivity = false,
+                optionsFileUsesMatlabParallelServer = false,
+                wildcardsAreUsed = false,
+                ipAddressesAreUsed = false,
                 LicenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>(),
                 IncludeDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>(),
                 IncludeBorrowDictionary = new Dictionary<int, Tuple<string, string, string, string, string>>(),
@@ -151,10 +161,11 @@ namespace Options.File.Checker
                 serverLineHasPort = true;
                 daemonLineHasPort = false;
                 daemonPortIsCNUFriendly = false;
-                caseSensitivitydaemonPortIsCNUFriendly = false;
-                optionsFileUsesMatlabParallelServerdaemonPortIsCNUFriendly = false;
-                wildcardsAreUseddaemonPortIsCNUFriendly = false;
-                ipAddressesAreUseddaemonPortIsCNUFriendly = false;
+                caseSensitivity = false;
+                unspecifiedLicenseOrProductKey = false;
+                optionsFileUsesMatlabParallelServer = false;
+                wildcardsAreUsed = false;
+                ipAddressesAreUsed = false;
                 result.LicenseFileDictionary.Clear();
                 result.IncludeDictionary.Clear();
                 result.IncludeBorrowDictionary.Clear();
@@ -398,7 +409,7 @@ namespace Options.File.Checker
                         if (productKey.Length > 20)
                         {
                             result.ErrorMessage = "There is an issue with the license file: one of your product keys is greater that 20 characters long. This means it's likely been " +
-                            $"tampered with. This is what the product key is being read as: " + productKey + ".";
+                            "tampered with. This is what the product key is being read as: " + productKey + ".";
                             result.Success = false;
                             return result;
                         }
@@ -859,13 +870,13 @@ namespace Options.File.Checker
                         string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
 
                         // Check for wild cards and IP addresses.
-                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+                        if (maxClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+                        if (Regex.IsMatch(maxClientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
 
                         // Listen, we all have bad ideas.
-                        if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
+                        if (maxProductName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
                         result.MaxDictionary[maxProductName] = Tuple.Create(maxSeats, maxClientType, maxClientSpecified);
                     }
@@ -1012,13 +1023,13 @@ namespace Options.File.Checker
                         }
 
                         // Check for wild cards and IP addresses.
-                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+                        if (reserveClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+                        if (Regex.IsMatch(reserveClientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
 
                         // Listen, we all have bad ideas.
-                        if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
+                        if (reserveProductName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
                         result.ReserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
                     }
@@ -1045,14 +1056,14 @@ namespace Options.File.Checker
                         int groupUserCount = groupUsers.Split(' ').Length;
 
                         // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
-                        var existingEntry = groupDictionary.Values.FirstOrDefault(g => g.Item1 == groupName);
+                        var existingEntry = result.GroupDictionary.Values.FirstOrDefault(g => g.Item1 == groupName);
                         if (existingEntry != null)
                         {
                             string combinedUsers = existingEntry.Item2 + " " + groupUsers;
                             int combinedUserCount = existingEntry.Item3 + groupUserCount;
 
                             // Find the key of the existing entry.
-                            var existingKey = groupDictionary.FirstOrDefault(x => x.Value.Item1 == groupName).Key;
+                            var existingKey = result.GroupDictionary.FirstOrDefault(x => x.Value.Item1 == groupName).Key;
 
                             // Update the existing entry in the dictionary.
                             result.GroupDictionary[existingKey] = Tuple.Create(groupName, combinedUsers, combinedUserCount);
@@ -1064,10 +1075,10 @@ namespace Options.File.Checker
                         }
 
                         // Check for wild cards and IP addresses.
-                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+                        if (groupUsers.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+                        if (Regex.IsMatch(groupUsers, ipAddressPattern)) { ipAddressesAreUsed = true; }
 
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
@@ -1092,11 +1103,11 @@ namespace Options.File.Checker
                         string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2)).TrimEnd();
 
                         // Same as GROUP, combine HOST_GROUPs with duplicate names and treat them as one.
-                        var existingEntry = hostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
+                        var existingEntry = result.HostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
                         if (existingEntry != null)
                         {
                             string combinedUsers = existingEntry.Item2 + " " + hostGroupClientSpecified;
-                            var existingKey = hostGroupDictionary.FirstOrDefault(x => x.Value.Item1 == hostGroupName).Key;
+                            var existingKey = result.HostGroupDictionary.FirstOrDefault(x => x.Value.Item1 == hostGroupName).Key;
                             result.HostGroupDictionary[existingKey] = Tuple.Create(hostGroupName, combinedUsers);
                         }
                         else
@@ -1105,11 +1116,11 @@ namespace Options.File.Checker
                         }
 
                         // Check for wild cards and IP addresses.
-                        if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
+                        if (hostGroupClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
-                        
+                        if (Regex.IsMatch(hostGroupClientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
+
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {

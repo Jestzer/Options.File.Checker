@@ -181,7 +181,7 @@ namespace Options.File.Checker
                 // We'll first check if you're using an NNU only license. If you are, then we'll see if you have any INCLUDE lines.
                 // If you do, then we'll make sure at least one of those INCLUDE lines uses a GROUP or USER.
                 bool nnuExclusiveLicense = true;
-                foreach (var licenseFileEntry in licenseFileDictionary)
+                foreach (var licenseFileEntry in result.LicenseFileDictionary)
                 {
                     int licenseLineIndex = licenseFileEntry.Key;
                     Tuple<string, int, string, string, string> licenseFileData = licenseFileEntry.Value;
@@ -200,7 +200,7 @@ namespace Options.File.Checker
                 }
                 if (nnuExclusiveLicense)
                 {
-                    if (includeDictionary.Count == 0)
+                    if (result.IncludeDictionary.Count == 0)
                     {
                         err = "There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.";
                         result.Success = false;
@@ -209,7 +209,7 @@ namespace Options.File.Checker
                     }
 
                     bool foundValidIncludeLine = false;
-                    foreach (var includeEntry in includeDictionary)
+                    foreach (var includeEntry in result.IncludeDictionary)
                     {
                         Tuple<string, string, string, string, string> includeData = includeEntry.Value;
                         string productName = includeData.Item1;
