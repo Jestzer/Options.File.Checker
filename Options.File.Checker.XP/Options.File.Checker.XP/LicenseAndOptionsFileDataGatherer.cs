@@ -272,15 +272,6 @@ namespace Options.File.Checker
                             result.Success = false;
                             return result;
                         }
-
-                        // There is no situation where you should have more than 3 SERVER lines.
-                        if (serverLineCount > 3 || serverLineCount == 2)
-                        {
-                            result.ErrorMessage = "There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
-                            result.Success = false;
-                            return result;
-                        }
-
                     }
                     else if (line.TrimStart().StartsWith("DAEMON"))
                     {
@@ -636,6 +627,14 @@ namespace Options.File.Checker
 
                         result.LicenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
+                }
+
+                // There is no situation where you should have more than 3 SERVER lines.
+                if (serverLineCount > 3 || serverLineCount == 2)
+                {
+                    result.ErrorMessage = "There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
+                    result.Success = false;
+                    return result;
                 }
 
                 // Options file information gathering.

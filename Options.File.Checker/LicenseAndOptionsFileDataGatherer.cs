@@ -244,14 +244,6 @@ namespace Options.File.Checker
                             err = "There is an issue with the license file: you have stray information on your SERVER line.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
-
-                        // There is no situation where you should have more than 3 SERVER lines.
-                        if (serverLineCount > 3 || serverLineCount == 2)
-                        {
-                            err = "There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
-                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
-
                     }
                     else if (line.TrimStart().StartsWith("DAEMON"))
                     {
@@ -582,6 +574,13 @@ namespace Options.File.Checker
 
                         licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
+                }
+
+                // There is no situation where you should have more than 3 SERVER lines.
+                if (serverLineCount > 3 || serverLineCount == 2)
+                {
+                    err = "There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
+                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
                 // Options file information gathering.
