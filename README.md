@@ -10,7 +10,4 @@ Notes for user:
 - Yes, options= and port= aren't technically needed on the DAEMON line, but MathWorks says you should use them.
 - I _think_ it's possible in the options file to specify new entries (ex: INCLUDE MATLAB USER rob) without creating a line break. This program does not support this type of formatting and probably never will.
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
-- Latest release uses .NET 8.0.
-
-To-do:
-- Fix bool values not passing correctly in XP edition between classes.
+- Latest release uses .NET 8.0. XP-Edition uses .NET Framework 4.0.
