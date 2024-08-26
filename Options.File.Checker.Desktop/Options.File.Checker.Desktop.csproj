@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <PublishAot>false</PublishAot>
+    <PublishAot>true</PublishAot>
     <OutputType>WinExe</OutputType>
     <AssemblyName>Options File Checker</AssemblyName>
     <TargetFramework>net8.0</TargetFramework>
