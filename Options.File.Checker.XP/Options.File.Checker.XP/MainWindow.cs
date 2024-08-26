@@ -276,7 +276,7 @@ namespace Options.File.Checker.XP
 
             if (analyzeResult.WildcardsAreUsed)
             {
-                output.AppendLine("Warning: you are using at least 1 wild card in your options file. These may be unreliable or cause other issues.\n");
+                output.AppendLine("Warning: you are using at least 1 wildcard in your options file. These may be unreliable or cause other issues.\n");
             }
 
             if (analyzeResult.IpAddressesAreUsed)

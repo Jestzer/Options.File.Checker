@@ -167,6 +167,9 @@ if (licenseFilePath != null && optionsFilePath != null)
         daemonPortIsCNUFriendly,
         caseSensitivity,
         unspecifiedLicenseOrProductKey,
+        optionsFileUsesMatlabParallelServer,
+        wildcardsAreUsed,
+        ipAddressesAreUsed,
         licenseFileDictionary,
         includeDictionary,
         includeBorrowDictionary,
@@ -211,6 +214,22 @@ if (licenseFilePath != null && optionsFilePath != null)
     {
         WarningMessage("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
             "license the product appears on.\n");
+    }
+
+    if (optionsFileUsesMatlabParallelServer)
+    {
+        WarningMessage("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
+        "This does not prevent users from accessing the cluster.\n");
+    }
+
+    if (wildcardsAreUsed)
+    {
+        WarningMessage("Warning: you are using at least 1 wildcard in your options file. These may be unreliable or cause other issues.\n");
+    }
+
+    if (ipAddressesAreUsed)
+    {
+        WarningMessage("Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n");
     }
 
     // Print seatCount.
