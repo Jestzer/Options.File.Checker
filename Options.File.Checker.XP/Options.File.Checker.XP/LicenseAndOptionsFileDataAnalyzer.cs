@@ -63,14 +63,14 @@ namespace Options.File.Checker
             }
 
             // Use the gathered data.
-            result.ServerLineHasPort = gatherResult.serverLineHasPort;
-            result.DaemonLineHasPort = gatherResult.daemonLineHasPort;
-            result.DaemonPortIsCNUFriendly = gatherResult.daemonPortIsCNUFriendly;
-            result.CaseSensitivity = gatherResult.caseSensitivity;
-            result.UnspecifiedLicenseOrProductKey = gatherResult.unspecifiedLicenseOrProductKey;
-            result.OptionsFileUsesMatlabParallelServer = gatherResult.optionsFileUsesMatlabParallelServer;
-            result.WildcardsAreUsed = gatherResult.wildcardsAreUsed;
-            result.IpAddressesAreUsed = gatherResult.ipAddressesAreUsed;
+            result.ServerLineHasPort = gatherResult.ServerLineHasPort;
+            result.DaemonLineHasPort = gatherResult.DaemonLineHasPort;
+            result.DaemonPortIsCNUFriendly = gatherResult.DaemonPortIsCNUFriendly;
+            result.CaseSensitivity = gatherResult.CaseSensitivity;
+            result.UnspecifiedLicenseOrProductKey = gatherResult.UnspecifiedLicenseOrProductKey;
+            result.OptionsFileUsesMatlabParallelServer = gatherResult.OptionsFileUsesMatlabParallelServer;
+            result.WildcardsAreUsed = gatherResult.WildcardsAreUsed;
+            result.IpAddressesAreUsed = gatherResult.IpAddressesAreUsed;
             result.LicenseFileDictionary = gatherResult.LicenseFileDictionary;
             result.IncludeDictionary = gatherResult.IncludeDictionary;
             result.IncludeBorrowDictionary = gatherResult.IncludeBorrowDictionary;
@@ -715,21 +715,5 @@ namespace Options.File.Checker
             }
             return successfullySubtracted;
         }
-    }
-}
-public class GatherDataResult
-{
-    public bool ServerLineHasPort { get; set; }
-    public bool DaemonLineHasPort { get; set; }
-    // Add other properties...
-    public Dictionary<int, Tuple<string, int, string, string, string>> LicenseFileDictionary { get; set; }
-    // Initialize other dictionary properties...
-    public string Err { get; set; }
-
-    public GatherDataResult()
-    {
-        LicenseFileDictionary = new Dictionary<int, Tuple<string, int, string, string, string>>();
-        // Initialize other dictionaries...
-        Err = string.Empty;
     }
 }

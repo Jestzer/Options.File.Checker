@@ -246,40 +246,40 @@ namespace Options.File.Checker.XP
             // Process the returned data.
             StringBuilder output = new StringBuilder();
 
-            if (!LicenseAndOptionsFileDataAnalyzer.serverLineHasPort)
+            if (!analyzeResult.ServerLineHasPort)
             {
                 output.AppendLine("Warning: you did not specify a port number on your SERVER line.\n");
             }
 
-            if (!LicenseAndOptionsFileDataAnalyzer.daemonLineHasPort)
+            if (!analyzeResult.DaemonLineHasPort)
             {
                 output.AppendLine("Warning: you did not specify a port number on your DAEMON line. This means a random port will be chosen each time you restart FlexLM.\n");
             }
 
-            if (LicenseAndOptionsFileDataAnalyzer.caseSensitivity)
+            if (analyzeResult.CaseSensitivity)
             {
                 output.AppendLine("Warning: case sensitivity is enabled for users defined in GROUPs and HOST_GROUPs.\n");
             }
 
             // Warn the user if they didn't specify a license number or product key in their seat-subtracting option entries.
-            if (LicenseAndOptionsFileDataAnalyzer.unspecifiedLicenseOrProductKey)
+            if (analyzeResult.UnspecifiedLicenseOrProductKey)
             {
                 output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
                     "license the product appears on.\n");
             }
 
-            if (LicenseAndOptionsFileDataAnalyzer.optionsFileUsesMatlabParallelServer)
+            if (analyzeResult.OptionsFileUsesMatlabParallelServer)
             {
                 output.AppendLine("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
             "This does not prevent users from accessing the cluster.\n");
             }
 
-            if (LicenseAndOptionsFileDataAnalyzer.wildcardsAreUsed)
+            if (analyzeResult.WildcardsAreUsed)
             {
                 output.AppendLine("Warning: you are using at least 1 wild card in your options file. These may be unreliable or cause other issues.\n");
             }
 
-            if (!LicenseAndOptionsFileDataAnalyzer.ipAddressesAreUsed)
+            if (analyzeResult.IpAddressesAreUsed)
             {
                 output.AppendLine("Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n");
             }
