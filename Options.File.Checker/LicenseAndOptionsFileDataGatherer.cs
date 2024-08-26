@@ -726,7 +726,7 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
-                        // Check for wild cards and IP addresses.
+                        // Check for wildcards and IP addresses.
                         if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
@@ -774,7 +774,7 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
-                        // Check for wild cards and IP addresses.
+                        // Check for wildcards and IP addresses.
                         if (clientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
@@ -805,7 +805,7 @@ namespace Options.File.Checker
                         string maxClientType = lineParts[3];
                         string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
 
-                        // Check for wild cards and IP addresses.
+                        // Check for wildcards and IP addresses.
                         if (maxClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
@@ -949,7 +949,7 @@ namespace Options.File.Checker
                             reserveProductKey = string.Empty;
                         }
 
-                        // Check for wild cards and IP addresses.
+                        // Check for wildcards and IP addresses.
                         if (reserveClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
@@ -999,7 +999,7 @@ namespace Options.File.Checker
                             groupDictionary[optionsLineIndex] = Tuple.Create(groupName, groupUsers, groupUserCount);
                         }
 
-                        // Check for wild cards and IP addresses.
+                        // Check for wildcards and IP addresses.
                         if (groupUsers.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
@@ -1038,7 +1038,7 @@ namespace Options.File.Checker
                             hostGroupDictionary[optionsLineIndex] = Tuple.Create(hostGroupName, hostGroupClientSpecified);
                         }
 
-                        // Check for wild cards and IP addresses.
+                        // Check for wildcards and IP addresses.
                         if (hostGroupClientSpecified.Contains('*')) { wildcardsAreUsed = true; }
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
