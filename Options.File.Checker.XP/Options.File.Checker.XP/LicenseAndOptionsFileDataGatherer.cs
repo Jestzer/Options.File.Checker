@@ -616,6 +616,14 @@ namespace Options.File.Checker
                             return result;
                         }
 
+                        if (productName == "MATLAB_Distrib_Comp_Engine" && licenseOffering == "NNU")
+                        {
+                            result.ErrorMessage = "There is an issue with the license file: you have a license for MATLAB Parallel Server, but it is being registered as part of an NNU license, which is not possible. " +
+                            "Please regenerate your MATLAB Parallel Server license and then replace it with the existing contents in your license file.";
+                            result.Success = false;
+                            return result;
+                        }
+
                         result.LicenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
                 }

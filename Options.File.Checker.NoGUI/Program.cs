@@ -3,7 +3,7 @@ using Options.File.Checker; // I'm not bundling this separately and this will ma
 
 if (args.Contains("-version"))
 {
-    Console.WriteLine("Version 0.2.4");
+    Console.WriteLine("Version 0.2.5");
     Environment.Exit(0);
 }
 
