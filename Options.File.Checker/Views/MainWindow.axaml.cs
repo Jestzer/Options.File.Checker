@@ -209,7 +209,7 @@ public partial class MainWindow : Window
                         return;
                     }
 
-                    if (!fileContents.Contains("SERVER") || !fileContents.Contains("DAEMON"))
+                    if (!fileContents.Contains("SERVER") || (!fileContents.Contains("DAEMON") && !fileContents.Contains("VENDOR")))
                     {
                         ShowErrorWindow("There is an issue with the license file: it is missing the SERVER and/or DAEMON line.");
                         LicenseFileLocationTextBox.Text = string.Empty;
