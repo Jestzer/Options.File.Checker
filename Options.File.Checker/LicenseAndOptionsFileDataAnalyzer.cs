@@ -52,7 +52,7 @@ namespace Options.File.Checker
                 groupDictionary,
                 hostGroupDictionary,
                 err) = LicenseAndOptionsFileDataGatherer.GatherData(licenseFilePath, optionsFilePath);
-            
+
             // Only thing that needs to be cleared here since it's not in the Gatherer.
             bool unspecifiedLicenseOrProductKey = false;
 
@@ -178,7 +178,7 @@ namespace Options.File.Checker
                         err = "There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.";
                         return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                     }
-                    
+
                     bool foundValidIncludeLine = false;
                     foreach (var includeEntry in includeDictionary)
                     {
@@ -195,7 +195,7 @@ namespace Options.File.Checker
                             break;
                         }
                     }
-                    if (!foundValidIncludeLine) 
+                    if (!foundValidIncludeLine)
                     {
                         err = "There is an issue with the options file: you have no INCLUDE lines with a USER or GROUP. You need these to use an NNU license.";
                         return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
@@ -564,7 +564,7 @@ namespace Options.File.Checker
             {
                 if (!string.IsNullOrEmpty(licenseNumber))
                 {
-                    err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file.";
+                    err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file for the product {productName}.";
                 }
                 else if (!string.IsNullOrEmpty(productKey))
                 {
@@ -617,8 +617,19 @@ namespace Options.File.Checker
                     {
                         // No matching group found.
                         string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
-                        string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                                     $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                        string err = string.Empty;
+                        if (specified.Contains("USER"))
+                        {
+                            err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                                  $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate. " +
+                                  "You cannot specify a GROUP and a USER on a single INCLUDE line.";
+                        }
+                        else
+                        {
+                            err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                                  $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                        }
+
                         return err;
                     }
                 }

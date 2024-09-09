@@ -585,6 +585,17 @@ namespace Options.File.Checker
 
                         licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
                     }
+                    else if (line.TrimStart().StartsWith('#') || string.IsNullOrWhiteSpace(line)) { } // Ignore empty and commented out lines.
+                    else if (line.TrimStart().StartsWith("USE_SERVER"))
+                    {
+                        // # Add some code to complain about this.
+                    }
+                    else
+                    {
+                        err = "There is an issue with the license file: it has an unrecognized line. You likely manually edited the license file and likely need to regenerate it. " +
+                        $"The lines contents are the following: {line}";
+                        return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                    }
                 }
 
                 // There is no situation where you should have more than 3 SERVER lines.
@@ -986,6 +997,11 @@ namespace Options.File.Checker
                                 $"The line in question is \"{line}\".";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
+
+                        // Remove any elements after lineParts[2] that are blank, whitespace, or tabs
+                        lineParts = lineParts.Take(3)
+                                             .Concat(lineParts.Skip(3).Where(part => !string.IsNullOrWhiteSpace(part)))
+                                             .ToArray();
 
                         string groupName = lineParts[1];
                         string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
