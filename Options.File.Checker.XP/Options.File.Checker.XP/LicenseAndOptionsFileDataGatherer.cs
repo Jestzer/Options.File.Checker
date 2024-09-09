@@ -83,14 +83,17 @@ namespace Options.File.Checker
                 // Remove Windows line breaks.
                 string lineBreaksToRemove = "\\\r\n\t";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+                optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove Unix line breaks.
                 lineBreaksToRemove = "\\\r\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+                optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove more Unix line breaks...
                 lineBreaksToRemove = "\\\n\t";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+                optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove empty space that will likely appear on Unix systems.
                 string emptySpaceToRemove = "        ";
@@ -98,6 +101,7 @@ namespace Options.File.Checker
 
                 // Put it back together!
                 licenseFileContentsLines = licenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                optionsFileContentsLines = optionsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
 
                 // Next, let's check for some obvious errors.
                 // Make sure, you know, the files exist.
@@ -571,7 +575,7 @@ namespace Options.File.Checker
                             return result;
                         }
 
-                        if (!licenseOffering.Contains("CNU") && rawSeatCount == "uncounted")
+                        if (rawSeatCount == "uncounted")
                         {
                             result.ErrorMessage = "There is an issue with the license file: it contains an Individual or Designated Computer license, " +
                                 "which cannot use an options file. The license number is question is " + licenseNumber + ".";
