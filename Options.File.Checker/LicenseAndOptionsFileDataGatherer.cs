@@ -249,7 +249,7 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
                     }
-                    else if (line.TrimStart().StartsWith("DAEMON"))
+                    else if (line.TrimStart().StartsWith("DAEMON") || line.TrimStart().StartsWith("VENDOR"))
                     {
                         // DAEMON line should come before the product(s).
                         if (productLinesHaveBeenReached)
