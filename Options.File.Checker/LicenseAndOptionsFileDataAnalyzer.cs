@@ -294,12 +294,6 @@ namespace Options.File.Checker
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
 
-                // CNU licenses have unlimited seats.
-                if (licenseFileLicenseOffering.Contains("CNU") && (licenseFileSeatCount == 9999999))
-                {
-                    continue;
-                }
-
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                 // Case-senstivity does not matter, apparently.
                 if (string.Equals(productName, licenseFileProductName, StringComparison.OrdinalIgnoreCase) || optionSelected == "INCLUDEALL")
@@ -336,6 +330,8 @@ namespace Options.File.Checker
                     {
                         licenseFileSeatCount -= reserveSeatCount;
 
+                        // Record the line used to subtract this seat.
+
                         // Error out if the seat count is negative.
                         if (licenseFileSeatCount < 0)
                         {
@@ -362,6 +358,8 @@ namespace Options.File.Checker
                                 return;
                             }
                         }
+
+                        // Record the line used to subtract this seat.
                     }
                     else if (optionSelected == "INCLUDEALL")
                     {
@@ -374,6 +372,8 @@ namespace Options.File.Checker
                             {
                                 // Subtract 1 from seatCount, since you only specified a single user.
                                 licenseFileSeatCount--;
+
+                                // Record the line used to subtract this seat.
 
                                 // Error out if the seat count is negative and not CN.
                                 if (licenseFileSeatCount < 0)
