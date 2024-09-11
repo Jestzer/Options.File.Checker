@@ -517,12 +517,6 @@ namespace Options.File.Checker
                             }
                         }
 
-                        // Technically infinite. This should avoid at least 1 unnecessary error report.
-                        if (licenseOffering.Contains("CNU") && (seatCount == 0))
-                        {
-                            seatCount = 9999999;
-                        }
-
                         if (licenseOffering == "lo=CN" && (seatCount == 0) && licenseNumber == "220668")
                         {
                             if ((productVersion <= 18) || (productName.Contains("Polyspace") && productVersion <= 22))
