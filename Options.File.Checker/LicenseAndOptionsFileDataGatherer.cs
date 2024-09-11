@@ -29,7 +29,7 @@ namespace Options.File.Checker
         private static bool optionsFileUsesMatlabParallelServer = false;
         private static bool wildcardsAreUsed = false;
         private static bool ipAddressesAreUsed = false;
-        private static readonly Dictionary<int, Tuple<string, int, string, string, string>> licenseFileDictionary = [];
+        private static readonly Dictionary<int, Tuple<string, int, string, string, string, string>> licenseFileDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeBorrowDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string>> includeAllDictionary = [];
@@ -50,7 +50,7 @@ namespace Options.File.Checker
             bool optionsFileUsesMatlabParallelServer,
             bool wildcardsAreUsed,
             bool ipAddressesAreUsed,
-            Dictionary<int, Tuple<string, int, string, string, string>>? licenseFileDictionary,
+            Dictionary<int, Tuple<string, int, string, string, string, string>>? licenseFileDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
             Dictionary<int, Tuple<string, string>>? includeAllDictionary,
@@ -577,7 +577,8 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
-                        licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber);
+                        string linesThatSubstractSeats = string.Empty; // This needs to be set here even if it's just going to be empty until the analyzer class potentially fills it.
+                        licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber, linesThatSubstractSeats);
                     }
                     else if (line.TrimStart().StartsWith('#') || string.IsNullOrWhiteSpace(line)) { } // Ignore empty and commented out lines.
                     else if (line.TrimStart().StartsWith("USE_SERVER"))
