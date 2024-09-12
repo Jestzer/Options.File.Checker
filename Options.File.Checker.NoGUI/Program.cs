@@ -261,10 +261,6 @@ if (licenseFilePath != null && optionsFilePath != null)
                 }
             }
 
-            if (item.Value.Item4.Contains("CNU") && item.Value.Item2 == 9999999)
-            {
-                Console.WriteLine($"{item.Value.Item1} has unlimited seats on license {item.Value.Item5}\n");
-            }
             else if (item.Value.Item4.Contains("CN") && item.Value.Item2 < 0)
             {
                 if (!overdraftCNWarningHit)
