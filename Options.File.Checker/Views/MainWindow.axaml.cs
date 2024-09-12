@@ -489,10 +489,6 @@ public partial class MainWindow : Window
                     }
                 }
 
-                if (item.Value.Item4.Contains("CNU") && item.Value.Item2 == 9999999)
-                {
-                    output.AppendLine($"{item.Value.Item1} has unlimited seats on license {item.Value.Item5}\n");
-                }
                 else if (item.Value.Item4.Contains("CN") && item.Value.Item2 < 0)
                 {
                     if (!overdraftCNWarningHit)
