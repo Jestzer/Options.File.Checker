@@ -30,13 +30,13 @@ namespace Options.File.Checker
         private static bool wildcardsAreUsed = false;
         private static bool ipAddressesAreUsed = false;
         private static readonly Dictionary<int, Tuple<string, int, string, string, string, List<string>>> licenseFileDictionary = [];
-        private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeDictionary = [];
+        private static readonly Dictionary<int, Tuple<string, string, string, string, string, string>> includeDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> includeBorrowDictionary = [];
-        private static readonly Dictionary<int, Tuple<string, string>> includeAllDictionary = [];
+        private static readonly Dictionary<int, Tuple<string, string, string>> includeAllDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> excludeDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string, string, string, string>> excludeBorrowDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string>> excludeAllDictionary = [];
-        private static readonly Dictionary<int, Tuple<int, string, string, string, string, string>> reserveDictionary = [];
+        private static readonly Dictionary<int, Tuple<int, string, string, string, string, string, string>> reserveDictionary = [];
         private static readonly Dictionary<string, Tuple<int, string, string>> maxDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string, int>> groupDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string>> hostGroupDictionary = [];
@@ -51,13 +51,13 @@ namespace Options.File.Checker
             bool wildcardsAreUsed,
             bool ipAddressesAreUsed,
             Dictionary<int, Tuple<string, int, string, string, string, List<string>>>? licenseFileDictionary,
-            Dictionary<int, Tuple<string, string, string, string, string>>? includeDictionary,
+            Dictionary<int, Tuple<string, string, string, string, string, string>>? includeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
-            Dictionary<int, Tuple<string, string>>? includeAllDictionary,
+            Dictionary<int, Tuple<string, string, string>>? includeAllDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? excludeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? excludeBorrowDictionary,
             Dictionary<int, Tuple<string, string>>? excludeAllDictionary,
-            Dictionary<int, Tuple<int, string, string, string, string, string>>? reserveDictionary,
+            Dictionary<int, Tuple<int, string, string, string, string, string, string>>? reserveDictionary,
             Dictionary<string, Tuple<int, string, string>>? maxDictionary,
             Dictionary<int, Tuple<string, string, int>>? groupDictionary,
             Dictionary<int, Tuple<string, string>>? hostGroupDictionary,
@@ -752,7 +752,7 @@ namespace Options.File.Checker
                         // Listen, we all have bad ideas.
                         if (productName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
-                        if (line.TrimStart().StartsWith("INCLUDE ")) { includeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
+                        if (line.TrimStart().StartsWith("INCLUDE ")) { includeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified, line); }
                         else if (line.TrimStart().StartsWith("INCLUDE_BORROW ")) { includeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("EXCLUDE ")) { excludeDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
                         else if (line.TrimStart().StartsWith("EXCLUDE_BORROW ")) { excludeBorrowDictionary[optionsLineIndex] = Tuple.Create(productName, licenseNumber, productKey, clientType, clientSpecified); }
@@ -797,7 +797,7 @@ namespace Options.File.Checker
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
                         if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { ipAddressesAreUsed = true; }
 
-                        if (line.TrimStart().StartsWith("INCLUDEALL ")) { includeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
+                        if (line.TrimStart().StartsWith("INCLUDEALL ")) { includeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified, line); }
                         else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { excludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
                     }
                     else if (line.TrimStart().StartsWith("MAX "))
@@ -974,7 +974,7 @@ namespace Options.File.Checker
 
                         if (reserveProductName == "MATLAB_Distrib_Comp_Engine") { optionsFileUsesMatlabParallelServer = true; }
 
-                        reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified);
+                        reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified, line);
                     }
                     else if (line.TrimStart().StartsWith("GROUP "))
                     {
