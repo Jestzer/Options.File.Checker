@@ -14,14 +14,14 @@ namespace Options.File.Checker
             bool optionsFileUsesMatlabParallelServer,
             bool wildcardsAreUsed,
             bool ipAddressesAreUsed,
-            Dictionary<int, Tuple<string, int, string, string, string, List<string>>? licenseFileDictionary,
-            Dictionary<int, Tuple<string, string, string, string, string>>? includeDictionary,
+            Dictionary<int, Tuple<string, int, string, string, string, List<string>>>? licenseFileDictionary,
+            Dictionary<int, Tuple<string, string, string, string, string, string>>? includeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
-            Dictionary<int, Tuple<string, string>>? includeAllDictionary,
+            Dictionary<int, Tuple<string, string, string>>? includeAllDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? excludeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? excludeBorrowDictionary,
             Dictionary<int, Tuple<string, string>>? excludeAllDictionary,
-            Dictionary<int, Tuple<int, string, string, string, string, string>>? reserveDictionary,
+            Dictionary<int, Tuple<int, string, string, string, string, string, string>>? reserveDictionary,
             Dictionary<string, Tuple<int, string, string>>? maxDictionary,
             Dictionary<int, Tuple<string, string, int>>? groupDictionary,
             Dictionary<int, Tuple<string, string>>? hostGroupDictionary,
@@ -182,12 +182,13 @@ namespace Options.File.Checker
                     bool foundValidIncludeLine = false;
                     foreach (var includeEntry in includeDictionary)
                     {
-                        Tuple<string, string, string, string, string> includeData = includeEntry.Value;
+                        Tuple<string, string, string, string, string, string> includeData = includeEntry.Value;
                         string productName = includeData.Item1;
                         string licenseNumber = includeData.Item2;
                         string productKey = includeData.Item3;
                         string clientType = includeData.Item4;
                         string clientSpecified = includeData.Item5;
+                        string rawOptionLine = includeData.Item6;
 
                         if (clientType == "USER" || clientType == "GROUP")
                         {
@@ -242,7 +243,7 @@ namespace Options.File.Checker
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string, List<string>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string, List<string>>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
         {
             // These need to be defined outside the if statements below so they can be used across them.
             int reserveSeatCount = 0;
@@ -251,11 +252,12 @@ namespace Options.File.Checker
             string productKey = string.Empty;
             string clientType = string.Empty;
             string clientSpecified = string.Empty;
+            string rawOptionLine = string.Empty;
 
             // Determine the option we're using. Set variables appropriately.
             if (optionSelected == "INCLUDE")
             {
-                Tuple<string, string, string, string, string> optionsData = optionsEntry.Value;
+                Tuple<string, string, string, string, string, string> optionsData = optionsEntry.Value;
                 productName = optionsData.Item1;
                 licenseNumber = optionsData.Item2;
                 productKey = optionsData.Item3;
@@ -293,7 +295,7 @@ namespace Options.File.Checker
                 string licenseFileProductKey = licenseFileData.Item3;
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
-                List<string> linesThatSubstractSeats = licenseFileData.Item6;
+                List<string> linesThatSubtractSeats = licenseFileData.Item6;
 
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                 // Case-senstivity does not matter, apparently.
@@ -332,6 +334,7 @@ namespace Options.File.Checker
                         licenseFileSeatCount -= reserveSeatCount;
 
                         // Record the line used to subtract this seat.
+                        linesThatSubtractSeats.Add(rawOptionLine);
 
                         // Error out if the seat count is negative.
                         if (licenseFileSeatCount < 0)
@@ -359,8 +362,6 @@ namespace Options.File.Checker
                                 return;
                             }
                         }
-
-                        // Record the line used to subtract this seat.
                     }
                     else if (optionSelected == "INCLUDEALL")
                     {
@@ -375,7 +376,7 @@ namespace Options.File.Checker
                                 licenseFileSeatCount--;
 
                                 // Record the line used to subtract this seat.
-
+                                linesThatSubtractSeats.Add(rawOptionLine);
 
                                 // Error out if the seat count is negative and not CN.
                                 if (licenseFileSeatCount < 0)
@@ -412,6 +413,9 @@ namespace Options.File.Checker
                                         // Subtract the appropriate number of seats.
                                         licenseFileSeatCount -= groupUserCount;
 
+                                        // Record the line used to subtract this seat.
+                                        linesThatSubtractSeats.Add(rawOptionLine);
+
                                         // Error out if the seat count is negative.
                                         if (licenseFileSeatCount < 0)
                                         {
@@ -426,10 +430,8 @@ namespace Options.File.Checker
                                 }
 
                             }
-                            else if (clientType == "HOST_GROUP" || clientType == "HOST" || clientType == "DISPLAY" || clientType == "PROJECT" || clientType == "INTERNET")
-                            {
-                                // There is no subtraction that can be done because you've specified a client type that can be shared between any number of users.
-                            }
+                            // There is no subtraction that can be done because you've specified a client type that can be shared between any number of users.
+                            else if (clientType == "HOST_GROUP" || clientType == "HOST" || clientType == "DISPLAY" || clientType == "PROJECT" || clientType == "INTERNET") { }
                             else
                             {
                                 err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
@@ -448,6 +450,9 @@ namespace Options.File.Checker
                                 "but you did not define the USER.";
                                 return;
                             }
+
+                            // Record the line used to subtract this seat.
+                            linesThatSubtractSeats.Add(rawOptionLine);
 
                             licenseFileSeatCount--;
 
@@ -510,6 +515,9 @@ namespace Options.File.Checker
                                 {
                                     // Subtract the appropriate number of seats.
                                     licenseFileSeatCount -= groupUserCount;
+
+                                    // Record the line used to subtract this seat.
+                                    linesThatSubtractSeats.Add(rawOptionLine);
 
                                     // Error out if the seat count is negative.
                                     if (licenseFileSeatCount < 0)
@@ -676,7 +684,7 @@ namespace Options.File.Checker
             foreach (var licenseFileEntry in licenseFileDictionary)
             {
                 int licenseLineIndex = licenseFileEntry.Key;
-                Tuple<string, int, string, string, string, List<string> licenseFileData = licenseFileEntry.Value;
+                Tuple<string, int, string, string, string, List<string>> licenseFileData = licenseFileEntry.Value;
 
                 string licenseFileProductName = licenseFileData.Item1;
                 int licenseFileSeatCount = licenseFileData.Item2;
