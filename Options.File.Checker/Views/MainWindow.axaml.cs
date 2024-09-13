@@ -521,7 +521,25 @@ public partial class MainWindow : Window
                         }
                     }
                     // Finally, print the stuff we want to see!
+                    string message = $"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).";
                     output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).");
+                    if (DataContext is MainViewModel viewModel)
+                    {
+                        // Create the main item
+                        var mainItem = new TreeViewItemModel
+                        {
+                            Title = $"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3})."
+                        };
+
+                        // Add sub-items from Item6
+                        foreach (var subItem in item.Value.Item6)
+                        {
+                            mainItem.Children.Add(new TreeViewItemModel { Title = subItem });
+                        }
+
+                        // Add the main item to the TreeView
+                        viewModel.TreeViewItems.Add(mainItem);
+                    }
                 }
             }
         }
