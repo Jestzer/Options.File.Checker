@@ -2,6 +2,7 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:vm="using:Options.File.Checker.ViewModels"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:local="clr-namespace:Options.File.Checker"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:Options.File.Checker.Views"
         mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
@@ -99,9 +100,17 @@
       <TextBlock Name="OutputTextBlock"
                  TextWrapping="Wrap"
                  Text="Warning messages will appear here after analysis. Errors will appear in a pop-up window."
-                 Foreground="White"/>
+                 Foreground="White"/>                     
     </ScrollViewer>
-
+<TreeView Name="OutputTreeView" Grid.Row="0" Margin="20,20,600,350" VerticalAlignment="Stretch"
+          Background="#FF2D2B2B" BorderBrush="Black" BorderThickness="2" Foreground="White"
+          ItemsSource="{Binding TreeViewItems}">
+    <TreeView.ItemTemplate>
+        <TreeDataTemplate DataType="{x:Type local:TreeViewItemModel}" ItemsSource="{Binding Children}">
+            <TextBlock Text="{Binding Title}" Foreground="White"/>
+        </TreeDataTemplate>
+    </TreeView.ItemTemplate>
+</TreeView>
     <TextBlock Name="OptionsFileLocationLabel"
                Text="Options file path"
                HorizontalAlignment="Left"
