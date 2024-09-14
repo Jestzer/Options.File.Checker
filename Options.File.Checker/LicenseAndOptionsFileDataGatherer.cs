@@ -577,8 +577,8 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                         }
 
-                        List<string> linesThatSubstractSeats = []; // This needs to be set here even if it's just going to be empty until the analyzer class potentially fills it.
-                        licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber, linesThatSubstractSeats);
+                        List<string> linesThatSubtractSeats = []; // This needs to be set here even if it's just going to be empty until the analyzer class potentially fills it.
+                        licenseFileDictionary[licenseLineIndex] = Tuple.Create(productName, seatCount, productKey, licenseOffering, licenseNumber, linesThatSubtractSeats);
                     }
                     else if (line.TrimStart().StartsWith('#') || string.IsNullOrWhiteSpace(line)) { } // Ignore empty and commented out lines.
                     else if (line.TrimStart().StartsWith("USE_SERVER"))
