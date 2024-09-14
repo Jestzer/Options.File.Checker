@@ -110,7 +110,7 @@ namespace Options.File.Checker
                 }
 
                 // Subtract seats now.
-                if (includeDictionary != null && includeAllDictionary != null && licenseFileDictionary != null && groupDictionary != null)
+                if (licenseFileDictionary != null)
                 {
                     foreach (var includeEntry in includeDictionary)
                     {
