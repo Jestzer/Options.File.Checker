@@ -538,7 +538,7 @@ public partial class MainWindow : Window
                     if (DataContext is MainViewModel viewModel)
                     {
                         // Create the main item
-                        var mainItem = new TreeViewItemModel
+                        var mainItem = new MainWindowTreeViewItemModel
                         {
                             Title = $"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3})."
                         };
@@ -546,7 +546,7 @@ public partial class MainWindow : Window
                         // Add sub-items from Item6
                         foreach (var subItem in item.Value.Item6)
                         {
-                            mainItem.Children.Add(new TreeViewItemModel { Title = subItem });
+                            mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
                         }
 
                         // Add the main item to the TreeView
