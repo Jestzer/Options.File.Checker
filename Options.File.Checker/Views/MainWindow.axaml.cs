@@ -122,6 +122,12 @@ public partial class MainWindow : Window
     private async void ShowErrorWindow(string errorMessage)
     {
         OutputTextBlock.Text = string.Empty;
+        if (DataContext is MainViewModel viewModel)
+        {
+            
+            viewModel.TreeViewItems.Clear();
+        }
+
         ErrorWindow errorWindow = new();
         errorWindow.ErrorTextBlock.Text = errorMessage;
 
@@ -366,6 +372,12 @@ public partial class MainWindow : Window
 
     private void AnalyzerButton_Click(object sender, RoutedEventArgs e)
     {
+        // Clear the TreeView.
+        if (DataContext is MainViewModel treeViewModel)
+        {
+            treeViewModel.TreeViewItems.Clear();
+        }
+        
         string licenseFilePath = string.Empty;
         string optionsFilePath = string.Empty; // Thank you for the lousy suggestion to remove this Visual Studio.
 
