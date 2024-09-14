@@ -106,7 +106,7 @@
           Background="#FF2D2B2B" BorderBrush="Black" BorderThickness="2" Foreground="White"
           ItemsSource="{Binding TreeViewItems}">
     <TreeView.ItemTemplate>
-        <TreeDataTemplate DataType="{x:Type local:TreeViewItemModel}" ItemsSource="{Binding Children}">
+        <TreeDataTemplate DataType="{x:Type local:MainWindowTreeViewItemModel}" ItemsSource="{Binding Children}">
             <TextBlock Text="{Binding Title}" Foreground="White"/>
         </TreeDataTemplate>
     </TreeView.ItemTemplate>
