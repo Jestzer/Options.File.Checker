@@ -533,23 +533,24 @@ public partial class MainWindow : Window
                         }
                     }
                     // Finally, print the stuff we want to see!
-                    string message = $"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).";
-                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).");
+                    string message = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).";
+                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).");
                     if (DataContext is MainViewModel viewModel)
                     {
-                        // Create the main item
+                        // Create the main tree view item that displays main product info.
                         var mainItem = new MainWindowTreeViewItemModel
                         {
                             Title = $"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3})."
                         };
 
-                        // Add sub-items from Item6
+                        // Add sub-items that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
+                        // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
                         foreach (var subItem in item.Value.Item6)
                         {
                             mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
                         }
 
-                        // Add the main item to the TreeView
+                        // Add the whole item and its subitems to the tree view.
                         viewModel.TreeViewItems.Add(mainItem);
                     }
                 }

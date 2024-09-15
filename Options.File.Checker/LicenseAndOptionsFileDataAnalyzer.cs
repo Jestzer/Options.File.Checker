@@ -1,4 +1,4 @@
-﻿using System;
+﻿using System; // Don't let VSC deceive you, you need these!
 using System.Collections.Generic;
 
 namespace Options.File.Checker
@@ -14,7 +14,7 @@ namespace Options.File.Checker
             bool optionsFileUsesMatlabParallelServer,
             bool wildcardsAreUsed,
             bool ipAddressesAreUsed,
-            Dictionary<int, Tuple<string, int, string, string, string, List<string>>>? licenseFileDictionary,
+            Dictionary<int, Tuple<string, int, string, string, string, List<string>, int>>? licenseFileDictionary,
             Dictionary<int, Tuple<string, string, string, string, string, string>>? includeDictionary,
             Dictionary<int, Tuple<string, string, string, string, string>>? includeBorrowDictionary,
             Dictionary<int, Tuple<string, string, string>>? includeAllDictionary,
@@ -157,7 +157,7 @@ namespace Options.File.Checker
                 foreach (var licenseFileEntry in licenseFileDictionary)
                 {
                     int licenseLineIndex = licenseFileEntry.Key;
-                    Tuple<string, int, string, string, string, List<string>> licenseFileData = licenseFileEntry.Value;
+                    Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
 
                     string licenseFileProductName = licenseFileData.Item1;
                     int licenseFileSeatCount = licenseFileData.Item2;
@@ -243,7 +243,7 @@ namespace Options.File.Checker
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string, List<string>>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string, List<string>, int>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
         {
             // These need to be defined outside the if statements below so they can be used across them.
             int reserveSeatCount = 0;
@@ -291,7 +291,7 @@ namespace Options.File.Checker
             foreach (var licenseFileEntry in licenseFileDictionary)
             {
                 int licenseLineIndex = licenseFileEntry.Key;
-                Tuple<string, int, string, string, string, List<string>> licenseFileData = licenseFileEntry.Value;
+                Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
 
                 string licenseFileProductName = licenseFileData.Item1;
                 int licenseFileSeatCount = licenseFileData.Item2;
@@ -299,6 +299,7 @@ namespace Options.File.Checker
                 string licenseFileLicenseOffering = licenseFileData.Item4;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
                 List<string> linesThatSubtractSeats = licenseFileData.Item6;
+                int originalLicenseFileSeatCount = licenseFileData.Item7;
 
                 // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                 // Case-senstivity does not matter, apparently.
@@ -347,7 +348,7 @@ namespace Options.File.Checker
                                 // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
                                 int remainingSeatCount = licenseFileSeatCount;
                                 licenseFileSeatCount = 0;
-                                licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats);
+                                licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
                                 licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
                                 if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
@@ -467,7 +468,7 @@ namespace Options.File.Checker
                                     // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
                                     int remainingSeatCount = licenseFileSeatCount;
                                     licenseFileSeatCount = 0;
-                                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats);
+                                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
                                     licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
                                     if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
@@ -530,7 +531,7 @@ namespace Options.File.Checker
                                             // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
                                             int remainingSeatCount = licenseFileSeatCount;
                                             licenseFileSeatCount = 0;
-                                            licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats);
+                                            licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, licenseFileData.Item6, licenseFileData.Item7);
                                             licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
                                             if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
@@ -554,7 +555,7 @@ namespace Options.File.Checker
                         }
                     }
 
-                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats);
+                    licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
                     licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
                     if (optionSelected != "INCLUDEALL")
@@ -679,7 +680,7 @@ namespace Options.File.Checker
             return null;
         }
 
-        private static bool SubtractFromDuplicateProducts(string optionsLicenseNumber, string optionsProductName, int seatsToSubtract, Dictionary<int, Tuple<string, int, string, string, string, List<string>>> licenseFileDictionary)
+        private static bool SubtractFromDuplicateProducts(string optionsLicenseNumber, string optionsProductName, int seatsToSubtract, Dictionary<int, Tuple<string, int, string, string, string, List<string>, int>> licenseFileDictionary)
         {
             bool successfullySubtracted = false;
 
@@ -687,12 +688,13 @@ namespace Options.File.Checker
             foreach (var licenseFileEntry in licenseFileDictionary)
             {
                 int licenseLineIndex = licenseFileEntry.Key;
-                Tuple<string, int, string, string, string, List<string>> licenseFileData = licenseFileEntry.Value;
+                Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
 
                 string licenseFileProductName = licenseFileData.Item1;
                 int licenseFileSeatCount = licenseFileData.Item2;
                 string licenseFileLicenseNumber = licenseFileData.Item5;
                 List<string> linesThatSubtractSeats = licenseFileData.Item6;
+                int originalLicenseFileSeatCount = licenseFileData.Item7;
 
                 if (licenseFileProductName == optionsProductName)
                 {
@@ -716,7 +718,7 @@ namespace Options.File.Checker
                             successfullySubtracted = true;
                         }
 
-                        licenseFileData = Tuple.Create(optionsProductName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats);
+                        licenseFileData = Tuple.Create(optionsProductName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
                         licenseFileDictionary[licenseLineIndex] = licenseFileData;
 
                         if (successfullySubtracted) break;
