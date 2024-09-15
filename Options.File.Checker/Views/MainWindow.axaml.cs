@@ -133,7 +133,7 @@ public partial class MainWindow : Window
         OutputTextBlock.Text = "Error: " + errorMessage;
 
         // Check if VisualRoot is not null and is a Window before casting
-        if (this.VisualRoot is Window window)
+        if (VisualRoot is Window window)
         {
             await errorWindow.ShowDialog(window);
         }
@@ -185,9 +185,9 @@ public partial class MainWindow : Window
 
                     // Check the file size indirectly via its content length.
                     long fileSizeInBytes = fileContents.Length;
-                    const long FiftyMegabytes = 50L * 1024L * 1024L;
+                    const long fiftyMegabytes = 50L * 1024L * 1024L;
 
-                    if (fileSizeInBytes > FiftyMegabytes)
+                    if (fileSizeInBytes > fiftyMegabytes)
                     {
                         ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
                         LicenseFileLocationTextBox.Text = string.Empty;
@@ -533,15 +533,13 @@ public partial class MainWindow : Window
                             includeAllNNUWarningHit = true;
                         }
                     }
-                    // Finally, print the stuff we want to see!
-                    string message = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).";
-                    output.AppendLine($"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3}).");
+                    // Finally, print the stuff we want to see!                    
                     if (DataContext is MainViewModel viewModel)
                     {
                         // Create the main tree view item that displays main product info.
                         var mainItem = new MainWindowTreeViewItemModel
                         {
-                            Title = $"{item.Value.Item1} has {item.Value.Item2} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3})."
+                            Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3})."
                         };
 
                         // Add sub-items that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.

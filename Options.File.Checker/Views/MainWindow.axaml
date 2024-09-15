@@ -14,11 +14,7 @@
         Title="Options File Checker"
         Background="#FF2D2B2B"
         WindowStartupLocation="CenterScreen">
-    <Grid>
-        <Grid.RowDefinitions>
-            <RowDefinition Height="*" />
-            <RowDefinition Height="Auto" />
-        </Grid.RowDefinitions>
+    <Grid RowDefinitions="*,Auto">
 
         <TextBox Name="LicenseFileLocationTextBox"
                  HorizontalAlignment="Left"

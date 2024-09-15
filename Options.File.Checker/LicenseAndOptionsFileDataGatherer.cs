@@ -595,7 +595,7 @@ namespace Options.File.Checker
                 }
 
                 // There is no situation where you should have more than 3 SERVER lines.
-                if (serverLineCount > 3 || serverLineCount == 2)
+                if (serverLineCount is > 3 or 2)
                 {
                     _err = "There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.";
                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
