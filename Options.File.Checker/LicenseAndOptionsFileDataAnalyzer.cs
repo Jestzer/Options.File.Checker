@@ -300,6 +300,7 @@ namespace Options.File.Checker
                     // Go through each line and subtract seats accordingly.
                     foreach (var licenseFileEntry in licenseFileDictionary)
                     {
+                        bool needToGoToNextEntry = false;
                         int licenseLineIndex = licenseFileEntry.Key;
                         Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
 
@@ -354,32 +355,6 @@ namespace Options.File.Checker
 
                                         // # Add some code to properly implement this. seatCountHasBeenFullySubtracted = true;
 
-                                        // Error out if the seat count is negative.
-                                        // if (licenseFileSeatCount < 0 && !forceSubtraction)
-                                        // {
-                                        //     if (licenseFileLicenseOffering != "lo=CN" && !forceSubtraction)
-                                        //     {
-                                        //         // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
-                                        //         int remainingSeatCount = licenseFileSeatCount;
-                                        //         //licenseFileSeatCount = 0;
-                                        //         licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
-                                        //         licenseFileDictionary[licenseLineIndex] = licenseFileData;
-
-                                        //         if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
-                                        //         {
-                                        //             // if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                        //             // {
-                                        //             //     err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                        //             //           $"for license {licenseNumber}.";
-                                        //             // }
-                                        //             // else
-                                        //             // {
-                                        //             //     err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
-                                        //             // }
-                                        //         }
-                                        //         return;
-                                        //     }
-                                        // }
                                         break;
                                     }
                                 case "INCLUDEALL":
@@ -396,17 +371,6 @@ namespace Options.File.Checker
 
                                                 // Record the line used to subtract this seat.
                                                 linesThatSubtractSeats.Add(rawOptionLine);
-
-                                                // Error out if the seat count is negative and not CN.
-                                                if (licenseFileSeatCount < 0)
-                                                {
-                                                    if (licenseFileLicenseOffering == "NNU")
-                                                    {
-                                                        // err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
-                                                        //       "Don't forget that you are using at least 1 INCLUDEALL line.";
-                                                        // return;
-                                                    }
-                                                }
                                             }
                                             else if (clientType == "GROUP")
                                             {
@@ -434,17 +398,6 @@ namespace Options.File.Checker
 
                                                         // Record the line used to subtract this seat.
                                                         linesThatSubtractSeats.Add(rawOptionLine);
-
-                                                        // Error out if the seat count is negative.
-                                                        if (licenseFileSeatCount < 0)
-                                                        {
-                                                            if (licenseFileLicenseOffering == "NNU")
-                                                            {
-                                                                // err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}. " +
-                                                                //       "Don't forget that you are using at least 1 INCLUDEALL line.";
-                                                                // return;
-                                                            }
-                                                        }
                                                     }
                                                 }
 
@@ -472,42 +425,27 @@ namespace Options.File.Checker
                                         // Record the line used to subtract this seat.
                                         case "USER":
                                             {
-
-                                                if (firstAttemptToSubtractSeats)
+                                                if (licenseFileSeatCount <= 0)
+                                                {
+                                                    if (forceSubtraction)
+                                                    {
+                                                        licenseFileSeatCount--;
+                                                        linesThatSubtractSeats.Add(rawOptionLine);
+                                                        doneSubtractingSeats = true;
+                                                        forceSubtraction = false;
+                                                    }
+                                                    else { continue; }
+                                                }
+                                                else
                                                 {
                                                     licenseFileSeatCount--;
-
                                                     linesThatSubtractSeats.Add(rawOptionLine);
+                                                    doneSubtractingSeats = true;
+                                                    forceSubtraction = false;
                                                 }
-
-                                                // Error out if the seat count is negative.
-                                                // if (licenseFileSeatCount < 0)
-                                                // {
-                                                //     if (licenseFileLicenseOffering != "lo=CN" && !forceSubtraction)
-                                                //     {
-                                                //         // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
-                                                //         int remainingSeatCount = licenseFileSeatCount;
-                                                //         //licenseFileSeatCount = 0;
-                                                //         licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
-                                                //         licenseFileDictionary[licenseLineIndex] = licenseFileData;
-
-                                                //         if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
-                                                //         {
-                                                //             // if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                                //             // {
-                                                //             //     err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                                //             //           $"for license {licenseNumber}.";
-                                                //             // }
-                                                //             // else
-                                                //             // {
-                                                //             //     err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
-                                                //             // }
-                                                //         }
-                                                //         return;
-                                                //     }
-                                                // }
                                                 break;
                                             }
+
                                         // Check that a group has actually been specified.
                                         case "GROUP" when string.IsNullOrWhiteSpace(clientSpecified):
                                             {
@@ -555,6 +493,7 @@ namespace Options.File.Checker
 
                                                                 // Record the line used to subtract this seat.
                                                                 linesThatSubtractSeats.Add(rawOptionLine);
+                                                                needToGoToNextEntry = true;
                                                             }
                                                             else
                                                             {
@@ -565,55 +504,37 @@ namespace Options.File.Checker
                                                                 linesThatSubtractSeats.Add(rawOptionLine);
 
                                                                 doneSubtractingSeats = true;
+                                                                forceSubtraction = false;
                                                             }
                                                         }
                                                         else
                                                         {
+
                                                             if (remainingSeatsToSubtract > licenseFileSeatCount)
                                                             {
-                                                                int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
-                                                                licenseFileSeatCount -= remainingSeatsToSubtract;
+                                                                if (licenseFileSeatCount != 0 || forceSubtraction)
+                                                                {
 
-                                                                // Calculate the remaining seats that couldn't be subtracted.
-                                                                remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
 
-                                                                // Record the line used to subtract this seat.
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
+                                                                    int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
+                                                                    licenseFileSeatCount -= remainingSeatsToSubtract;
+
+                                                                    // Calculate the remaining seats that couldn't be subtracted.
+                                                                    remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
+
+                                                                    // Record the line used to subtract this seat.
+                                                                    linesThatSubtractSeats.Add(rawOptionLine);
+                                                                    if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
+                                                                }
                                                             }
                                                             else
                                                             {
                                                                 licenseFileSeatCount -= remainingSeatsToSubtract;
                                                                 linesThatSubtractSeats.Add(rawOptionLine);
                                                                 doneSubtractingSeats = true;
+                                                                forceSubtraction = false;
                                                             }
                                                         }
-
-                                                        // Error out if the seat count is negative.
-                                                        // if (licenseFileSeatCount < 0)
-                                                        // {
-                                                        //     if (licenseFileLicenseOffering != "lo=CN" && !forceSubtraction)
-                                                        //     {
-                                                        //         // Let's see if we can find a duplicate product on the license to subtract from, unless you specified a productKey.
-                                                        //         int remainingSeatCount = licenseFileSeatCount;
-                                                        //         //licenseFileSeatCount = 0;
-                                                        //         licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, licenseFileData.Item6, licenseFileData.Item7);
-                                                        //         licenseFileDictionary[licenseLineIndex] = licenseFileData;
-
-                                                        //         if (!string.IsNullOrEmpty(productKey) || !SubtractFromDuplicateProducts(licenseNumber, productName, remainingSeatCount, licenseFileDictionary))
-                                                        //         {
-                                                        //             // if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                                        //             // {
-                                                        //             //     err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName} " +
-                                                        //             //           $"for license {licenseNumber}.";
-                                                        //             // }
-                                                        //             // else
-                                                        //             // {
-                                                        //             //     err = $"There is an issue with the options file: you have specified too many users to be able to use {licenseFileProductName}.";
-                                                        //             // }
-                                                        //         }
-                                                        //         return;
-                                                        //     }
-                                                        // }
                                                         break;
                                                     }
                                                 }
@@ -625,10 +546,15 @@ namespace Options.File.Checker
 
                             licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
                             licenseFileDictionary[licenseLineIndex] = licenseFileData;
-
+                            if (needToGoToNextEntry) { continue; }
                             if (optionSelected != "INCLUDEALL") { break; } // We don't need to go through any other products since we've already done seat subtraction.
                         }
                     }
+                    if (!doneSubtractingSeats)
+                    {
+                        forceSubtraction = true;
+                    }
+
                 }
 
                 // You can't give away what you don't have.
