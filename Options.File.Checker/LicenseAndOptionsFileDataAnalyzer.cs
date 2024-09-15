@@ -274,14 +274,14 @@ namespace Options.File.Checker
             }
             else if (optionSelected == "RESERVE")
             {
-                Tuple<int, string, string, string, string, string> optionsData = optionsEntry.Value;
+                Tuple<int, string, string, string, string, string, string> optionsData = optionsEntry.Value;
                 reserveSeatCount = optionsData.Item1;
                 productName = optionsData.Item2;
                 licenseNumber = optionsData.Item3;
                 productKey = optionsData.Item4;
                 clientType = optionsData.Item5;
                 clientSpecified = optionsData.Item6;
-                // # Add some code to include this. rawOptionLine = optionsData.Item7;
+                rawOptionLine = optionsData.Item7;
             }
 
             bool matchingProductFoundInLicenseFile = false;
