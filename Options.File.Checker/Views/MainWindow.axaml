@@ -5,9 +5,9 @@
         xmlns:local="clr-namespace:Options.File.Checker"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:views="clr-namespace:Options.File.Checker.Views"
-        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-        Width="800" Height="450"
-        MinWidth="875" MinHeight="450"
+        mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="550"
+        Width="800" Height="550"
+        MinWidth="875" MinHeight="550"
         x:Class="Options.File.Checker.Views.MainWindow"
         x:DataType="vm:MainViewModel"
         Icon="/Assets/icon.ico"
@@ -96,14 +96,17 @@
             </Button.Styles>
         </Button>
 
-        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="36,177,36,36">
-            <TextBlock Name="OutputTextBlock"
-                       TextWrapping="Wrap"
-                       Text="Warning messages will appear here after analysis. Errors will appear in a pop-up window."
-                       Foreground="White" />
+        <ScrollViewer VerticalScrollBarVisibility="Auto" Margin="36,177,36,236">
+            <Border BorderBrush="Gray" BorderThickness="2">
+                <TextBlock Name="OutputTextBlock"
+                           TextWrapping="Wrap"
+                           Text="Warning messages will appear here after analysis. Errors will appear in a pop-up window."
+                           Foreground="White" />
+            </Border>
         </ScrollViewer>
-        <TreeView Name="OutputTreeView" Grid.Row="0" Margin="20,20,600,350" VerticalAlignment="Stretch"
-                  Background="#FF2D2B2B" BorderBrush="Black" BorderThickness="2" Foreground="White"
+
+        <TreeView Name="OutputTreeView" Margin="36,320,36,60" VerticalAlignment="Stretch"
+                  Background="#FF2D2B2B" BorderBrush="Gray" BorderThickness="2" Foreground="White"
                   ItemsSource="{Binding TreeViewItems}">
             <TreeView.ItemTemplate>
                 <TreeDataTemplate DataType="{x:Type local:MainWindowTreeViewItemModel}"

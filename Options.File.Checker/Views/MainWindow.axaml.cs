@@ -130,6 +130,7 @@ public partial class MainWindow : Window
 
         ErrorWindow errorWindow = new();
         errorWindow.ErrorTextBlock.Text = errorMessage;
+        OutputTextBlock.Text = "Error: " + errorMessage;
 
         // Check if VisualRoot is not null and is a Window before casting
         if (this.VisualRoot is Window window)
