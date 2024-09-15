@@ -1,4 +1,4 @@
-GROUP ratcrab_users jestzer funky_monkey three four five six seven eight nine
+GROUP ratcrab_users jestzer funky_monkey three four five six seven eict
 HOST_GROUP wildcats 192.168.86.25 10.0.0.*
 # RESERVE 2 MATLAB_Distrib_Comp_Engine GROUP ratcrab_users
 INCLUDE MATLAB GROUP ratcrab_users
