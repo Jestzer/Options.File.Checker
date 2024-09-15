@@ -2,3 +2,4 @@ GROUP ratcrab_users jestzer funky_monkey
 HOST_GROUP wildcats 192.168.86.25 10.0.0.*
 INCLUDE MATLAB_Distrib_Comp_Engine GROUP ratcrab_users
 INCLUDE MATLAB HOST_GROUP wildcats
+INCLUDEALL GROUP ratcrab_users
