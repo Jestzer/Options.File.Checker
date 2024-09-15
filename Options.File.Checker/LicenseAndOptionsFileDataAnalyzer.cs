@@ -267,10 +267,10 @@ namespace Options.File.Checker
             }
             else if (optionSelected == "INCLUDEALL")
             {
-                Tuple<string, string> optionsData = optionsEntry.Value;
+                Tuple<string, string, string> optionsData = optionsEntry.Value;
                 clientType = optionsData.Item1;
                 clientSpecified = optionsData.Item2;
-                // # Add some code to include this. rawOptionLine = optionsData.Item3;
+                rawOptionLine = optionsData.Item3;
             }
             else if (optionSelected == "RESERVE")
             {
