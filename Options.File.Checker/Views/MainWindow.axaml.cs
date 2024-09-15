@@ -167,7 +167,7 @@ public partial class MainWindow : Window
                 ]
             };
 
-            // Open the file dialog and await the user's response
+            // Open the file dialog and await the user's response.
             var result = await mainWindow.StorageProvider.OpenFilePickerAsync(filePickerOptions);
 
             if (result != null && result.Any())
