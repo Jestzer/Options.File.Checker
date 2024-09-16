@@ -124,7 +124,7 @@ public partial class MainWindow : Window
         OutputTextBlock.Text = string.Empty;
         if (DataContext is MainViewModel viewModel)
         {
-            
+
             viewModel.TreeViewItems.Clear();
         }
 
@@ -378,7 +378,7 @@ public partial class MainWindow : Window
         {
             treeViewModel.TreeViewItems.Clear();
         }
-        
+
         string licenseFilePath = string.Empty;
         string optionsFilePath = string.Empty; // Thank you for the lousy suggestion to remove this Visual Studio.
 
@@ -476,7 +476,6 @@ public partial class MainWindow : Window
         // Print seatCount.
         if (licenseFileDictionary != null)
         {
-            bool overdraftCNWarningHit = false;
             bool includeAllNNUWarningHit = false;
             bool alreadyYelledToCNUAboutPORTFormat = false;
 
@@ -501,24 +500,13 @@ public partial class MainWindow : Window
                         alreadyYelledToCNUAboutPORTFormat = true;
                     }
                 }
-
-                else if (item.Value.Item4.Contains("CN") && item.Value.Item2 < 0)
-                {
-                    if (!overdraftCNWarningHit)
-                    {
-                        OutputTextBlock.Text += $"\r\nWARNING: you have specified more users on license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for. " +
-                            $"If every user included was using the product at once then the seat count would technically be at {item.Value.Item2}. " +
-                            "This is acceptable since it is a Concurrent license, but if all seats are being used, then a user you've specified to be able to use the product will not be able to " +
-                            "access this product until a seat is available.\r\n\r\nTHE WARNING ABOVE WILL ONLY PRINT ONCE FOR THIS SINGLE PRODUCT.\r\n";
-                        overdraftCNWarningHit = true;
-                    }
-                    else
-                    {
-                        output.AppendLine($"You have specified more users on Concurrent license {item.Value.Item5} for the product {item.Value.Item1} than you have seats for (technically counting at {item.Value.Item2} seats.)");
-                    }
-                }
                 else
                 {
+                    // Setup License Offering in plain English for Concurrent, at least.
+                    string licenseFileLicenseOffering = string.Empty;
+                    licenseFileLicenseOffering = item.Value.Item4;
+                    if (licenseFileLicenseOffering == "lo=CN") { licenseFileLicenseOffering = "CN"; }
+
                     if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
                     {
                         if (!includeAllNNUWarningHit)
@@ -533,20 +521,31 @@ public partial class MainWindow : Window
                             includeAllNNUWarningHit = true;
                         }
                     }
+                    if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0)
+                    {
+                        ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
+                        "Please close this window and see the full output for more information.");
+                        output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
+                        "Please see the full output for more information.");
+                    }
                     // Finally, print the stuff we want to see!                    
                     if (DataContext is MainViewModel viewModel)
                     {
                         // Create the main tree view item that displays main product info.
                         var mainItem = new MainWindowTreeViewItemModel
                         {
-                            Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on license number {item.Value.Item5} (product key {item.Value.Item3})."
+                            Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
                         };
 
                         // Add sub-items that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
                         // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
                         foreach (var subItem in item.Value.Item6)
                         {
-                            mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
+                            // Check if a subitem with the same title already exists. Should probably do something proper to fix this but w/e.
+                            if (!mainItem.Children.Any(child => child.Title == subItem))
+                            {
+                                mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
+                            }
                         }
 
                         // Add the whole item and its subitems to the tree view.
@@ -563,5 +562,10 @@ public partial class MainWindow : Window
 
         // Show us the goods, since we didn't hit any critical errors.
         OutputTextBlock.Text = output.ToString();
+
+        if (string.IsNullOrWhiteSpace(OutputTextBlock.Text) && string.IsNullOrWhiteSpace(err))
+        {
+            OutputTextBlock.Text = "No errors detected and no warnings needed to be printed! See the box below for information on your options file.";
+        }
     }
 }

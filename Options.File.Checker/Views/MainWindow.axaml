@@ -14,7 +14,7 @@
         Title="Options File Checker"
         Background="#FF2D2B2B"
         WindowStartupLocation="CenterScreen">
-    <Grid Margin="20,20,20,5"> <!-- Since everything is in this grid, it's basically the window's margins. -->
+    <Grid Margin="30,30,30,5"> <!-- Since everything is in this grid, it's basically the window's margins. -->
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto"/> <!-- License file path label -->
             <RowDefinition Height="Auto"/> <!-- License file path input -->
@@ -88,7 +88,7 @@
         </StackPanel>
 
         <!-- Action Buttons -->
-        <StackPanel Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="0,0,0,0">
+        <StackPanel Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,0,0,0">
             <Button Name="AnalyzerButton"
                     Content="Analyze" Margin="0,0,10,0" Foreground="White"
                     IsEnabled="False" Click="AnalyzerButton_Click">
