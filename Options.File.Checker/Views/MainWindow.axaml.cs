@@ -524,9 +524,9 @@ public partial class MainWindow : Window
                     if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0)
                     {
                         ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                        "Please close this window and see the full output for more information.");
+                        "Please close this window and see the full output in the main window for more information.");
                         output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                        "Please see the full output for more information.");
+                        "Please see the full output below for more information.");
                     }
                     // Finally, print the stuff we want to see!                    
                     if (DataContext is MainViewModel viewModel)
