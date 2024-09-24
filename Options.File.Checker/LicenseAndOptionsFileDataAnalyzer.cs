@@ -417,6 +417,7 @@ namespace Options.File.Checker
 
                                                 // Record the line used to subtract this seat.
                                                 linesThatSubtractSeats.Add(rawOptionLine);
+                                                doneSubtractingSeats = true; // I see no reason this won't always be true. We have to subtraction on CN and CNU licenses and setting this shouldn't pose any issues... right?
                                             }
                                             else if (clientType == "GROUP")
                                             {
@@ -504,6 +505,12 @@ namespace Options.File.Checker
                                                 err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
                                                 return;
                                             }
+                                        }
+                                        // NNU licenses.
+                                        else
+                                        { // If we've already attempted to subtract seats and there are only NNU licenses remaining, then we have nothing left we can subtract from.
+                                            if (!firstAttemptToSubtractSeats) { doneSubtractingSeats = true;}
+                                            
                                         }
                                         break;
                                     }
