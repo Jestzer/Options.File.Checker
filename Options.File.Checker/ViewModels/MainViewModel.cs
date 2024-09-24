@@ -5,7 +5,7 @@ public partial class MainViewModel : ViewModelBase
 {
     public static string PackageVersion => GetPackageVersion();
 
-    public ObservableCollection<MainWindowTreeViewItemModel> TreeViewItems { get; } = new ObservableCollection<MainWindowTreeViewItemModel>();
+    public ObservableCollection<MainWindowTreeViewItemModel> TreeViewItems { get; } = [];
 
     private static string GetPackageVersion()
     {
