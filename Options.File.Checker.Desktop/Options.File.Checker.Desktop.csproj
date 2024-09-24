@@ -5,6 +5,7 @@
     <OutputType>WinExe</OutputType>
     <AssemblyName>Options File Checker</AssemblyName>
     <TargetFramework>net8.0</TargetFramework>
+    <VersionPrefix>0.2.6</VersionPrefix>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <ApplicationManifest>app.manifest</ApplicationManifest>
