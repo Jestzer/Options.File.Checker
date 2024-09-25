@@ -326,6 +326,25 @@ namespace Options.File.Checker
                             {
                                 if (!string.IsNullOrEmpty(licenseNumber) || !string.IsNullOrEmpty(productKey))
                                 {
+                                    if (forceSubtraction) // Don't make sure search all day for something that doesn't exist, unless we must.
+                                    {
+                                        if (!usableLicenseNumberOrProductKeyFoundInLicenseFile)
+                                        {
+                                            if (!string.IsNullOrEmpty(licenseNumber))
+                                            {
+                                                err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file for the product {productName}.";
+                                                return;
+                                            }
+                                            else if (!string.IsNullOrEmpty(productKey))
+                                            {
+                                                err = $"There is an issue with the options file: you have specified a product key, {productKey}, which does not exist in the license file.";
+                                                return;
+                                            }
+                                            // ... this'll hopefully cover anything I missed.
+                                            err = $"There is an issue with the options file: you have specified either a license number or product key, ({licenseNumber}, {productKey}), which does not exist in the license file.";
+                                            return;
+                                        }
+                                    }
                                     continue; // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
                                 }
                                 else // If you're here, your option entry does not use a license number/product key, so we'll check if the current license file license number/product key has any remaining seats we can use/subtract from.
@@ -509,8 +528,8 @@ namespace Options.File.Checker
                                         // NNU licenses.
                                         else
                                         { // If we've already attempted to subtract seats and there are only NNU licenses remaining, then we have nothing left we can subtract from.
-                                            if (!firstAttemptToSubtractSeats) { doneSubtractingSeats = true;}
-                                            
+                                            if (!firstAttemptToSubtractSeats) { doneSubtractingSeats = true; }
+
                                         }
                                         break;
                                     }
@@ -552,12 +571,12 @@ namespace Options.File.Checker
                                             {
                                                 if (!string.IsNullOrWhiteSpace(licenseNumber))
                                                 {
-                                                    err = $"There is an issue with the options file: You have specified a GROUP to be able to use {licenseFileProductName} " +
+                                                    err = $"There is an issue with the options file: you have specified a GROUP to be able to use {licenseFileProductName} " +
                                                           $"for license {licenseNumber}, but you did not specify which GROUP.";
                                                 }
                                                 else
                                                 {
-                                                    err = $"There is an issue with the options file: You have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
+                                                    err = $"There is an issue with the options file: you have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
                                                 }
                                                 return;
                                             }
@@ -647,12 +666,24 @@ namespace Options.File.Checker
                             if (needToGoToNextEntry) { continue; }
                             if (optionSelected != "INCLUDEALL") { break; } // We don't need to go through any other products since we've already done seat subtraction.
                         }
+                        else
+                        {
+                            if (forceSubtraction)
+                            {
+                                // You can't give away what you don't have.
+                                if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
+                                {
+                                    err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
+                                            "Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.";
+                                    return;
+                                }
+                            }
+                        }
                     }
                     if (!doneSubtractingSeats)
                     {
                         forceSubtraction = true;
                     }
-
                 }
 
                 // You can't give away what you don't have.
