@@ -22,6 +22,9 @@ namespace Options.File.Checker
         [GeneratedRegex("asset_info=", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex AssetInfo();
 
+        [GeneratedRegex(@"^[^Rab_\d]+$")]
+        private static partial Regex LicenseNumber();
+
         private static bool _serverLineHasPort = true;
         private static bool _daemonLineHasPort = false;
         private static bool _daemonPortIsCnuFriendly = false;
@@ -405,6 +408,12 @@ namespace Options.File.Checker
                         }
                         else
                         {
+                            if (string.IsNullOrWhiteSpace(licenseNumber))
+                            {
+                                _err = $"There is an issue with the license file: the license number was not found for the product {productName} with the product key {productKey}. " +
+                                "Your license file has likely been tampered with. Please regenate it for this product before proceeding.";
+                                return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                            }
                             _err = $"There is an issue with the license file: the license number {licenseNumber} was not found for the product {productName}.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
@@ -551,13 +560,19 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
 
-                        if (licenseNumber.Contains("broken") || string.IsNullOrWhiteSpace(licenseNumber) || Regex.IsMatch(licenseNumber, @"^[^Rab_\d]+$"))
+                        if (string.IsNullOrWhiteSpace(licenseNumber) || LicenseNumber().IsMatch(licenseNumber))
                         {
+                            if (licenseNumber == "DEMO")
+                            {
+                                _err = $"There is an issue with the license file: an invalid license number is detected for your trial license of {productName}. " +
+                                "Your trial license file has likely been tampered with. Please regenerate it before proceeding.";
+                                return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                            }
                             _err = $"There is an issue with the license file: an invalid license number, {licenseNumber}, is detected for {productName}.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
 
-                        if (licenseOffering.Contains("broken") || string.IsNullOrWhiteSpace(licenseOffering))
+                        if (string.IsNullOrWhiteSpace(licenseOffering))
                         {
                             _err = $"There is an issue with the license file: a license offering could not be detected for {productName} " +
                                 $"on license number {licenseNumber}.";
