@@ -492,65 +492,64 @@ public partial class MainWindow : Window
                     seatOrSeats = "seats";
                 }
 
-                if (!daemonPortIsCNUFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU"))
+                if (!daemonPortIsCNUFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCNUAboutPORTFormat)
                 {
-                    if (!alreadyYelledToCNUAboutPORTFormat)
+
+                    output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
+                    alreadyYelledToCNUAboutPORTFormat = true;
+
+                }
+
+                // Setup License Offering in plain English for Concurrent, at least.
+                string licenseFileLicenseOffering = string.Empty;
+                licenseFileLicenseOffering = item.Value.Item4;
+                if (licenseFileLicenseOffering == "lo=CN") { licenseFileLicenseOffering = "CN"; }
+
+                if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
+                {
+                    if (!includeAllNNUWarningHit)
                     {
-                        output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
-                        alreadyYelledToCNUAboutPORTFormat = true;
+                        if (includeAllDictionary != null)
+                        {
+                            if (includeAllDictionary.Count != 0)
+                            {
+                                output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
+                            }
+                        }
+                        includeAllNNUWarningHit = true;
                     }
                 }
-                else
+
+                if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0)
                 {
-                    // Setup License Offering in plain English for Concurrent, at least.
-                    string licenseFileLicenseOffering = string.Empty;
-                    licenseFileLicenseOffering = item.Value.Item4;
-                    if (licenseFileLicenseOffering == "lo=CN") { licenseFileLicenseOffering = "CN"; }
+                    ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
+                    "Please close this window and see the full output in the main window for more information.");
+                    output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
+                    "Please see the full output below for more information.");
+                }
 
-                    if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
+                // Finally, print the stuff we want to see!                    
+                if (DataContext is MainViewModel viewModel)
+                {
+                    // Create the main tree view item that displays main product info.
+                    var mainItem = new MainWindowTreeViewItemModel
                     {
-                        if (!includeAllNNUWarningHit)
+                        Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
+                    };
+
+                    // Add sub-items that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
+                    // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
+                    foreach (var subItem in item.Value.Item6)
+                    {
+                        // Check if a subitem with the same title already exists. Should probably do something proper to fix this but w/e.
+                        if (!mainItem.Children.Any(child => child.Title == subItem))
                         {
-                            if (includeAllDictionary != null)
-                            {
-                                if (includeAllDictionary.Count != 0)
-                                {
-                                    output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
-                                }
-                            }
-                            includeAllNNUWarningHit = true;
+                            mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
                         }
                     }
-                    if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0)
-                    {
-                        ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                        "Please close this window and see the full output in the main window for more information.");
-                        output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                        "Please see the full output below for more information.");
-                    }
-                    // Finally, print the stuff we want to see!                    
-                    if (DataContext is MainViewModel viewModel)
-                    {
-                        // Create the main tree view item that displays main product info.
-                        var mainItem = new MainWindowTreeViewItemModel
-                        {
-                            Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
-                        };
 
-                        // Add sub-items that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
-                        // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
-                        foreach (var subItem in item.Value.Item6)
-                        {
-                            // Check if a subitem with the same title already exists. Should probably do something proper to fix this but w/e.
-                            if (!mainItem.Children.Any(child => child.Title == subItem))
-                            {
-                                mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
-                            }
-                        }
-
-                        // Add the whole item and its subitems to the tree view.
-                        viewModel.TreeViewItems.Add(mainItem);
-                    }
+                    // Add the whole item and its subitems to the tree view.
+                    viewModel.TreeViewItems.Add(mainItem);
                 }
             }
         }
