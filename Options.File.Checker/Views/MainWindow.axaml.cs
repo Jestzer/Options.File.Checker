@@ -381,6 +381,7 @@ public partial class MainWindow : Window
 
         string licenseFilePath = string.Empty;
         string optionsFilePath = string.Empty; // Thank you for the lousy suggestion to remove this Visual Studio.
+        bool nnuOverdraftWarningDisplayed = false;
 
         if (!string.IsNullOrEmpty(LicenseFileLocationTextBox.Text))
         {
@@ -520,12 +521,13 @@ public partial class MainWindow : Window
                     }
                 }
 
-                if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0)
+                if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0 && !nnuOverdraftWarningDisplayed)
                 {
                     ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
                     "Please close this window and see the full output in the main window for more information.");
                     output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
                     "Please see the full output below for more information.");
+                    nnuOverdraftWarningDisplayed = true;
                 }
 
                 // Finally, print the stuff we want to see!                    
