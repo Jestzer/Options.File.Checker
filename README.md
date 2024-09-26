@@ -15,4 +15,3 @@ Notes for user:
 To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
-- Check if the previously used logic at the end of the SeatSubtractor method is still needed (very likely, it isn't)
