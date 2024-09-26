@@ -122,6 +122,7 @@ public partial class MainWindow : Window
     private bool treeViewShouldBeCleared = true;
     private async void ShowErrorWindow(string errorMessage)
     {
+        // Generally speaking, the treeview should be cleared because otherwise, it'll show up after an error appears. The exception is when NNU seats are still being reported.
         OutputTextBlock.Text = string.Empty;
         if (DataContext is MainViewModel viewModel && treeViewShouldBeCleared)
         {
@@ -133,7 +134,7 @@ public partial class MainWindow : Window
         OutputTextBlock.Text = "Error: " + errorMessage;
         treeViewShouldBeCleared = true;
 
-        // Check if VisualRoot is not null and is a Window before casting
+        // Check if VisualRoot is not null and is a Window before casting.
         if (VisualRoot is Window window)
         {
             await errorWindow.ShowDialog(window);
