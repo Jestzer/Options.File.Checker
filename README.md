@@ -15,4 +15,3 @@ Notes for user:
 To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
-- Review other options available from https://www.mathworks.com/help/install/license/borrow-licenses.html
