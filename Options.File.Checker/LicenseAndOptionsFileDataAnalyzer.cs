@@ -248,474 +248,440 @@ namespace Options.File.Checker
         {
             bool forceSubtraction = false;
 
-            while (true)
+            // These need to be defined outside the if statements below so they can be used across them.
+            int reserveSeatCount = 0;
+            string productName = string.Empty;
+            string licenseNumber = string.Empty;
+            string productKey = string.Empty;
+            string clientType = string.Empty;
+            string clientSpecified = string.Empty;
+            string rawOptionLine = string.Empty;
+
+            // Determine the option we're using. Set variables appropriately.
+            if (optionSelected == "INCLUDE")
             {
-                // These need to be defined outside the if statements below so they can be used across them.
-                int reserveSeatCount = 0;
-                string productName = string.Empty;
-                string licenseNumber = string.Empty;
-                string productKey = string.Empty;
-                string clientType = string.Empty;
-                string clientSpecified = string.Empty;
-                string rawOptionLine = string.Empty;
+                Tuple<string, string, string, string, string, string> optionsData = optionsEntry.Value;
+                productName = optionsData.Item1;
+                licenseNumber = optionsData.Item2;
+                productKey = optionsData.Item3;
+                clientType = optionsData.Item4;
+                clientSpecified = optionsData.Item5;
+                rawOptionLine = optionsData.Item6;
+            }
+            else if (optionSelected == "INCLUDEALL")
+            {
+                Tuple<string, string, string> optionsData = optionsEntry.Value;
+                clientType = optionsData.Item1;
+                clientSpecified = optionsData.Item2;
+                rawOptionLine = optionsData.Item3;
+            }
+            else if (optionSelected == "RESERVE")
+            {
+                Tuple<int, string, string, string, string, string, string> optionsData = optionsEntry.Value;
+                reserveSeatCount = optionsData.Item1;
+                productName = optionsData.Item2;
+                licenseNumber = optionsData.Item3;
+                productKey = optionsData.Item4;
+                clientType = optionsData.Item5;
+                clientSpecified = optionsData.Item6;
+                rawOptionLine = optionsData.Item7;
+            }
 
-                // Determine the option we're using. Set variables appropriately.
-                if (optionSelected == "INCLUDE")
-                {
-                    Tuple<string, string, string, string, string, string> optionsData = optionsEntry.Value;
-                    productName = optionsData.Item1;
-                    licenseNumber = optionsData.Item2;
-                    productKey = optionsData.Item3;
-                    clientType = optionsData.Item4;
-                    clientSpecified = optionsData.Item5;
-                    rawOptionLine = optionsData.Item6;
-                }
-                else if (optionSelected == "INCLUDEALL")
-                {
-                    Tuple<string, string, string> optionsData = optionsEntry.Value;
-                    clientType = optionsData.Item1;
-                    clientSpecified = optionsData.Item2;
-                    rawOptionLine = optionsData.Item3;
-                }
-                else if (optionSelected == "RESERVE")
-                {
-                    Tuple<int, string, string, string, string, string, string> optionsData = optionsEntry.Value;
-                    reserveSeatCount = optionsData.Item1;
-                    productName = optionsData.Item2;
-                    licenseNumber = optionsData.Item3;
-                    productKey = optionsData.Item4;
-                    clientType = optionsData.Item5;
-                    clientSpecified = optionsData.Item6;
-                    rawOptionLine = optionsData.Item7;
-                }
+            bool matchingProductFoundInLicenseFile = false;
+            bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
+            int remainingSeatsToSubtract = 0; // The 0 has no significance and will be set accordingly later on, if used.
+            bool doneSubtractingSeats = false;
+            bool firstAttemptToSubtractSeats = true;
 
-                bool matchingProductFoundInLicenseFile = false;
-                bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
-                int remainingSeatsToSubtract = 0; // The 0 has no significance and will be set accordingly later on, if used.
-                bool doneSubtractingSeats = false;
-                bool firstAttemptToSubtractSeats = true;
-
-                while (!doneSubtractingSeats)
+            while (!doneSubtractingSeats)
+            {
+                // Go through each line and subtract seats accordingly.
+                foreach (var licenseFileEntry in licenseFileDictionary)
                 {
-                    // Go through each line and subtract seats accordingly.
-                    foreach (var licenseFileEntry in licenseFileDictionary)
+                    bool needToGoToNextEntry = false;
+                    int licenseLineIndex = licenseFileEntry.Key;
+                    Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
+
+                    string licenseFileProductName = licenseFileData.Item1;
+                    int licenseFileSeatCount = licenseFileData.Item2;
+                    string licenseFileProductKey = licenseFileData.Item3;
+                    string licenseFileLicenseOffering = licenseFileData.Item4;
+                    string licenseFileLicenseNumber = licenseFileData.Item5;
+                    List<string> linesThatSubtractSeats = licenseFileData.Item6;
+                    int originalLicenseFileSeatCount = licenseFileData.Item7;
+
+                    // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
+                    // Case-senstivity does not matter, apparently.
+                    if (string.Equals(productName, licenseFileProductName, StringComparison.OrdinalIgnoreCase) || optionSelected == "INCLUDEALL")
                     {
-                        bool needToGoToNextEntry = false;
-                        int licenseLineIndex = licenseFileEntry.Key;
-                        Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
+                        matchingProductFoundInLicenseFile = true;
 
-                        string licenseFileProductName = licenseFileData.Item1;
-                        int licenseFileSeatCount = licenseFileData.Item2;
-                        string licenseFileProductKey = licenseFileData.Item3;
-                        string licenseFileLicenseOffering = licenseFileData.Item4;
-                        string licenseFileLicenseNumber = licenseFileData.Item5;
-                        List<string> linesThatSubtractSeats = licenseFileData.Item6;
-                        int originalLicenseFileSeatCount = licenseFileData.Item7;
-
-                        // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
-                        // Case-senstivity does not matter, apparently.
-                        if (string.Equals(productName, licenseFileProductName, StringComparison.OrdinalIgnoreCase) || optionSelected == "INCLUDEALL")
+                        if (licenseNumber == licenseFileLicenseNumber || productKey == licenseFileProductKey)
                         {
-                            matchingProductFoundInLicenseFile = true;
-
-                            if (licenseNumber == licenseFileLicenseNumber || productKey == licenseFileProductKey)
+                            usableLicenseNumberOrProductKeyFoundInLicenseFile = true; // Continue on, adventurer.
+                        }
+                        else
+                        {
+                            if (!string.IsNullOrEmpty(licenseNumber) || !string.IsNullOrEmpty(productKey))
                             {
-                                usableLicenseNumberOrProductKeyFoundInLicenseFile = true; // Continue on, adventurer.
-                            }
-                            else
-                            {
-                                if (!string.IsNullOrEmpty(licenseNumber) || !string.IsNullOrEmpty(productKey))
+                                if (forceSubtraction) // Don't make sure search all day for something that doesn't exist, unless we must.
                                 {
-                                    if (forceSubtraction) // Don't make sure search all day for something that doesn't exist, unless we must.
+                                    if (!usableLicenseNumberOrProductKeyFoundInLicenseFile)
                                     {
-                                        if (!usableLicenseNumberOrProductKeyFoundInLicenseFile)
+                                        if (!string.IsNullOrEmpty(licenseNumber))
                                         {
-                                            if (!string.IsNullOrEmpty(licenseNumber))
-                                            {
-                                                err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file for the product {productName}.";
-                                                return;
-                                            }
-                                            else if (!string.IsNullOrEmpty(productKey))
-                                            {
-                                                err = $"There is an issue with the options file: you have specified a product key, {productKey}, which does not exist in the license file.";
-                                                return;
-                                            }
-                                            // ... this'll hopefully cover anything I missed.
-                                            err = $"There is an issue with the options file: you have specified either a license number or product key, ({licenseNumber}, {productKey}), which does not exist in the license file.";
+                                            err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file for the product {productName}.";
                                             return;
                                         }
+                                        else if (!string.IsNullOrEmpty(productKey))
+                                        {
+                                            err = $"There is an issue with the options file: you have specified a product key, {productKey}, which does not exist in the license file.";
+                                            return;
+                                        }
+                                        // ... this'll hopefully cover anything I missed.
+                                        err = $"There is an issue with the options file: you have specified either a license number or product key, ({licenseNumber}, {productKey}), which does not exist in the license file.";
+                                        return;
                                     }
-                                    continue; // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
                                 }
-                                else // If you're here, your option entry does not use a license number/product key, so we'll check if the current license file license number/product key has any remaining seats we can use/subtract from.
+                                continue; // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
+                            }
+                            else // If you're here, your option entry does not use a license number/product key, so we'll check if the current license file license number/product key has any remaining seats we can use/subtract from.
+                            {
+                                if (licenseFileSeatCount == 0 && !forceSubtraction)
                                 {
-                                    if (licenseFileSeatCount == 0 && !forceSubtraction)
+                                    continue; // See if we can find another entry with the same product that does not have a seat count of 0.
+                                }
+                                else
+                                {
+                                    if (optionSelected != "INCLUDEALL") unspecifiedLicenseOrProductKey = true;
+
+                                    usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
+                                }
+                            }
+                        }
+
+                        switch (optionSelected)
+                        {
+                            // RESERVE lines don't care about your clientType.
+                            case "RESERVE":
+                                {
+                                    if (firstAttemptToSubtractSeats)
                                     {
-                                        continue; // See if we can find another entry with the same product that does not have a seat count of 0.
+                                        if (reserveSeatCount > licenseFileSeatCount && !forceSubtraction)
+                                        {
+                                            // Subtract as much as possible from licenseFileSeatCount.
+                                            int seatsToSubtract = Math.Min(reserveSeatCount, licenseFileSeatCount);
+                                            licenseFileSeatCount -= seatsToSubtract;
+
+                                            // Calculate the remaining seats that couldn't be subtracted.
+                                            remainingSeatsToSubtract = reserveSeatCount - seatsToSubtract;
+                                            firstAttemptToSubtractSeats = false;
+
+                                            // Record the line used to subtract this seat.
+                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                            needToGoToNextEntry = true;
+                                        }
+                                        else
+                                        {
+                                            // Subtract the appropriate number of seats.
+                                            licenseFileSeatCount -= reserveSeatCount;
+
+                                            // Record the line used to subtract this seat.
+                                            linesThatSubtractSeats.Add(rawOptionLine);
+
+                                            doneSubtractingSeats = true;
+                                            forceSubtraction = false;
+                                        }
                                     }
                                     else
                                     {
-                                        if (optionSelected != "INCLUDEALL") unspecifiedLicenseOrProductKey = true;
-
-                                        usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
-                                    }
-                                }
-                            }
-
-                            switch (optionSelected)
-                            {
-                                // RESERVE lines don't care about your clientType.
-                                case "RESERVE":
-                                    {
-                                        if (firstAttemptToSubtractSeats)
+                                        if (remainingSeatsToSubtract > licenseFileSeatCount)
                                         {
-                                            if (reserveSeatCount > licenseFileSeatCount && !forceSubtraction)
+                                            if (licenseFileSeatCount != 0 || forceSubtraction)
                                             {
-                                                // Subtract as much as possible from licenseFileSeatCount.
-                                                int seatsToSubtract = Math.Min(reserveSeatCount, licenseFileSeatCount);
-                                                licenseFileSeatCount -= seatsToSubtract;
+                                                int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
+                                                licenseFileSeatCount -= remainingSeatsToSubtract;
 
                                                 // Calculate the remaining seats that couldn't be subtracted.
                                                 remainingSeatsToSubtract = reserveSeatCount - seatsToSubtract;
-                                                firstAttemptToSubtractSeats = false;
 
                                                 // Record the line used to subtract this seat.
                                                 linesThatSubtractSeats.Add(rawOptionLine);
-                                                needToGoToNextEntry = true;
-                                            }
-                                            else
-                                            {
-                                                // Subtract the appropriate number of seats.
-                                                licenseFileSeatCount -= reserveSeatCount;
-
-                                                // Record the line used to subtract this seat.
-                                                linesThatSubtractSeats.Add(rawOptionLine);
-
-                                                doneSubtractingSeats = true;
-                                                forceSubtraction = false;
+                                                if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
                                             }
                                         }
                                         else
                                         {
-                                            if (remainingSeatsToSubtract > licenseFileSeatCount)
-                                            {
-                                                if (licenseFileSeatCount != 0 || forceSubtraction)
-                                                {
-                                                    int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
-                                                    licenseFileSeatCount -= remainingSeatsToSubtract;
-
-                                                    // Calculate the remaining seats that couldn't be subtracted.
-                                                    remainingSeatsToSubtract = reserveSeatCount - seatsToSubtract;
-
-                                                    // Record the line used to subtract this seat.
-                                                    linesThatSubtractSeats.Add(rawOptionLine);
-                                                    if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
-                                                }
-                                            }
-                                            else
-                                            {
-                                                licenseFileSeatCount -= remainingSeatsToSubtract;
-                                                linesThatSubtractSeats.Add(rawOptionLine);
-                                                doneSubtractingSeats = true;
-                                                forceSubtraction = false;
-                                            }
+                                            licenseFileSeatCount -= remainingSeatsToSubtract;
+                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                            doneSubtractingSeats = true;
+                                            forceSubtraction = false;
                                         }
-                                        break;
                                     }
-                                case "INCLUDEALL":
+                                    break;
+                                }
+                            case "INCLUDEALL":
+                                {
+                                    // Without this, the recorded product name will be blank.
+                                    productName = licenseFileProductName;
+
+                                    if (licenseFileLicenseOffering != "NNU") // You can't use INCLUDEALL with NNU.
                                     {
-                                        // Without this, the recorded product name will be blank.
-                                        productName = licenseFileProductName;
-
-                                        if (licenseFileLicenseOffering != "NNU") // You can't use INCLUDEALL with NNU.
+                                        if (clientType == "USER")
                                         {
-                                            if (clientType == "USER")
-                                            {
-                                                // Subtract 1 from seatCount, since you only specified a single user.
-                                                licenseFileSeatCount--;
+                                            // Subtract 1 from seatCount, since you only specified a single user.
+                                            licenseFileSeatCount--;
 
-                                                // Record the line used to subtract this seat.
-                                                linesThatSubtractSeats.Add(rawOptionLine);
-                                                doneSubtractingSeats = true; // I see no reason this won't always be true. We have to subtraction on CN and CNU licenses and setting this shouldn't pose any issues... right?
+                                            // Record the line used to subtract this seat.
+                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                            doneSubtractingSeats = true; // I see no reason this won't always be true. We have to subtraction on CN and CNU licenses and setting this shouldn't pose any issues... right?
+                                        }
+                                        else if (clientType == "GROUP")
+                                        {
+                                            if (string.IsNullOrWhiteSpace(clientSpecified))
+                                            {
+                                                err = "There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
+                                                return;
                                             }
-                                            else if (clientType == "GROUP")
+
+                                            // Subtract from seat count based on the number of users in the GROUP.
+                                            foreach (var optionsGroupEntry in groupDictionary)
                                             {
-                                                if (string.IsNullOrWhiteSpace(clientSpecified))
+                                                // Load GROUP specifications.
+                                                int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                                Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                                string groupName = optionsGroupData.Item1;
+                                                string groupUsers = optionsGroupData.Item2;
+                                                int groupUserCount = optionsGroupData.Item3;
+
+                                                if (groupName == clientSpecified)
                                                 {
-                                                    err = "There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP.";
-                                                    return;
-                                                }
-
-                                                // Subtract from seat count based on the number of users in the GROUP.
-                                                foreach (var optionsGroupEntry in groupDictionary)
-                                                {
-                                                    // Load GROUP specifications.
-                                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
-                                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-
-                                                    string groupName = optionsGroupData.Item1;
-                                                    string groupUsers = optionsGroupData.Item2;
-                                                    int groupUserCount = optionsGroupData.Item3;
-
-                                                    if (groupName == clientSpecified)
+                                                    if (firstAttemptToSubtractSeats)
                                                     {
-                                                        if (firstAttemptToSubtractSeats)
+                                                        if (groupUserCount > licenseFileSeatCount && !forceSubtraction)
                                                         {
-                                                            if (groupUserCount > licenseFileSeatCount && !forceSubtraction)
+                                                            // Subtract as much as possible from licenseFileSeatCount.
+                                                            int seatsToSubtract = Math.Min(groupUserCount, licenseFileSeatCount);
+                                                            licenseFileSeatCount -= seatsToSubtract;
+
+                                                            // Calculate the remaining seats that couldn't be subtracted.
+                                                            remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
+                                                            firstAttemptToSubtractSeats = false;
+
+                                                            // Record the line used to subtract this seat.
+                                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                                            needToGoToNextEntry = true;
+                                                        }
+                                                        else
+                                                        {
+                                                            // Subtract the appropriate number of seats.
+                                                            licenseFileSeatCount -= groupUserCount;
+
+                                                            // Record the line used to subtract this seat.
+                                                            linesThatSubtractSeats.Add(rawOptionLine);
+
+                                                            doneSubtractingSeats = true;
+                                                            forceSubtraction = false;
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        if (remainingSeatsToSubtract > licenseFileSeatCount)
+                                                        {
+                                                            if (licenseFileSeatCount != 0 || forceSubtraction)
                                                             {
-                                                                // Subtract as much as possible from licenseFileSeatCount.
-                                                                int seatsToSubtract = Math.Min(groupUserCount, licenseFileSeatCount);
-                                                                licenseFileSeatCount -= seatsToSubtract;
+                                                                int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
+                                                                licenseFileSeatCount -= remainingSeatsToSubtract;
 
                                                                 // Calculate the remaining seats that couldn't be subtracted.
                                                                 remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
-                                                                firstAttemptToSubtractSeats = false;
 
                                                                 // Record the line used to subtract this seat.
                                                                 linesThatSubtractSeats.Add(rawOptionLine);
-                                                                needToGoToNextEntry = true;
-                                                            }
-                                                            else
-                                                            {
-                                                                // Subtract the appropriate number of seats.
-                                                                licenseFileSeatCount -= groupUserCount;
-
-                                                                // Record the line used to subtract this seat.
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
-
-                                                                doneSubtractingSeats = true;
-                                                                forceSubtraction = false;
+                                                                if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            if (remainingSeatsToSubtract > licenseFileSeatCount)
-                                                            {
-                                                                if (licenseFileSeatCount != 0 || forceSubtraction)
-                                                                {
-                                                                    int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
-                                                                    licenseFileSeatCount -= remainingSeatsToSubtract;
-
-                                                                    // Calculate the remaining seats that couldn't be subtracted.
-                                                                    remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
-
-                                                                    // Record the line used to subtract this seat.
-                                                                    linesThatSubtractSeats.Add(rawOptionLine);
-                                                                    if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                licenseFileSeatCount -= remainingSeatsToSubtract;
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
-                                                                doneSubtractingSeats = true;
-                                                                forceSubtraction = false;
-                                                            }
+                                                            licenseFileSeatCount -= remainingSeatsToSubtract;
+                                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                                            doneSubtractingSeats = true;
+                                                            forceSubtraction = false;
                                                         }
-                                                        break;
                                                     }
+                                                    break;
                                                 }
+                                            }
 
-                                            }
-                                            // There is no subtraction that can be done because you've specified a client type that can be shared between any number of users.
-                                            else if (clientType is "HOST_GROUP" or "HOST" or "DISPLAY" or "PROJECT" or "INTERNET") { }
-                                            else
-                                            {
-                                                err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
-                                                return;
-                                            }
                                         }
-                                        // NNU licenses.
+                                        // There is no subtraction that can be done because you've specified a client type that can be shared between any number of users.
+                                        else if (clientType is "HOST_GROUP" or "HOST" or "DISPLAY" or "PROJECT" or "INTERNET") { }
                                         else
-                                        { // If we've already attempted to subtract seats and there are only NNU licenses remaining, then we have nothing left we can subtract from.
-                                            if (!firstAttemptToSubtractSeats) { doneSubtractingSeats = true; }
-
-                                        }
-                                        break;
-                                    }
-                                // optionSelected == INCLUDE
-                                default:
-                                    switch (clientType)
-                                    {
-                                        // Check that a user has actually been specified.
-                                        case "USER" when string.IsNullOrWhiteSpace(clientSpecified):
-                                            err = $"There is an issue with the options file: you have specified a USER to be able to use {licenseFileProductName}, " +
-                                                  "but you did not define the USER.";
+                                        {
+                                            err = "There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line.";
                                             return;
-                                        // Record the line used to subtract this seat.
-                                        case "USER":
+                                        }
+                                    }
+                                    // NNU licenses.
+                                    else
+                                    { // If we've already attempted to subtract seats and there are only NNU licenses remaining, then we have nothing left we can subtract from.
+                                        if (!firstAttemptToSubtractSeats) { doneSubtractingSeats = true; }
+
+                                    }
+                                    break;
+                                }
+                            // optionSelected == INCLUDE
+                            default:
+                                switch (clientType)
+                                {
+                                    // Check that a user has actually been specified.
+                                    case "USER" when string.IsNullOrWhiteSpace(clientSpecified):
+                                        err = $"There is an issue with the options file: you have specified a USER to be able to use {licenseFileProductName}, " +
+                                              "but you did not define the USER.";
+                                        return;
+                                    // Record the line used to subtract this seat.
+                                    case "USER":
+                                        {
+                                            if (licenseFileSeatCount <= 0)
                                             {
-                                                if (licenseFileSeatCount <= 0)
-                                                {
-                                                    if (forceSubtraction)
-                                                    {
-                                                        licenseFileSeatCount--;
-                                                        linesThatSubtractSeats.Add(rawOptionLine);
-                                                        doneSubtractingSeats = true;
-                                                        forceSubtraction = false;
-                                                    }
-                                                    else { continue; }
-                                                }
-                                                else
+                                                if (forceSubtraction)
                                                 {
                                                     licenseFileSeatCount--;
                                                     linesThatSubtractSeats.Add(rawOptionLine);
                                                     doneSubtractingSeats = true;
                                                     forceSubtraction = false;
                                                 }
-                                                break;
+                                                else { continue; }
                                             }
-
-                                        // Check that a group has actually been specified.
-                                        case "GROUP" when string.IsNullOrWhiteSpace(clientSpecified):
+                                            else
                                             {
-                                                if (!string.IsNullOrWhiteSpace(licenseNumber))
-                                                {
-                                                    err = $"There is an issue with the options file: you have specified a GROUP to be able to use {licenseFileProductName} " +
-                                                          $"for license {licenseNumber}, but you did not specify which GROUP.";
-                                                }
-                                                else
-                                                {
-                                                    err = $"There is an issue with the options file: you have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
-                                                }
-                                                return;
+                                                licenseFileSeatCount--;
+                                                linesThatSubtractSeats.Add(rawOptionLine);
+                                                doneSubtractingSeats = true;
+                                                forceSubtraction = false;
                                             }
-                                        case "GROUP":
+                                            break;
+                                        }
+
+                                    // Check that a group has actually been specified.
+                                    case "GROUP" when string.IsNullOrWhiteSpace(clientSpecified):
+                                        {
+                                            if (!string.IsNullOrWhiteSpace(licenseNumber))
                                             {
-                                                foreach (var optionsGroupEntry in groupDictionary)
+                                                err = $"There is an issue with the options file: you have specified a GROUP to be able to use {licenseFileProductName} " +
+                                                      $"for license {licenseNumber}, but you did not specify which GROUP.";
+                                            }
+                                            else
+                                            {
+                                                err = $"There is an issue with the options file: you have specified a GROUP to be able to use {licenseFileProductName}, but you did not specify which GROUP.";
+                                            }
+                                            return;
+                                        }
+                                    case "GROUP":
+                                        {
+                                            foreach (var optionsGroupEntry in groupDictionary)
+                                            {
+                                                // Load GROUP specifications.
+                                                int optionsGroupLineIndex = optionsGroupEntry.Key;
+                                                Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+
+                                                string groupName = optionsGroupData.Item1;
+                                                //string groupUsers = optionsGroupData.Item2;
+                                                int groupUserCount = optionsGroupData.Item3;
+
+                                                if (groupName == clientSpecified)
                                                 {
-                                                    // Load GROUP specifications.
-                                                    int optionsGroupLineIndex = optionsGroupEntry.Key;
-                                                    Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-
-                                                    string groupName = optionsGroupData.Item1;
-                                                    //string groupUsers = optionsGroupData.Item2;
-                                                    int groupUserCount = optionsGroupData.Item3;
-
-                                                    if (groupName == clientSpecified)
+                                                    // If we're going to get a negative seat count, we need to subtract as many seats as we can from as many matching products as we can...
+                                                    // ... If you specified a license number, then it needs to match (we already checked for this earlier.) However, a product key...
+                                                    // ... is always unique and therefore, we won't bother looking for another license file entry.
+                                                    // If we've hit forceSubtraction, that means we've already gone through every license file entry and didn't find any other candidates...
+                                                    // ... with a positive seat count (1 or greater), so we're just going to subtract it from whatever (likely the first instance of the product.)
+                                                    if (firstAttemptToSubtractSeats)
                                                     {
-                                                        // If we're going to get a negative seat count, we need to subtract as many seats as we can from as many matching products as we can...
-                                                        // ... If you specified a license number, then it needs to match (we already checked for this earlier.) However, a product key...
-                                                        // ... is always unique and therefore, we won't bother looking for another license file entry.
-                                                        // If we've hit forceSubtraction, that means we've already gone through every license file entry and didn't find any other candidates...
-                                                        // ... with a positive seat count (1 or greater), so we're just going to subtract it from whatever (likely the first instance of the product.)
-                                                        if (firstAttemptToSubtractSeats)
+                                                        if (groupUserCount > licenseFileSeatCount && !forceSubtraction)
                                                         {
-                                                            if (groupUserCount > licenseFileSeatCount && !forceSubtraction)
+                                                            // Subtract as much as possible from licenseFileSeatCount.
+                                                            int seatsToSubtract = Math.Min(groupUserCount, licenseFileSeatCount);
+                                                            licenseFileSeatCount -= seatsToSubtract;
+
+                                                            // Calculate the remaining seats that couldn't be subtracted.
+                                                            remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
+                                                            firstAttemptToSubtractSeats = false;
+
+                                                            // Record the line used to subtract this seat.
+                                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                                            needToGoToNextEntry = true;
+                                                        }
+                                                        else
+                                                        {
+                                                            // Subtract the appropriate number of seats.
+                                                            licenseFileSeatCount -= groupUserCount;
+
+                                                            // Record the line used to subtract this seat.
+                                                            linesThatSubtractSeats.Add(rawOptionLine);
+
+                                                            doneSubtractingSeats = true;
+                                                            forceSubtraction = false;
+                                                        }
+                                                    }
+                                                    else
+                                                    {
+                                                        if (remainingSeatsToSubtract > licenseFileSeatCount)
+                                                        {
+                                                            if (licenseFileSeatCount != 0 || forceSubtraction)
                                                             {
-                                                                // Subtract as much as possible from licenseFileSeatCount.
-                                                                int seatsToSubtract = Math.Min(groupUserCount, licenseFileSeatCount);
-                                                                licenseFileSeatCount -= seatsToSubtract;
+                                                                int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
+                                                                licenseFileSeatCount -= remainingSeatsToSubtract;
 
                                                                 // Calculate the remaining seats that couldn't be subtracted.
                                                                 remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
-                                                                firstAttemptToSubtractSeats = false;
 
                                                                 // Record the line used to subtract this seat.
                                                                 linesThatSubtractSeats.Add(rawOptionLine);
-                                                                needToGoToNextEntry = true;
-                                                            }
-                                                            else
-                                                            {
-                                                                // Subtract the appropriate number of seats.
-                                                                licenseFileSeatCount -= groupUserCount;
-
-                                                                // Record the line used to subtract this seat.
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
-
-                                                                doneSubtractingSeats = true;
-                                                                forceSubtraction = false;
+                                                                if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
                                                             }
                                                         }
                                                         else
                                                         {
-                                                            if (remainingSeatsToSubtract > licenseFileSeatCount)
-                                                            {
-                                                                if (licenseFileSeatCount != 0 || forceSubtraction)
-                                                                {
-                                                                    int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
-                                                                    licenseFileSeatCount -= remainingSeatsToSubtract;
-
-                                                                    // Calculate the remaining seats that couldn't be subtracted.
-                                                                    remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
-
-                                                                    // Record the line used to subtract this seat.
-                                                                    linesThatSubtractSeats.Add(rawOptionLine);
-                                                                    if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
-                                                                }
-                                                            }
-                                                            else
-                                                            {
-                                                                licenseFileSeatCount -= remainingSeatsToSubtract;
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
-                                                                doneSubtractingSeats = true;
-                                                                forceSubtraction = false;
-                                                            }
+                                                            licenseFileSeatCount -= remainingSeatsToSubtract;
+                                                            linesThatSubtractSeats.Add(rawOptionLine);
+                                                            doneSubtractingSeats = true;
+                                                            forceSubtraction = false;
                                                         }
-                                                        break;
                                                     }
+                                                    break;
                                                 }
-                                                break;
                                             }
-                                    }
-                                    break;
-                            }
-
-                            licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
-                            licenseFileDictionary[licenseLineIndex] = licenseFileData;
-                            if (needToGoToNextEntry) { continue; }
-                            if (optionSelected != "INCLUDEALL") { break; } // We don't need to go through any other products since we've already done seat subtraction.
-                        }
-                        else
-                        {
-                            if (forceSubtraction)
-                            {
-                                // You can't give away what you don't have.
-                                if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
-                                {
-                                    err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
-                                            "Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.";
-                                    return;
+                                            break;
+                                        }
                                 }
-                            }
+                                break;
                         }
-                    }
-                    if (!doneSubtractingSeats)
-                    {
-                        forceSubtraction = true;
-                    }
-                }
 
-                // You can't give away what you don't have.
-                if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
-                {
-                    err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
-                            "Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.";
-                    return;
-                }
-
-                // You're likely here because you didn't specify a license number in your specified option and there is no combination of products with seats remaining from any licenses in the license file to subtract from.
-                if (!usableLicenseNumberOrProductKeyFoundInLicenseFile && optionSelected != "INCLUDEALL")
-                {
-                    if (!string.IsNullOrEmpty(licenseNumber))
-                    {
-                        err = $"There is an issue with the options file: you have specified a license number, {licenseNumber}, which does not exist in the license file for the product {productName}.";
-                    }
-                    else if (!string.IsNullOrEmpty(productKey))
-                    {
-                        err = $"There is an issue with the options file: you have specified a product key, {productKey}, which does not exist in the license file.";
+                        licenseFileData = Tuple.Create(productName, licenseFileSeatCount, licenseFileData.Item3, licenseFileData.Item4, licenseFileData.Item5, linesThatSubtractSeats, originalLicenseFileSeatCount);
+                        licenseFileDictionary[licenseLineIndex] = licenseFileData;
+                        if (needToGoToNextEntry) { continue; }
+                        if (optionSelected != "INCLUDEALL") { break; } // We don't need to go through any other products since we've already done seat subtraction.
                     }
                     else
                     {
-                        if (!forceSubtraction)
+                        if (forceSubtraction)
                         {
-                            forceSubtraction = true; // We will need to do this again to land on the first matching product and subtract the seat count accordingly.
+                            // You can't give away what you don't have.
+                            if (!matchingProductFoundInLicenseFile && optionSelected != "INCLUDEALL")
+                            {
+                                err = $"There is an issue with the options file: you specified a product, {productName}, but this product is not in your license file. " +
+                                        "Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.";
+                                return;
+                            }
                         }
-                        else { break; }
-                        // err = $"There is an issue with the options file: you have specified too many users to be able to use {productName}.";
                     }
                 }
-                else { break; }
+                if (!doneSubtractingSeats)
+                {
+                    forceSubtraction = true;
+                }
             }
         }
 
