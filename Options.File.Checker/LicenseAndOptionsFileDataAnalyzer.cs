@@ -1,6 +1,5 @@
 ﻿using System; // Don't let VSC deceive you, you need these!
 using System.Collections.Generic;
-using System.Net;
 
 namespace Options.File.Checker
 {
