@@ -655,6 +655,12 @@ namespace Options.File.Checker
                                             }
                                             break;
                                         }
+                                    // You have a clientType that does not require subtraction because we cannot subtract a definitive number of seats from it.
+                                    default:
+                                        {
+                                            doneSubtractingSeats = true;
+                                        }
+                                        break;
                                 }
                                 break;
                         }
