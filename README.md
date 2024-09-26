@@ -15,3 +15,4 @@ Notes for user:
 To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
+- Check if a duplicate INCLUDE line with only case-sensitivty changed will count as 2 seats or 1
