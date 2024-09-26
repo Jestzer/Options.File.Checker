@@ -119,18 +119,19 @@ public partial class MainWindow : Window
         SaveSettings(settings);
     }
 
+    private bool treeViewShouldBeCleared = true;
     private async void ShowErrorWindow(string errorMessage)
     {
         OutputTextBlock.Text = string.Empty;
-        if (DataContext is MainViewModel viewModel)
+        if (DataContext is MainViewModel viewModel && treeViewShouldBeCleared)
         {
-
             viewModel.TreeViewItems.Clear();
         }
 
         ErrorWindow errorWindow = new();
         errorWindow.ErrorTextBlock.Text = errorMessage;
         OutputTextBlock.Text = "Error: " + errorMessage;
+        treeViewShouldBeCleared = true;
 
         // Check if VisualRoot is not null and is a Window before casting
         if (VisualRoot is Window window)
@@ -523,6 +524,7 @@ public partial class MainWindow : Window
 
                 if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0 && !nnuOverdraftWarningDisplayed)
                 {
+                    treeViewShouldBeCleared = false;
                     ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
                     "Please close this window and see the full output in the main window for more information.");
                     output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
