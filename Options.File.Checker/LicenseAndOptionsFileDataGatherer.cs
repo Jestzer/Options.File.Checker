@@ -1089,7 +1089,7 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ")
                         || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ")
                         || line.TrimStart().StartsWith("DEFAULT ") || line.TrimStart().StartsWith("HIDDEN ") || line.TrimStart().StartsWith("MAX_BORROW_HOURS") || line.TrimStart().StartsWith('#') 
-                        || string.IsNullOrWhiteSpace(line))
+                        || string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("BORROW_LOWWATER "))
                     {
                         // Other valid line beginnings that I currently do nothing with.
                     }
