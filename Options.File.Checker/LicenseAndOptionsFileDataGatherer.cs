@@ -44,6 +44,9 @@ namespace Options.File.Checker
         private static readonly Dictionary<int, Tuple<string, string, int>> groupDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string>> hostGroupDictionary = [];
         private static string? _err = string.Empty;
+        
+        // Putting this here so that they can be printed in try-catch error messages.
+        private static string? productExpirationDate;
 
         public static (
             bool serverLineHasPort,
@@ -357,7 +360,7 @@ namespace Options.File.Checker
                         string[] lineParts = line.Split(' ');
                         productName = lineParts[1];
                         int productVersion = int.Parse(lineParts[3]);
-                        string productExpirationDate = lineParts[4];
+                        productExpirationDate = lineParts[4];
                         string productKey = lineParts[6];
                         string licenseOffering = string.Empty;
                         string licenseNumber = string.Empty;
@@ -1112,6 +1115,10 @@ namespace Options.File.Checker
                 else if (ex.Message == "Index was outside the bounds of the array.")
                 {
                     _err = $"There is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"";
+                }
+                else if (ex.Message.Contains("is not supported in calendar 'System.Globalization.GregorianCalendar'."))
+                {
+                    _err = $"There is an issue with your license file: it contains a date not recognized in the Gregorian Calendar: {productExpirationDate}. Please regenerate your license file.";
                 }
                 else
                 {
