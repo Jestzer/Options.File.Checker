@@ -102,6 +102,10 @@ namespace Options.File.Checker
                 string emptySpaceToRemove = "        ";
                 licenseFileContents = licenseFileContents.Replace(emptySpaceToRemove, string.Empty);
 
+                // ...just in case...
+                lineBreaksToRemove = "\\\n";
+                licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+
                 // Put it back together!
                 licenseFileContentsLines = licenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
                 optionsFileContentsLines = optionsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
