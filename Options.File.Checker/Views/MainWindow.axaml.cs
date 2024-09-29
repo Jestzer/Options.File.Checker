@@ -11,6 +11,8 @@ using System.IO;
 using System.Text;
 using System;
 using Microsoft.CodeAnalysis;
+using System.Threading.Tasks;
+using Avalonia.Threading;
 
 namespace Options.File.Checker.Views;
 
@@ -120,29 +122,32 @@ public partial class MainWindow : Window
     }
 
     private bool treeViewShouldBeCleared = true;
-    private async void ShowErrorWindow(string errorMessage)
+    private void ShowErrorWindow(string errorMessage)
     {
-        // Generally speaking, the treeview should be cleared because otherwise, it'll show up after an error appears. The exception is when NNU seats are still being reported.
-        OutputTextBlock.Text = string.Empty;
-        if (DataContext is MainViewModel viewModel && treeViewShouldBeCleared)
+        Dispatcher.UIThread.Post(async () =>
         {
-            viewModel.TreeViewItems.Clear();
-        }
+            // Generally speaking, the treeview should be cleared because otherwise, it'll show up after an error appears. The exception is when NNU seats are still being reported.
+            OutputTextBlock.Text = string.Empty;
+            if (DataContext is MainViewModel viewModel && treeViewShouldBeCleared)
+            {
+                viewModel.TreeViewItems.Clear();
+            }
 
-        ErrorWindow errorWindow = new();
-        errorWindow.ErrorTextBlock.Text = errorMessage;
-        OutputTextBlock.Text = "Error: " + errorMessage;
-        treeViewShouldBeCleared = true;
+            ErrorWindow errorWindow = new();
+            errorWindow.ErrorTextBlock.Text = errorMessage;
+            OutputTextBlock.Text = "Error: " + errorMessage;
+            treeViewShouldBeCleared = true;
 
-        // Check if VisualRoot is not null and is a Window before casting.
-        if (VisualRoot is Window window)
-        {
-            await errorWindow.ShowDialog(window);
-        }
-        else
-        {
-            OutputTextBlock.Text = "The error window broke somehow. Please make an issue for this in GitHub.";
-        }
+            // Check if VisualRoot is not null and is a Window before casting.
+            if (VisualRoot is Window window)
+            {
+                await errorWindow.ShowDialog(window);
+            }
+            else
+            {
+                OutputTextBlock.Text = "The error window broke somehow. Please make an issue for this in GitHub.";
+            }
+        });
     }
 
     private async void CheckForUpdateButton_Click(object sender, RoutedEventArgs e)
@@ -373,17 +378,25 @@ public partial class MainWindow : Window
         }
     }
 
-    private void AnalyzerButton_Click(object sender, RoutedEventArgs e)
+    private async void AnalyzerButton_Click(object sender, RoutedEventArgs e)
     {
+        OutputTextBlock.Text = "Loading, please wait.";
+
+        // Run the analysis on a background thread so that the loading message actually appears.
+        // Reversing this results in the opposite happening, unfortunately, so I can't just put the loading message in the task.
+
+
         // Clear the TreeView.
         if (DataContext is MainViewModel treeViewModel)
         {
             treeViewModel.TreeViewItems.Clear();
         }
 
+
         string licenseFilePath = string.Empty;
-        string optionsFilePath = string.Empty; // Thank you for the lousy suggestion to remove this Visual Studio.
+        string optionsFilePath = string.Empty;
         bool nnuOverdraftWarningDisplayed = false;
+
 
         if (!string.IsNullOrEmpty(LicenseFileLocationTextBox.Text))
         {
@@ -395,6 +408,7 @@ public partial class MainWindow : Window
             return;
         }
 
+
         if (!string.IsNullOrEmpty(OptionsFileLocationTextBox.Text))
         {
             optionsFilePath = OptionsFileLocationTextBox.Text;
@@ -404,7 +418,6 @@ public partial class MainWindow : Window
             ShowErrorWindow("You did not specify a path to an options file.");
             return;
         }
-
 
         // Call the AnalyzeFiles method. I'm leaving these unused variables in case I want to use them later. You're welcome future me.
         var (serverLineHasPort,
@@ -428,148 +441,135 @@ public partial class MainWindow : Window
             hostGroupDictionary,
             err) = LicenseAndOptionsFileDataAnalyzer.AnalyzeData(licenseFilePath, optionsFilePath);
 
-        // Check if there was an error.
+        // Check if there was an error during the analysis or gathering.
         if (!string.IsNullOrEmpty(err))
         {
             ShowErrorWindow(err);
             return;
         }
-
-        // Process the returned data.
-        StringBuilder output = new();
-
-        if (!serverLineHasPort)
+        await Task.Run(() =>
         {
-            output.AppendLine("Warning: you did not specify a port number on your SERVER line.\n");
-        }
+            StringBuilder output = new();
 
-        if (!daemonLineHasPort)
-        {
-            output.AppendLine("Warning: you did not specify a port number on your DAEMON line. This means random port will be chosen each time you restart FlexLM.\n");
-        }
-
-        if (caseSensitivity)
-        {
-            output.AppendLine("Warning: case sensitivity is enabled for users defined in GROUPs and HOST_GROUPs.\n");
-        }
-
-        // Warn the user if they didn't specify a license number or product key in their seat-subtracting option entries.
-        if (unspecifiedLicenseOrProductKey)
-        {
-            output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
-                "license the product appears on.\n");
-        }
-
-        if (optionsFileUsesMatlabParallelServer)
-        {
-            output.AppendLine("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
-            "This does not prevent users from accessing the cluster.\n");
-        }
-
-        if (wildcardsAreUsed)
-        {
-            output.AppendLine("Warning: you are using at least 1 wildcard in your options file. These may be unreliable or cause other issues.\n");
-        }
-
-        if (ipAddressesAreUsed)
-        {
-            output.AppendLine("Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n");
-        }
-
-        // Print seatCount.
-        if (licenseFileDictionary != null)
-        {
-            bool includeAllNNUWarningHit = false;
-            bool alreadyYelledToCNUAboutPORTFormat = false;
-
-            foreach (var item in licenseFileDictionary)
+            if (!serverLineHasPort)
             {
-                string seatOrSeats; // Grammar is important, I guess.
+                output.AppendLine("Warning: you did not specify a port number on your SERVER line.\n");
+            }
 
-                if (item.Value.Item2 == 1)
+            if (!daemonLineHasPort)
+            {
+                output.AppendLine("Warning: you did not specify a port number on your DAEMON line. This means random port will be chosen each time you restart FlexLM.\n");
+            }
+
+            if (caseSensitivity)
+            {
+                output.AppendLine("Warning: case sensitivity is enabled for users defined in GROUPs and HOST_GROUPs.\n");
+            }
+
+            if (unspecifiedLicenseOrProductKey)
+            {
+                output.AppendLine("Please note: you did not specify a license number or product key for either one of your INCLUDE or RESERVE lines. This means we will subtract the seat from the first " +
+                    "license the product appears on.\n");
+            }
+
+            if (optionsFileUsesMatlabParallelServer)
+            {
+                output.AppendLine("Warning: you are including MATLAB Parallel Server in your options file. Keep in mind that the username must correspond to the username as it is on the cluster. " +
+                "This does not prevent users from accessing the cluster.\n");
+            }
+
+            if (wildcardsAreUsed)
+            {
+                output.AppendLine("Warning: you are using at least 1 wildcard in your options file. These may be unreliable or cause other issues.\n");
+            }
+
+            if (ipAddressesAreUsed)
+            {
+                output.AppendLine("Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n");
+            }
+
+            if (licenseFileDictionary != null)
+            {
+                bool includeAllNNUWarningHit = false;
+                bool alreadyYelledToCNUAboutPORTFormat = false;
+
+                foreach (var item in licenseFileDictionary)
                 {
-                    seatOrSeats = "seat";
-                }
-                else
-                {
-                    seatOrSeats = "seats";
-                }
+                    string seatOrSeats = item.Value.Item2 == 1 ? "seat" : "seats";
 
-                if (!daemonPortIsCNUFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCNUAboutPORTFormat)
-                {
-
-                    output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
-                    alreadyYelledToCNUAboutPORTFormat = true;
-
-                }
-
-                // Setup License Offering in plain English for Concurrent, at least.
-                string licenseFileLicenseOffering = string.Empty;
-                licenseFileLicenseOffering = item.Value.Item4;
-                if (licenseFileLicenseOffering == "lo=CN") { licenseFileLicenseOffering = "CN"; }
-
-                if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
-                {
-                    if (!includeAllNNUWarningHit)
+                    if (!daemonPortIsCNUFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCNUAboutPORTFormat)
                     {
-                        if (includeAllDictionary != null)
+                        output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
+                        alreadyYelledToCNUAboutPORTFormat = true;
+                    }
+
+                    string licenseFileLicenseOffering = item.Value.Item4;
+                    if (licenseFileLicenseOffering == "lo=CN") { licenseFileLicenseOffering = "CN"; }
+
+                    if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
+                    {
+                        if (!includeAllNNUWarningHit)
                         {
-                            if (includeAllDictionary.Count != 0)
+                            if (includeAllDictionary != null && includeAllDictionary.Count != 0)
                             {
-                                output.AppendLine("Warning: INCLUDEALL cannot be used NNU licenses and will not count towards their seat count.\n");
+                                output.AppendLine("Warning: INCLUDEALL cannot be used with NNU licenses and will not count towards their seat count.\n");
                             }
+                            includeAllNNUWarningHit = true;
                         }
-                        includeAllNNUWarningHit = true;
                     }
-                }
 
-                if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0 && !nnuOverdraftWarningDisplayed)
-                {
-                    treeViewShouldBeCleared = false;
-                    ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                    "Please close this window and see the full output in the main window for more information.");
-                    output.AppendLine("ERROR: there is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                    "Please see the full output below for more information.");
-                    nnuOverdraftWarningDisplayed = true;
-                }
-
-                // Finally, print the stuff we want to see!                    
-                if (DataContext is MainViewModel viewModel)
-                {
-                    // Create the main tree view item that displays main product info.
-                    var mainItem = new MainWindowTreeViewItemModel
+                    if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0 && !nnuOverdraftWarningDisplayed)
                     {
-                        Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
-                    };
+                        treeViewShouldBeCleared = false;
+                        ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
+                        "Please close this window and see the full output in the main window for more information.");
+                        output.AppendLine("ERROR: There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
+                        "Please see the full output below for more information.");
+                        nnuOverdraftWarningDisplayed = true;
+                    }
 
-                    // Add sub-items that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
-                    // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
-                    foreach (var subItem in item.Value.Item6)
+                    Dispatcher.UIThread.Post(() =>
                     {
-                        // Check if a subitem with the same title already exists. Should probably do something proper to fix this but w/e.
-                        if (!mainItem.Children.Any(child => child.Title == subItem))
+                        // Finally, print the stuff we want to see!
+                        if (DataContext is MainViewModel viewModel)
                         {
-                            mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
-                        }
-                    }
+                            // Main product/seat info
+                            var mainItem = new MainWindowTreeViewItemModel
+                            {
+                                Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
+                            };
 
-                    // Add the whole item and its subitems to the tree view.
-                    viewModel.TreeViewItems.Add(mainItem);
+                            // Add subitems that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
+                            // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
+                            foreach (var subItem in item.Value.Item6)
+                            {
+                                // Don't add duplicate subitems. Should probably do something proper to fix this but w/e.
+                                if (!mainItem.Children.Any(child => child.Title == subItem))
+                                {
+                                    mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
+                                }
+                            }
+
+                            // Actually add the whole item to the tree now.
+                            viewModel.TreeViewItems.Add(mainItem);
+                        }
+                    });
                 }
             }
-        }
-        else
-        {
-            ShowErrorWindow("The license file dictionary is null. Please report this error on GitHub.");
-            return;
-        }
+            else
+            {
+                Dispatcher.UIThread.Post(() => ShowErrorWindow("The license file dictionary is null. Please report this error on GitHub."));
+                return;
+            }
 
-        // Show us the goods, since we didn't hit any critical errors.
-        OutputTextBlock.Text = output.ToString();
-
-        if (string.IsNullOrWhiteSpace(OutputTextBlock.Text) && string.IsNullOrWhiteSpace(err))
-        {
-            OutputTextBlock.Text = "No errors detected and no warnings needed to be printed! See the box below for information on your options file.";
-        }
+            Dispatcher.UIThread.Post(() =>
+            {
+                OutputTextBlock.Text = output.ToString();
+                if (string.IsNullOrWhiteSpace(OutputTextBlock.Text) && string.IsNullOrWhiteSpace(err))
+                {
+                    OutputTextBlock.Text = "No errors detected and no warnings needed to be printed! See the box below for information on your options file.";
+                }
+            });
+        });
     }
 }
