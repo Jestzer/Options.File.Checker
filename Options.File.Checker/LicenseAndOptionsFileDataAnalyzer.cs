@@ -704,6 +704,7 @@ namespace Options.File.Checker
             foreach (var entry in optionsIndex)
             {
                 TTuple tuple = entry.Value;
+                string err = string.Empty;
 
                 // Use the extractor to get the groupType and specified strings.
                 (string groupType, string specified) = extractor(tuple);
@@ -716,6 +717,13 @@ namespace Options.File.Checker
                     {
                         Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
                         string groupName = optionsGroupData.Item1;
+                        string groupUsers = optionsGroupData.Item2;
+
+                        if (string.IsNullOrEmpty(groupUsers))
+                        {
+                            err = $"There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is {groupName}.";
+                            return err;
+                        }
 
                         if (groupName == specified)
                         {
@@ -727,8 +735,7 @@ namespace Options.File.Checker
                     if (!groupFound)
                     {
                         // No matching group found.
-                        string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
-                        string err = string.Empty;
+                        string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!                        
                         if (specified.Contains("USER"))
                         {
                             err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
@@ -764,7 +771,7 @@ namespace Options.File.Checker
                     {
                         // No matching host group found.
                         string aOrAn = lineType == "RESERVE" ? "a" : "an";
-                        string err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                        err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
                                      $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
                         return err;
                     }

@@ -1009,15 +1009,7 @@ namespace Options.File.Checker
                             lineParts = lineParts.Skip(1).ToArray();
                         }
 
-                        // # Add some code that compensates for empty GROUP lines that ALSO have a duplicate GROUP name with non-empty lines...
-                        if (lineParts.Length < 3)
-                        {
-                            _err = "There is an issue with the options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
-                        }
-
-                        // Remove any elements after lineParts[2] that are blank, whitespace, or tabs
+                        // Remove any elements after lineParts[2] that are blank, whitespace, or tabs. We don't want to count them as users of the GROUP.
                         lineParts = lineParts.Take(3)
                                              .Concat(lineParts.Skip(3).Where(part => !string.IsNullOrWhiteSpace(part)))
                                              .ToArray();
