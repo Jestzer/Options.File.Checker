@@ -15,3 +15,4 @@ Notes for user:
 To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
+- Make it so the MainWindow buttons cannot be used with the Enter key when the Error or UpdateWindow is up
