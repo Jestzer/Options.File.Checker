@@ -1009,6 +1009,7 @@ namespace Options.File.Checker
                             lineParts = lineParts.Skip(1).ToArray();
                         }
 
+                        // # Add some code that compensates for empty GROUP lines that ALSO have a duplicate GROUP name with non-empty lines...
                         if (lineParts.Length < 3)
                         {
                             _err = "There is an issue with the options file: you have an incorrectly formatted GROUP line. It is missing necessary information. " +
