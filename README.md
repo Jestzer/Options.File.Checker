@@ -10,9 +10,10 @@ Notes for user:
 - I _think_ it's possible in the options file to specify multiple entries (ex: INCLUDE MATLAB USER rob) without creating a line break. This program does not support this type of formatting and probably never will.
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 - Latest release uses .NET 8.0.
-- Currently only updating main version
+- The "XP Edition" and "No GUI" versions are currently not being updated.
 
 To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
 - Make it so the MainWindow buttons cannot be used with the Enter key when the Error or UpdateWindow is up
+- Ignore empty GROUP lines that are associated with already existing, non-empty GROUP lines of the same name
