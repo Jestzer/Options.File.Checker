@@ -291,6 +291,9 @@ namespace Options.File.Checker
             int remainingSeatsToSubtract = 0; // The 0 has no significance and will be set accordingly later on, if used.
             bool doneSubtractingSeats = false;
             bool firstAttemptToSubtractSeats = true;
+            List<Tuple<string, string>> linesThatHaveBeenRecorded = []; // string = the line itself, string = licenseFileProductKey...
+            //... We're using the licenseFileProductKey so we can uniquely identify each INCREMENT.
+            // You might be worried that this isn't enough information to separate distinct INCLUDE/whatever lines from each other, but since this List/Tuple is defined in this SeatSubtractor method, it shouldn't matter.
 
             while (!doneSubtractingSeats)
             {
@@ -378,6 +381,8 @@ namespace Options.File.Checker
 
                                             // Record the line used to subtract this seat.
                                             linesThatSubtractSeats.Add(rawOptionLine);
+                                            linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+
                                             needToGoToNextEntry = true;
                                         }
                                         else
@@ -387,6 +392,7 @@ namespace Options.File.Checker
 
                                             // Record the line used to subtract this seat.
                                             linesThatSubtractSeats.Add(rawOptionLine);
+                                            linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
 
                                             doneSubtractingSeats = true;
                                             forceSubtraction = false;
@@ -404,21 +410,53 @@ namespace Options.File.Checker
                                                 // Calculate the remaining seats that couldn't be subtracted.
                                                 remainingSeatsToSubtract = reserveSeatCount - seatsToSubtract;
 
-                                                // Record the line used to subtract this seat.
-                                                linesThatSubtractSeats.Add(rawOptionLine);
+                                                bool needToSkipRawOptionLineRecording = false;
+                                                foreach (var recordedLineTuple in linesThatHaveBeenRecorded)
+                                                {
+                                                    if (recordedLineTuple.Item1 == rawOptionLine && recordedLineTuple.Item2 == licenseFileProductKey)
+                                                    {
+                                                        needToSkipRawOptionLineRecording = true;
+                                                        break;
+                                                    }
+                                                }
+
+                                                if (!needToSkipRawOptionLineRecording)
+                                                {
+                                                    linesThatSubtractSeats.Add(rawOptionLine);
+                                                    linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+                                                }
+
                                                 if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
                                             }
                                         }
                                         else
                                         {
                                             licenseFileSeatCount -= remainingSeatsToSubtract;
-                                            linesThatSubtractSeats.Add(rawOptionLine);
+
+                                            bool needToSkipRawOptionLineRecording = false;
+                                            foreach (var recordedLineTuple in linesThatHaveBeenRecorded)
+                                            {
+                                                if (recordedLineTuple.Item1 == rawOptionLine && recordedLineTuple.Item2 == licenseFileProductKey)
+                                                {
+                                                    needToSkipRawOptionLineRecording = true;
+                                                    break;
+                                                }
+                                            }
+
+                                            if (!needToSkipRawOptionLineRecording)
+                                            {
+                                                linesThatSubtractSeats.Add(rawOptionLine);
+                                                linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+                                            }
+
                                             doneSubtractingSeats = true;
                                             forceSubtraction = false;
                                         }
                                     }
                                     break;
                                 }
+                            // INCLUDEALL should be simpler because we are subtracting a set seat count from every product listed, no matter what.
+                            // Spreading out seats between multiple instances of the same product will not be done because of this.
                             case "INCLUDEALL":
                                 {
                                     // Without this, the recorded product name will be blank.
@@ -433,7 +471,9 @@ namespace Options.File.Checker
 
                                             // Record the line used to subtract this seat.
                                             linesThatSubtractSeats.Add(rawOptionLine);
-                                            doneSubtractingSeats = true; // I see no reason this won't always be true. We have to subtraction on CN and CNU licenses and setting this shouldn't pose any issues... right?
+
+                                            doneSubtractingSeats = true; // I see no reason this won't always be true. We have to subtract on CN and CNU licenses and setting this shouldn't pose any issues... right?
+                                            forceSubtraction = false;
                                         }
                                         else if (clientType == "GROUP")
                                         {
@@ -456,63 +496,17 @@ namespace Options.File.Checker
 
                                                 if (groupName == clientSpecified)
                                                 {
-                                                    if (firstAttemptToSubtractSeats)
-                                                    {
-                                                        if (groupUserCount > licenseFileSeatCount && !forceSubtraction)
-                                                        {
-                                                            // Subtract as much as possible from licenseFileSeatCount.
-                                                            int seatsToSubtract = Math.Min(groupUserCount, licenseFileSeatCount);
-                                                            licenseFileSeatCount -= seatsToSubtract;
+                                                    // Subtract the appropriate number of seats.
+                                                    licenseFileSeatCount -= groupUserCount;
 
-                                                            // Calculate the remaining seats that couldn't be subtracted.
-                                                            remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
-                                                            firstAttemptToSubtractSeats = false;
+                                                    // Record the line used to subtract this seat.
+                                                    linesThatSubtractSeats.Add(rawOptionLine);
 
-                                                            // Record the line used to subtract this seat.
-                                                            linesThatSubtractSeats.Add(rawOptionLine);
-                                                            needToGoToNextEntry = true;
-                                                        }
-                                                        else
-                                                        {
-                                                            // Subtract the appropriate number of seats.
-                                                            licenseFileSeatCount -= groupUserCount;
-
-                                                            // Record the line used to subtract this seat.
-                                                            linesThatSubtractSeats.Add(rawOptionLine);
-
-                                                            doneSubtractingSeats = true;
-                                                            forceSubtraction = false;
-                                                        }
-                                                    }
-                                                    else
-                                                    {
-                                                        if (remainingSeatsToSubtract > licenseFileSeatCount)
-                                                        {
-                                                            if (licenseFileSeatCount != 0 || forceSubtraction)
-                                                            {
-                                                                int seatsToSubtract = Math.Min(remainingSeatsToSubtract, licenseFileSeatCount);
-                                                                licenseFileSeatCount -= remainingSeatsToSubtract;
-
-                                                                // Calculate the remaining seats that couldn't be subtracted.
-                                                                remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
-
-                                                                // Record the line used to subtract this seat.
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
-                                                                if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
-                                                            }
-                                                        }
-                                                        else
-                                                        {
-                                                            licenseFileSeatCount -= remainingSeatsToSubtract;
-                                                            linesThatSubtractSeats.Add(rawOptionLine);
-                                                            doneSubtractingSeats = true;
-                                                            forceSubtraction = false;
-                                                        }
-                                                    }
+                                                    doneSubtractingSeats = true;
+                                                    forceSubtraction = false;
                                                     break;
                                                 }
                                             }
-
                                         }
                                         // There is no subtraction that can be done because you've specified a client type that can be shared between any number of users.
                                         else if (clientType is "HOST_GROUP" or "HOST" or "DISPLAY" or "PROJECT" or "INTERNET") { }
@@ -547,7 +541,23 @@ namespace Options.File.Checker
                                                 if (forceSubtraction)
                                                 {
                                                     licenseFileSeatCount--;
-                                                    linesThatSubtractSeats.Add(rawOptionLine);
+
+                                                    bool needToSkipRawOptionLineRecording = false;
+                                                    foreach (var recordedLineTuple in linesThatHaveBeenRecorded)
+                                                    {
+                                                        if (recordedLineTuple.Item1 == rawOptionLine && recordedLineTuple.Item2 == licenseFileProductKey)
+                                                        {
+                                                            needToSkipRawOptionLineRecording = true;
+                                                            break;
+                                                        }
+                                                    }
+
+                                                    if (!needToSkipRawOptionLineRecording)
+                                                    {
+                                                        linesThatSubtractSeats.Add(rawOptionLine);
+                                                        linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+                                                    }
+
                                                     doneSubtractingSeats = true;
                                                     forceSubtraction = false;
                                                 }
@@ -556,7 +566,23 @@ namespace Options.File.Checker
                                             else
                                             {
                                                 licenseFileSeatCount--;
-                                                linesThatSubtractSeats.Add(rawOptionLine);
+
+                                                bool needToSkipRawOptionLineRecording = false;
+                                                foreach (var recordedLineTuple in linesThatHaveBeenRecorded)
+                                                {
+                                                    if (recordedLineTuple.Item1 == rawOptionLine && recordedLineTuple.Item2 == licenseFileProductKey)
+                                                    {
+                                                        needToSkipRawOptionLineRecording = true;
+                                                        break;
+                                                    }
+                                                }
+
+                                                if (!needToSkipRawOptionLineRecording)
+                                                {
+                                                    linesThatSubtractSeats.Add(rawOptionLine);
+                                                    linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+                                                }
+
                                                 doneSubtractingSeats = true;
                                                 forceSubtraction = false;
                                             }
@@ -610,6 +636,8 @@ namespace Options.File.Checker
 
                                                             // Record the line used to subtract this seat.
                                                             linesThatSubtractSeats.Add(rawOptionLine);
+                                                            linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+
                                                             needToGoToNextEntry = true;
                                                         }
                                                         else
@@ -619,6 +647,7 @@ namespace Options.File.Checker
 
                                                             // Record the line used to subtract this seat.
                                                             linesThatSubtractSeats.Add(rawOptionLine);
+                                                            linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
 
                                                             doneSubtractingSeats = true;
                                                             forceSubtraction = false;
@@ -637,14 +666,45 @@ namespace Options.File.Checker
                                                                 remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
 
                                                                 // Record the line used to subtract this seat.
-                                                                linesThatSubtractSeats.Add(rawOptionLine);
+                                                                bool needToSkipRawOptionLineRecording = false;
+                                                                foreach (var recordedLineTuple in linesThatHaveBeenRecorded)
+                                                                {
+                                                                    if (recordedLineTuple.Item1 == rawOptionLine && recordedLineTuple.Item2 == licenseFileProductKey)
+                                                                    {
+                                                                        needToSkipRawOptionLineRecording = true;
+                                                                        break;
+                                                                    }
+                                                                }
+
+                                                                if (!needToSkipRawOptionLineRecording)
+                                                                {
+                                                                    linesThatSubtractSeats.Add(rawOptionLine);
+                                                                    linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+                                                                }
+
                                                                 if (forceSubtraction) { doneSubtractingSeats = true; forceSubtraction = false; }
                                                             }
                                                         }
                                                         else
                                                         {
                                                             licenseFileSeatCount -= remainingSeatsToSubtract;
-                                                            linesThatSubtractSeats.Add(rawOptionLine);
+
+                                                            bool needToSkipRawOptionLineRecording = false;
+                                                            foreach (var recordedLineTuple in linesThatHaveBeenRecorded)
+                                                            {
+                                                                if (recordedLineTuple.Item1 == rawOptionLine && recordedLineTuple.Item2 == licenseFileProductKey)
+                                                                {
+                                                                    needToSkipRawOptionLineRecording = true;
+                                                                    break;
+                                                                }
+                                                            }
+
+                                                            if (!needToSkipRawOptionLineRecording)
+                                                            {
+                                                                linesThatSubtractSeats.Add(rawOptionLine);
+                                                                linesThatHaveBeenRecorded.Add(Tuple.Create(rawOptionLine, licenseFileProductKey));
+                                                            }
+
                                                             doneSubtractingSeats = true;
                                                             forceSubtraction = false;
                                                         }
@@ -783,5 +843,9 @@ namespace Options.File.Checker
             }
             return null;
         }
+    }
+
+    internal class List<T1, T2>
+    {
     }
 }

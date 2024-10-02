@@ -1,8 +1,10 @@
-GROUP ratcrab_users jestzer funky_monkey three four five six seven
+GROUP ratcrab_users jestzer funky_monkey three four five six seven eight nine ten eleven twelve
 HOST_GROUP wildcats 192.168.86.25 10.0.0.*
 INCLUDEALL GROUP ratcrab_users
 #RESERVE 5 MATLAB_Distrib_Comp_Engine GROUP ratcrab_users
-INCLUDE MATLAB:key=12345ABCDXYZ GROUP ratcrab_users
+INCLUDE MATLAB GROUP ratcrab_users
+INCLUDE MATLAB USER jimmy
+INCLUDE MATLAB USER jimmy
 INCLUDE MATLAB USER jimmy
 INCLUDE_BORROW Image_Toolbox USER fred
 BORROW_LOWWATER MATLAB 3
