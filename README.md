@@ -11,9 +11,10 @@ Notes for user:
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
 - Latest release uses .NET 8.0.
 - The "XP Edition" and "No GUI" versions are currently not being updated.
+- In general, with FlexLM, USERs are case-sensitive. Additionally, if you have the exact same INCLUDE line multiple times, each one will be counted separately and will subtract from the seat count. Because FlexLM does this, so does this program.
 
 To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
 - Make it so the MainWindow buttons cannot be used with the Enter key when the Error or UpdateWindow is up
-- Ignore empty GROUP lines that are associated with already existing, non-empty GROUP lines of the same name
+- Remove duplicate TreeView entries that happen as a result of forcedSubstraction

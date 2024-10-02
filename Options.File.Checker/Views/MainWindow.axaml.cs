@@ -543,11 +543,7 @@ public partial class MainWindow : Window
                             // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
                             foreach (var subItem in item.Value.Item6)
                             {
-                                // Don't add duplicate subitems. Should probably do something proper to fix this but w/e.
-                                if (!mainItem.Children.Any(child => child.Title == subItem))
-                                {
-                                    mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
-                                }
+                                mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
                             }
 
                             // Actually add the whole item to the tree now.
