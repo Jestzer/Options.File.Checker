@@ -396,6 +396,7 @@ public partial class MainWindow : Window
         string licenseFilePath = string.Empty;
         string optionsFilePath = string.Empty;
         bool nnuOverdraftWarningDisplayed = false;
+        bool cnOverdraftWarningDisplayed = false;
 
 
         if (!string.IsNullOrEmpty(LicenseFileLocationTextBox.Text))
@@ -524,8 +525,14 @@ public partial class MainWindow : Window
                         ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
                         "Please close this window and see the full output in the main window for more information.");
                         output.AppendLine("ERROR: There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
-                        "Please see the full output below for more information.");
+                        "Please see the full output below for more information.\n");
                         nnuOverdraftWarningDisplayed = true;
+                    }
+                    else if (licenseFileLicenseOffering == "CN" && item.Value.Item2 < 0 && !cnOverdraftWarningDisplayed)
+                    {
+                        output.AppendLine("Warning: you have specified more users on a CN license than the number of seats available. " +
+                        "This is introduces the possibility of License Manager Error -4 appearing, since there is not a seat available for every user to use at once.\n");
+                        cnOverdraftWarningDisplayed = true;
                     }
 
                     Dispatcher.UIThread.Post(() =>
