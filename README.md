@@ -17,4 +17,3 @@ To-do:
 - Make action buttons not move when the window is resized
 - Make UI a little nicer looking
 - Make it so the MainWindow buttons cannot be used with the Enter key when the Error or UpdateWindow is up
-- Remove duplicate TreeView entries that happen as a result of forcedSubstraction
