@@ -1119,7 +1119,7 @@ namespace Options.File.Checker
                 }
                 else
                 {
-                    _err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
+                    _err = $"You managed to break something. How? Here's the automatic message from the Gatherer: {ex.Message}";
                 }
 
                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);

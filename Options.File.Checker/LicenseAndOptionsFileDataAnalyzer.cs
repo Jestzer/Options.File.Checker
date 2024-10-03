@@ -236,7 +236,7 @@ namespace Options.File.Checker
                 }
                 else
                 {
-                    err = $"You managed to break something. How? Here's the automatic message: {ex.Message}";
+                    err = $"You managed to break something. How? Here's the automatic message from the Analyzer: {ex.Message}";
                 }
 
                 return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
