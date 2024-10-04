@@ -1,5 +1,6 @@
 ﻿using System; // Don't let VSC deceive you, you need these!
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Options.File.Checker
 {
@@ -31,6 +32,7 @@ namespace Options.File.Checker
         {
             // I'm putting this here so that we can print its contents if we hit a generic error message.
             string line = string.Empty;
+            int debugPoint = 0;
 
             // Gather the data from the license and options files first.
             var (serverLineHasPort,
@@ -55,7 +57,7 @@ namespace Options.File.Checker
 
             // Only thing that needs to be cleared here since it's not in the Gatherer.
             bool unspecifiedLicenseOrProductKey = false;
-
+            debugPoint = 1;
             // Don't proceed if you've got an error.
             if (err != null)
             {
@@ -70,38 +72,54 @@ namespace Options.File.Checker
                 // Make sure that any GROUPs or HOST_GROUPs specified actually exist.
                 // It'll be more efficient if we do this all at once, rather than repeatedly in the foreach loop below.
                 // In words of all shitty programmers, the situation where any of these are null "sHoUlD nEvEr hApPeN" but I am trying to be the better man and give some kind of error if they don't.
+                debugPoint = 2;
                 if (includeDictionary != null && groupDictionary != null && hostGroupDictionary != null && excludeDictionary != null && reserveDictionary != null && includeAllDictionary != null && excludeAllDictionary != null)
                 {
-
-                    err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE");
-                    if (!string.IsNullOrEmpty(err))
+                    debugPoint = 3;
+                    if (includeDictionary.Count != 0)
                     {
-                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        err = PerformGroupCheck(includeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "INCLUDE", ref debugPoint);
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                        debugPoint = 20;
+                    }
+                    if (excludeDictionary.Count != 0)
+                    {
+                        err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE", ref debugPoint);
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+                    if (reserveDictionary.Count != 0)
+                    {
+                        err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE", ref debugPoint);
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
+                    }
+                    if (includeAllDictionary.Count != 0)
+                    {
+                        err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL", ref debugPoint);
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
                     }
 
-                    err = PerformGroupCheck(excludeDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item4, tuple.Item5), "EXCLUDE");
-                    if (!string.IsNullOrEmpty(err))
+                    if (excludeAllDictionary.Count != 0)
                     {
-                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL", ref debugPoint);
+                        if (!string.IsNullOrEmpty(err))
+                        {
+                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                        }
                     }
-
-                    err = PerformGroupCheck(reserveDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item5, tuple.Item6), "RESERVE");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                    }
-
-                    err = PerformGroupCheck(includeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "INCLUDEALL");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                    }
-
-                    err = PerformGroupCheck(excludeAllDictionary, groupDictionary, hostGroupDictionary, tuple => (tuple.Item1, tuple.Item2), "EXCLUDEALL");
-                    if (!string.IsNullOrEmpty(err))
-                    {
-                        return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                    }
+                    debugPoint = 21;
+                    err = string.Empty;
                 }
                 else
                 {
@@ -109,38 +127,52 @@ namespace Options.File.Checker
                     return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
                 }
 
+                debugPoint = 22;
                 // Subtract seats now.
                 if (licenseFileDictionary != null)
                 {
-                    foreach (var includeEntry in includeDictionary)
+                    debugPoint = 23;
+                    if (includeDictionary.Count != 0)
                     {
-                        optionSelected = "INCLUDE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
-
-                        if (err != null)
+                        debugPoint = 24;
+                        foreach (var includeEntry in includeDictionary)
                         {
-                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
-                        }
-                    }
-                    foreach (var includeAllEntry in includeAllDictionary)
-                    {
-                        optionSelected = "INCLUDEALL";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
-
-                        if (err != null)
-                        {
-                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            debugPoint = 25;
+                            optionSelected = "INCLUDE";
+                            SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeEntry.Key, includeEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err, ref debugPoint);
+                            debugPoint = 26;
+                            if (!string.IsNullOrEmpty(err))
+                            {
+                                return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            }
                         }
                     }
 
-                    foreach (var reserveEntry in reserveDictionary)
+                    if (includeAllDictionary.Count != 0)
                     {
-                        optionSelected = "RESERVE";
-                        SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err);
-
-                        if (err != null)
+                        foreach (var includeAllEntry in includeAllDictionary)
                         {
-                            return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            optionSelected = "INCLUDEALL";
+                            SeatSubtractor(optionSelected, new KeyValuePair<int, object>(includeAllEntry.Key, includeAllEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err, ref debugPoint);
+
+                            if (!string.IsNullOrEmpty(err))
+                            {
+                                return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            }
+                        }
+                    }
+
+                    if (reserveDictionary.Count != 0)
+                    {
+                        foreach (var reserveEntry in reserveDictionary)
+                        {
+                            optionSelected = "RESERVE";
+                            SeatSubtractor(optionSelected, new KeyValuePair<int, object>(reserveEntry.Key, reserveEntry.Value), licenseFileDictionary, groupDictionary, ref unspecifiedLicenseOrProductKey, ref err, ref debugPoint);
+
+                            if (!string.IsNullOrEmpty(err))
+                            {
+                                return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
+                            }
                         }
                     }
                 }
@@ -236,17 +268,17 @@ namespace Options.File.Checker
                 }
                 else
                 {
-                    err = $"You managed to break something. How? Here's the automatic message from the Analyzer: {ex.Message}";
+                    err = $"You managed to break something. How? Here's the automatic message from the Analyzer: {ex.Message} Debug point: {debugPoint}.";
                 }
 
                 return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
         }
 
-        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string, List<string>, int>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err)
+        private static void SeatSubtractor(string optionSelected, KeyValuePair<int, dynamic> optionsEntry, Dictionary<int, Tuple<string, int, string, string, string, List<string>, int>> licenseFileDictionary, Dictionary<int, Tuple<string, string, int>> groupDictionary, ref bool unspecifiedLicenseOrProductKey, ref string? err, ref int debugPoint)
         {
             bool forceSubtraction = false;
-
+            debugPoint = 27;
             // These need to be defined outside the if statements below so they can be used across them.
             int reserveSeatCount = 0;
             string productName = string.Empty;
@@ -259,33 +291,50 @@ namespace Options.File.Checker
             // Determine the option we're using. Set variables appropriately.
             if (optionSelected == "INCLUDE")
             {
-                Tuple<string, string, string, string, string, string> optionsData = optionsEntry.Value;
-                productName = optionsData.Item1;
-                licenseNumber = optionsData.Item2;
-                productKey = optionsData.Item3;
-                clientType = optionsData.Item4;
-                clientSpecified = optionsData.Item5;
-                rawOptionLine = optionsData.Item6;
+                // Cast optionsEntry.Value to the expected Tuple type.
+                if (optionsEntry.Value is not Tuple<string, string, string, string, string, string> optionsData)
+                {
+                    err = "optionsEntry.Value is not of the expected Tuple type.";
+                    return;
+                }
+
+                productName = optionsData.Item1 ?? "DefaultProductName";
+                licenseNumber = optionsData.Item2 ?? "DefaultLicenseNumber";
+                productKey = optionsData.Item3 ?? "DefaultProductKey";
+                clientType = optionsData.Item4 ?? "DefaultClientType";
+                clientSpecified = optionsData.Item5 ?? "DefaultClientSpecified";
+                rawOptionLine = optionsData.Item6 ?? "DefaultRawOptionLine";
             }
             else if (optionSelected == "INCLUDEALL")
             {
-                Tuple<string, string, string> optionsData = optionsEntry.Value;
-                clientType = optionsData.Item1;
-                clientSpecified = optionsData.Item2;
-                rawOptionLine = optionsData.Item3;
+                if (optionsEntry.Value is not Tuple<string, string, string> optionsData)
+                {
+                    err = "optionsEntry.Value is not of the expected Tuple type for INCLUDEALL.";
+                    return;
+                }
+
+                clientType = optionsData.Item1 ?? "DefaultClientType";
+                clientSpecified = optionsData.Item2 ?? "DefaultClientSpecified";
+                rawOptionLine = optionsData.Item3 ?? "DefaultRawOptionLine";
             }
             else if (optionSelected == "RESERVE")
             {
-                Tuple<int, string, string, string, string, string, string> optionsData = optionsEntry.Value;
+                if (optionsEntry.Value is not Tuple<int, string, string, string, string, string, string> optionsData)
+                {
+                    err = "optionsEntry.Value is not of the expected Tuple type for RESERVE.";
+                    return;
+                }
+
                 reserveSeatCount = optionsData.Item1;
-                productName = optionsData.Item2;
-                licenseNumber = optionsData.Item3;
-                productKey = optionsData.Item4;
-                clientType = optionsData.Item5;
-                clientSpecified = optionsData.Item6;
-                rawOptionLine = optionsData.Item7;
+                productName = optionsData.Item2 ?? "DefaultProductName";
+                licenseNumber = optionsData.Item3 ?? "DefaultLicenseNumber";
+                productKey = optionsData.Item4 ?? "DefaultProductKey";
+                clientType = optionsData.Item5 ?? "DefaultClientType";
+                clientSpecified = optionsData.Item6 ?? "DefaultClientSpecified";
+                rawOptionLine = optionsData.Item7 ?? "DefaultRawOptionLine";
             }
 
+            debugPoint = 34;
             bool matchingProductFoundInLicenseFile = false;
             bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
             int remainingSeatsToSubtract = 0; // The 0 has no significance and will be set accordingly later on, if used.
@@ -297,6 +346,7 @@ namespace Options.File.Checker
 
             while (!doneSubtractingSeats)
             {
+                debugPoint = 35;
                 // Go through each line and subtract seats accordingly.
                 foreach (var licenseFileEntry in licenseFileDictionary)
                 {
@@ -759,12 +809,37 @@ namespace Options.File.Checker
             Dictionary<TKey, Tuple<string, string, int>> groupIndex,
             Dictionary<TKey, Tuple<string, string>> hostGroupIndex,
             TupleExtractor<TTuple> extractor,
-            string lineType) where TKey : notnull
+            string lineType,
+            ref int debugPoint) where TKey : notnull
         {
+            debugPoint = 4;
+            if (optionsIndex == null)
+            {
+                string err = "optionsIndex is null.";
+                return err;
+            }
+
+            var firstEntry = optionsIndex.FirstOrDefault();
+            if (firstEntry.Key == null)
+            {
+                return "The key of the first entry in optionsIndex is null.";
+            }
+
+            if (firstEntry.Value == null)
+            {
+                //return null;
+                return $"The value of the first entry in optionsIndex is null. {lineType}";
+            }
+
+            debugPoint = 5;
+            //return $"optionsIndex contains {optionsIndex.Count} entries.";
             foreach (var entry in optionsIndex)
             {
+                debugPoint = 6;
                 TTuple tuple = entry.Value;
+                debugPoint = 7;
                 string err = string.Empty;
+                debugPoint = 8;
 
                 // Use the extractor to get the groupType and specified strings.
                 (string groupType, string specified) = extractor(tuple);
@@ -772,32 +847,37 @@ namespace Options.File.Checker
                 if (groupType == "GROUP")
                 {
                     bool groupFound = false;
-
+                    debugPoint = 9;
                     foreach (var optionsGroupEntry in groupIndex)
                     {
                         Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
                         string groupName = optionsGroupData.Item1;
                         string groupUsers = optionsGroupData.Item2;
-
+                        debugPoint = 10;
                         if (string.IsNullOrEmpty(groupUsers))
                         {
                             err = $"There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is {groupName}.";
                             return err;
                         }
-
+                        debugPoint = 11;
                         if (groupName == specified)
                         {
+                            debugPoint = 12;
                             groupFound = true;
                             break; // Matching GROUP found, exit the loop.
                         }
                     }
 
+                    debugPoint = 13;
                     if (!groupFound)
                     {
+                        debugPoint = 14;
                         // No matching group found.
-                        string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!                        
+                        string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
+                        debugPoint = 15;
                         if (specified.Contains("USER"))
                         {
+                            debugPoint = 16;
                             err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
                                   $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate. " +
                                   "You cannot specify a GROUP and a USER on a single INCLUDE line.";
@@ -810,6 +890,7 @@ namespace Options.File.Checker
 
                         return err;
                     }
+                    debugPoint = 17;
                 }
                 else if (groupType == "HOST_GROUP")
                 {
@@ -840,7 +921,9 @@ namespace Options.File.Checker
                 {
                     continue; // No need to do this for other client types.
                 }
+                debugPoint = 18;
             }
+            debugPoint = 19;
             return null;
         }
     }
