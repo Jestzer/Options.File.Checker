@@ -164,9 +164,21 @@ public partial class MainWindow : Window
 
     private async void CheckForUpdateButton_Click(object sender, RoutedEventArgs e)
     {
+        AnalyzerButton.IsEnabled = false;
+        SaveOutputButton.IsEnabled = false;
+        CheckForUpdateButton.IsEnabled = false;
+        LicenseFileBrowseButton.IsEnabled = false;
+        OptionsFileBrowseButton.IsEnabled = false;
+
         var updateWindow = new UpdateWindow();
 
         await updateWindow.ShowDialog(this); // Putting this here, otherwise it won't center it on the MainWindow. Sorryyyyy.
+
+        AnalyzerButton.IsEnabled = true;
+        SaveOutputButton.IsEnabled = true;
+        CheckForUpdateButton.IsEnabled = true;
+        LicenseFileBrowseButton.IsEnabled = true;
+        OptionsFileBrowseButton.IsEnabled = true;
     }
 
     private async void LicenseFileBrowseButton_Click(object sender, RoutedEventArgs e)
@@ -240,7 +252,7 @@ public partial class MainWindow : Window
                         ShowErrorWindow("There is an issue with the license file: it is missing the SERVER and/or DAEMON line.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
-                    }
+                    }                    
 
                     // Gotta convert some things, ya know?
                     var rawFilePath = selectedFile.TryGetLocalPath;
@@ -352,6 +364,13 @@ public partial class MainWindow : Window
                         !fileContents.Contains("LINGER") && !fileContents.Contains("DEFAULT") && !fileContents.Contains("HIDDEN"))
                     {
                         ShowErrorWindow("There is an issue with the options file: it contains no recognized options.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (fileContents.Contains("Server's System Date and Time:"))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it appears to be a log file, not a options file.");
                         OptionsFileLocationTextBox.Text = string.Empty;
                         return;
                     }
