@@ -133,6 +133,12 @@ public partial class MainWindow : Window
                 viewModel.TreeViewItems.Clear();
             }
 
+            AnalyzerButton.IsEnabled = false;
+            SaveOutputButton.IsEnabled = false;
+            CheckForUpdateButton.IsEnabled = false;
+            LicenseFileBrowseButton.IsEnabled = false;
+            OptionsFileBrowseButton.IsEnabled = false;
+
             ErrorWindow errorWindow = new();
             errorWindow.ErrorTextBlock.Text = errorMessage;
             OutputTextBlock.Text = "Error: " + errorMessage;
@@ -147,6 +153,12 @@ public partial class MainWindow : Window
             {
                 OutputTextBlock.Text = "The error window broke somehow. Please make an issue for this in GitHub.";
             }
+
+            AnalyzerButton.IsEnabled = true;
+            SaveOutputButton.IsEnabled = true;
+            CheckForUpdateButton.IsEnabled = true;
+            LicenseFileBrowseButton.IsEnabled = true;
+            OptionsFileBrowseButton.IsEnabled = true;
         });
     }
 

@@ -1,4 +1,4 @@
-﻿using System; // Don't let VSC deceive you, you need these!
+﻿using System; // Don't let your IDE deceive you, you need these!
 using System.Collections.Generic;
 using System.Linq;
 
@@ -32,6 +32,8 @@ namespace Options.File.Checker
         {
             // I'm putting this here so that we can print its contents if we hit a generic error message.
             string line = string.Empty;
+
+            // This is what happens when you have a bug that only exists in your published build...
             int debugPoint = 0;
 
             // Gather the data from the license and options files first.
@@ -926,9 +928,5 @@ namespace Options.File.Checker
             debugPoint = 19;
             return null;
         }
-    }
-
-    internal class List<T1, T2>
-    {
     }
 }
