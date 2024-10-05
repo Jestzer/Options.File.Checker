@@ -252,7 +252,7 @@ public partial class MainWindow : Window
                         ShowErrorWindow("There is an issue with the license file: it is missing the SERVER and/or DAEMON line.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
-                    }                    
+                    }
 
                     // Gotta convert some things, ya know?
                     var rawFilePath = selectedFile.TryGetLocalPath;
@@ -289,7 +289,18 @@ public partial class MainWindow : Window
 
                 if (result != null)
                 {
+                    // Start with the contents of the OutputTextBlock
                     string? fileContents = OutputTextBlock.Text;
+
+                    // Now append the contents of the TreeView.
+                    if (DataContext is MainViewModel viewModel)
+                    {
+                        foreach (var item in viewModel.TreeViewItems)
+                        {
+                            fileContents += $"\n{item.Title}";
+                            AppendChildItems(item, ref fileContents, 1);
+                        }
+                    }
 
                     // Save the file contents.
                     using var stream = await result.OpenWriteAsync();
@@ -307,6 +318,17 @@ public partial class MainWindow : Window
             ShowErrorWindow($"You managed to break something. How? Here's the automatic message: {ex.Message}");
         }
     }
+
+    // Used with the SaveOutputButton method to write the contents of the TreeView to the output file.
+    private static void AppendChildItems(MainWindowTreeViewItemModel parentItem, ref string fileContents, int indentLevel)
+    {
+        foreach (var child in parentItem.Children)
+        {
+            fileContents += $"\n{new string(' ', indentLevel * 2)}{child.Title}";
+            AppendChildItems(child, ref fileContents, indentLevel + 1);
+        }
+    }
+
 
     private async void OptionsFileBrowseButton_Click(object sender, RoutedEventArgs e)
     {
