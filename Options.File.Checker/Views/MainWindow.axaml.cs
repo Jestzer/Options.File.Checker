@@ -315,7 +315,7 @@ public partial class MainWindow : Window
         }
         catch (Exception ex)
         {
-            ShowErrorWindow($"You managed to break something. How? Here's the automatic message: {ex.Message}");
+            ShowErrorWindow($"You managed to break something in the MainWindow. How? Here's the automatic message: {ex.Message} Please submit this issue on GitHub.");
         }
     }
 
