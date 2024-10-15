@@ -14,6 +14,5 @@ Notes for user:
 - In general, with FlexLM, USERs are case-sensitive. Additionally, if you have the exact same INCLUDE line multiple times, each one will be counted separately and will subtract from the seat count. Because FlexLM does this, so does this program.
 
 To-do:
-- Make action buttons not move when the window is resized
 - Make UI a little nicer looking
-- Make it so the MainWindow buttons cannot be used with the Enter key when the Error or UpdateWindow is up
+- Let user know that USE_SERVER is not needed
