@@ -84,31 +84,31 @@ namespace Options.File.Checker
                 string licenseFileContents = string.Join(Environment.NewLine, licenseFileContentsLines);
 
                 // Remove Windows line breaks.
-                string lineBreaksToRemove = "\\\r\n\t";
-                licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
-                optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
+                // string lineBreaksToRemove = "\\\r\n\t";
+                // licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+                // optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove Unix line breaks.
-                lineBreaksToRemove = "\\\r\n";
+                string lineBreaksToRemove = "\\\r\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
                 optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove more Unix line breaks...
-                lineBreaksToRemove = "\\\n\t";
-                licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
-                optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
+                // lineBreaksToRemove = "\\\n\t";
+                // licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
+                // optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Remove empty space that will likely appear on Unix systems.
-                string emptySpaceToRemove = "        ";
-                licenseFileContents = licenseFileContents.Replace(emptySpaceToRemove, string.Empty);
+                //string emptySpaceToRemove = "        ";
+                //licenseFileContents = licenseFileContents.Replace(emptySpaceToRemove, string.Empty);
 
                 // ...just in case...
                 lineBreaksToRemove = "\\\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
 
                 // Put it back together!
-                licenseFileContentsLines = licenseFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
-                optionsFileContentsLines = optionsFileContents.Split(new[] { Environment.NewLine }, StringSplitOptions.None);
+                licenseFileContentsLines = licenseFileContents.Split([Environment.NewLine], StringSplitOptions.None);
+                optionsFileContentsLines = optionsFileContents.Split([Environment.NewLine], StringSplitOptions.None);
 
                 // Next, let's check for some obvious errors.
                 // Make sure, you know, the files exist.
