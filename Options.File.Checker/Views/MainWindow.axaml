@@ -5,8 +5,8 @@
     xmlns:local="clr-namespace:Options.File.Checker"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:views="clr-namespace:Options.File.Checker.Views"
-    mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="700"
-    Width="800" Height="700"
+    mc:Ignorable="d" d:DesignWidth="875" d:DesignHeight="700"
+    Width="875" Height="700"
     MinWidth="875" MinHeight="700"
     x:Class="Options.File.Checker.Views.MainWindow"
     x:DataType="vm:MainViewModel"
@@ -89,8 +89,8 @@
         </StackPanel>
 
         <!-- Action Buttons -->
-        <StackPanel Grid.Row="1" Grid.RowSpan="3" Grid.Column="0" Orientation="Horizontal"
-            VerticalAlignment="Center" Margin="500,0,0,0">
+        <StackPanel Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Orientation="Horizontal"
+            VerticalAlignment="Center" Margin="0,0,0,0">
             <Button Name="AnalyzerButton"
                 Content="Analyze" Margin="0,0,10,0" Foreground="White"
                 IsEnabled="False" Click="AnalyzerButton_Click">
