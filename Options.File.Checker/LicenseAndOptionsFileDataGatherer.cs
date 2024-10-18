@@ -83,26 +83,11 @@ namespace Options.File.Checker
                 string optionsFileContents = string.Join(Environment.NewLine, optionsFileContentsLines);
                 string licenseFileContents = string.Join(Environment.NewLine, licenseFileContentsLines);
 
-                // Remove Windows line breaks.
-                // string lineBreaksToRemove = "\\\r\n\t";
-                // licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
-                // optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
-
-                // Remove Unix line breaks.
+                // Remove line breaks.
                 string lineBreaksToRemove = "\\\r\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
                 optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
 
-                // Remove more Unix line breaks...
-                // lineBreaksToRemove = "\\\n\t";
-                // licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
-                // optionsFileContents = optionsFileContents.Replace(lineBreaksToRemove, string.Empty);
-
-                // Remove empty space that will likely appear on Unix systems.
-                //string emptySpaceToRemove = "        ";
-                //licenseFileContents = licenseFileContents.Replace(emptySpaceToRemove, string.Empty);
-
-                // ...just in case...
                 lineBreaksToRemove = "\\\n";
                 licenseFileContents = licenseFileContents.Replace(lineBreaksToRemove, string.Empty);
 
@@ -365,7 +350,7 @@ namespace Options.File.Checker
                         productName = lineParts[1];
                         int productVersion = int.Parse(lineParts[3]);
                         productExpirationDate = lineParts[4];
-                        string productKey = lineParts[6];
+                        string productKey = lineParts[6].Trim(); // I'm find with .Trim() here since it may be the end of the line.
                         string licenseOffering = string.Empty;
                         string licenseNumber = string.Empty;
                         _ = int.TryParse(lineParts[5], out seatCount);
