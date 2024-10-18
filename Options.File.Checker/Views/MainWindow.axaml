@@ -89,51 +89,56 @@
         </StackPanel>
 
         <!-- Action Buttons -->
-        <StackPanel Grid.Row="1" Grid.RowSpan="3" Grid.Column="1" Orientation="Horizontal"
-            VerticalAlignment="Center" Margin="0,0,0,0">
-            <Button Name="AnalyzerButton"
-                Content="Analyze" Margin="0,0,10,0" Foreground="White"
-                IsEnabled="False" Click="AnalyzerButton_Click">
-                <Button.Styles>
-                    <Style Selector="Button">
-                        <Setter Property="Background" Value="#FF464646" />
-                        <Setter Property="BorderBrush" Value="#FF1E699B" />
-                        <Setter Property="BorderThickness" Value="2" />
-                        <Setter Property="TextElement.Foreground" Value="White" />
-                    </Style>
-                    <Style Selector="Button:pointerover /template/ Button">
-                        <Setter Property="Background" Value="Gray" />
-                    </Style>
-                    <Style Selector="Button:pressed /template/ Button">
-                        <Setter Property="Background" Value="#FFCECECE" />
-                    </Style>
-                    <Style Selector="Button:disabled /template/ Button">
-                        <Setter Property="Background" Value="#FF858585" />
-                        <Setter Property="BorderBrush" Value="#FF858585" />
-                        <Setter Property="TextElement.Foreground" Value="#FFA5A5A5" />
-                    </Style>
-                </Button.Styles>
-            </Button>
+       
+<Canvas>
+    <!-- Analyzer Button -->
+    <Button Name="AnalyzerButton"
+            Content="Analyze" Margin="0,0,10,0" Foreground="White"
+            IsEnabled="False" Click="AnalyzerButton_Click"
+            Canvas.Left="500" Canvas.Top="50">
+        <Button.Styles>
+            <Style Selector="Button">
+                <Setter Property="Background" Value="#FF464646" />
+                <Setter Property="BorderBrush" Value="#FF1E699B" />
+                <Setter Property="BorderThickness" Value="2" />
+                <Setter Property="TextElement.Foreground" Value="White" />
+            </Style>
+            <Style Selector="Button:pointerover /template/ Button">
+                <Setter Property="Background" Value="Gray" />
+            </Style>
+            <Style Selector="Button:pressed /template/ Button">
+                <Setter Property="Background" Value="#FFCECECE" />
+            </Style>
+            <Style Selector="Button:disabled /template/ Button">
+                <Setter Property="Background" Value="#FF858585" />
+                <Setter Property="BorderBrush" Value="#FF858585" />
+                <Setter Property="TextElement.Foreground" Value="#FFA5A5A5" />
+            </Style>
+        </Button.Styles>
+    </Button>
 
-            <Button Name="SaveOutputButton"
-                Content="Save Output" Margin="0,0,0,0" Foreground="White"
-                Click="SaveOutputButton_Click">
-                <Button.Styles>
-                    <Style Selector="Button">
-                        <Setter Property="Background" Value="#FF464646" />
-                        <Setter Property="BorderBrush" Value="#FF1E699B" />
-                        <Setter Property="BorderThickness" Value="2" />
-                        <Setter Property="TextElement.Foreground" Value="White" />
-                    </Style>
-                    <Style Selector="Button:pointerover /template/ Button">
-                        <Setter Property="Background" Value="Gray" />
-                    </Style>
-                    <Style Selector="Button:pressed /template/ Button">
-                        <Setter Property="Background" Value="#FFCECECE" />
-                    </Style>
-                </Button.Styles>
-            </Button>
-        </StackPanel>
+    <!-- Save Output Button -->
+    <Button Name="SaveOutputButton"
+            Content="Save Output" Margin="0,0,0,0" Foreground="White"
+            Click="SaveOutputButton_Click"
+            Canvas.Left="600" Canvas.Top="50">
+        <Button.Styles>
+            <Style Selector="Button">
+                <Setter Property="Background" Value="#FF464646" />
+                <Setter Property="BorderBrush" Value="#FF1E699B" />
+                <Setter Property="BorderThickness" Value="2" />
+                <Setter Property="TextElement.Foreground" Value="White" />
+            </Style>
+            <Style Selector="Button:pointerover /template/ Button">
+                <Setter Property="Background" Value="Gray" />
+            </Style>
+            <Style Selector="Button:pressed /template/ Button">
+                <Setter Property="Background" Value="#FFCECECE" />
+            </Style>
+        </Button.Styles>
+    </Button>
+</Canvas>
+        
 
         <!-- OutputTextBlock Section -->
         <ScrollViewer Grid.Row="4" Grid.ColumnSpan="2" VerticalScrollBarVisibility="Auto"
