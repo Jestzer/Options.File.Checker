@@ -7,8 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Options.File.Checker", "Opt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Options.File.Checker.Desktop", "..\Options.File.Checker.Desktop\Options.File.Checker.Desktop.csproj", "{A4CF9DE8-D506-41CB-9B2A-18710CEED690}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Options.File.Checker.NoGUI", "..\Options.File.Checker.NoGUI\Options.File.Checker.NoGUI.csproj", "{BB7BD767-C5AC-487F-8A3F-6CF4042BFE7B}"
-EndProject
+#Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Options.File.Checker.NoGUI", "..\Options.File.Checker.NoGUI\Options.File.Checker.NoGUI.csproj", "{BB7BD767-C5AC-487F-8A3F-6CF4042BFE7B}"
+#EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

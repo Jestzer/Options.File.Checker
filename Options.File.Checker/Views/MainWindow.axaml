@@ -89,7 +89,7 @@
         </StackPanel>
 
         <!-- Action Buttons -->
-        <!-- Putting this on a canvas to precisely place it.-->
+        <!-- Putting this on a canvas to precisely place it. Putting it on the grid also tends to mess up the autosizing of the output blocks.-->
         <Canvas>
             <!-- Analyzer Button -->
             <Button Name="AnalyzerButton"
