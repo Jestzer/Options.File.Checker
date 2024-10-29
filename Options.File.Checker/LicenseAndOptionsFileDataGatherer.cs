@@ -608,8 +608,12 @@ namespace Options.File.Checker
                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                 }
 
+                // These will be used when gather Options File information. They're outside the loop since GROUPs and HOST_GROUPs may span multiple lines.
+                // Is this also true for INCLUDE/EXCLUDE lines? Hopefully not!!!!!!!!!!
                 bool lastLineWasAGroupLine = false;
+                bool lastLineWasAHostGroupLine = false;
                 string groupName = string.Empty;
+                string hostGroupName = string.Empty;
 
                 // Options file information gathering.
                 for (int optionsLineIndex = 0; optionsLineIndex < optionsFileContentsLines.Length; optionsLineIndex++)
@@ -619,6 +623,8 @@ namespace Options.File.Checker
                     if (line.TrimStart().StartsWith("INCLUDE ") || line.TrimStart().StartsWith("INCLUDE_BORROW ") || line.TrimStart().StartsWith("EXCLUDE ") || line.TrimStart().StartsWith("EXCLUDE_BORROW "))
                     {
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = false;
+
                         string optionType = string.Empty;
 
                         if (line.TrimStart().StartsWith("INCLUDE ")) { optionType = "INCLUDE"; }
@@ -772,6 +778,8 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("INCLUDEALL ") || line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = false;
+
                         string optionSpecified = string.Empty; // Could either be INCLUDEALL or EXCLUDEALL.
                         string clientType; // Examples include GROUP or USER.                    
                         string clientSpecified = string.Empty; // Examples include "matlab_group" or "root".
@@ -816,6 +824,8 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("MAX "))
                     {
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = false;
+
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -849,6 +859,8 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("RESERVE "))
                     {
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = false;
+
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -994,6 +1006,8 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("GROUP "))
                     {
                         lastLineWasAGroupLine = true;
+                        lastLineWasAHostGroupLine = false;
+
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -1048,22 +1062,17 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = true;
+
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
                         while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
                         {
                             lineParts = lineParts.Skip(1).ToArray();
-                        }
+                        }                        
 
-                        if (lineParts.Length < 3)
-                        {
-                            _err = "There is an issue with the options file: you have an incorrectly formatted HOST_GROUP line. It is missing necessary information. " +
-                                $"The line in question is \"{line}\".";
-                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
-                        }
-
-                        string hostGroupName = lineParts[1];
+                        hostGroupName = lineParts[1];
                         string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2)).TrimEnd();
 
                         // Same as GROUP, combine HOST_GROUPs with duplicate names and treat them as one.
@@ -1088,6 +1097,7 @@ namespace Options.File.Checker
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = false;
                         _caseSensitivity = false;
                     }
                     else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ")
@@ -1097,6 +1107,7 @@ namespace Options.File.Checker
                     {
                         // Other valid line beginnings that I currently do nothing with.
                         lastLineWasAGroupLine = false;
+                        lastLineWasAHostGroupLine = false;
                     }
                     else if (lastLineWasAGroupLine)
                     {
@@ -1137,6 +1148,33 @@ namespace Options.File.Checker
 
                         string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
                         if (Regex.IsMatch(groupUsers, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                    }
+                    else if (lastLineWasAHostGroupLine)
+                    {
+                        string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces, tabs, line breaks, and backslashes!
+                        lineParts = lineParts
+                                    .Select(part => part.Trim('\n', '\r', '\t'))
+                                    .Where(part => !string.IsNullOrWhiteSpace(part) && part != "\\")
+                                    .ToArray();
+
+                        string hostGroupClientSpecified = string.Join(" ", lineParts);
+
+                        var existingEntry = hostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
+                        if (existingEntry != null)
+                        {
+                            string combinedUsers = existingEntry.Item2 + " " + hostGroupClientSpecified;
+                            var existingKey = hostGroupDictionary.FirstOrDefault(x => x.Value.Item1 == hostGroupName).Key;
+                            hostGroupDictionary[existingKey] = Tuple.Create(hostGroupName, combinedUsers);
+                        }
+
+                        // Check for wildcards and IP addresses.
+                        if (hostGroupClientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(hostGroupClientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+
                     }
                     else // This should help spot my stupid typos.
                     {
