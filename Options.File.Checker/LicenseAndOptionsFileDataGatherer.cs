@@ -44,7 +44,7 @@ namespace Options.File.Checker
         private static readonly Dictionary<int, Tuple<string, string, int>> groupDictionary = [];
         private static readonly Dictionary<int, Tuple<string, string>> hostGroupDictionary = [];
         private static string? _err = string.Empty;
-        
+
         // Putting this here so that they can be printed in try-catch error messages.
         private static string? productExpirationDate;
 
@@ -608,6 +608,9 @@ namespace Options.File.Checker
                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                 }
 
+                bool lastLineWasAGroupLine = false;
+                string groupName = string.Empty;
+
                 // Options file information gathering.
                 for (int optionsLineIndex = 0; optionsLineIndex < optionsFileContentsLines.Length; optionsLineIndex++)
                 {
@@ -615,6 +618,7 @@ namespace Options.File.Checker
 
                     if (line.TrimStart().StartsWith("INCLUDE ") || line.TrimStart().StartsWith("INCLUDE_BORROW ") || line.TrimStart().StartsWith("EXCLUDE ") || line.TrimStart().StartsWith("EXCLUDE_BORROW "))
                     {
+                        lastLineWasAGroupLine = false;
                         string optionType = string.Empty;
 
                         if (line.TrimStart().StartsWith("INCLUDE ")) { optionType = "INCLUDE"; }
@@ -767,6 +771,7 @@ namespace Options.File.Checker
                     }
                     else if (line.TrimStart().StartsWith("INCLUDEALL ") || line.TrimStart().StartsWith("EXCLUDEALL "))
                     {
+                        lastLineWasAGroupLine = false;
                         string optionSpecified = string.Empty; // Could either be INCLUDEALL or EXCLUDEALL.
                         string clientType; // Examples include GROUP or USER.                    
                         string clientSpecified = string.Empty; // Examples include "matlab_group" or "root".
@@ -810,6 +815,7 @@ namespace Options.File.Checker
                     }
                     else if (line.TrimStart().StartsWith("MAX "))
                     {
+                        lastLineWasAGroupLine = false;
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -842,6 +848,7 @@ namespace Options.File.Checker
                     }
                     else if (line.TrimStart().StartsWith("RESERVE "))
                     {
+                        lastLineWasAGroupLine = false;
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -986,6 +993,7 @@ namespace Options.File.Checker
                     }
                     else if (line.TrimStart().StartsWith("GROUP "))
                     {
+                        lastLineWasAGroupLine = true;
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -997,11 +1005,20 @@ namespace Options.File.Checker
                         // Remove any elements after lineParts[2] that are blank, whitespace, or tabs. We don't want to count them as users of the GROUP.
                         lineParts = lineParts.Take(3)
                                              .Concat(lineParts.Skip(3).Where(part => !string.IsNullOrWhiteSpace(part)))
+                                             .Select(part => part.Trim('\n', '\r', '\t'))
+                                             .Where(part => !string.IsNullOrWhiteSpace(part) && part != "\\")
                                              .ToArray();
 
-                        string groupName = lineParts[1];
+                        groupName = string.Concat(lineParts[1].Where(c => !char.IsWhiteSpace(c)));
                         string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
-                        int groupUserCount = groupUsers.Split(' ').Length;
+
+                        int groupUserCount = 0;
+
+                        // Check if groupUsers is null, empty, or whitespace. If it is, leave the count at 0.
+                        if (!string.IsNullOrWhiteSpace(groupUsers))
+                        {
+                            groupUserCount = groupUsers.Split(' ').Length;
+                        }
 
                         // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
                         var existingEntry = groupDictionary.Values.FirstOrDefault(g => g.Item1 == groupName);
@@ -1030,6 +1047,7 @@ namespace Options.File.Checker
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
+                        lastLineWasAGroupLine = false;
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -1069,14 +1087,56 @@ namespace Options.File.Checker
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
+                        lastLineWasAGroupLine = false;
                         _caseSensitivity = false;
                     }
                     else if (line.TrimStart().StartsWith("TIMEOUTALL ") || line.TrimStart().StartsWith("DEBUGLOG ") || line.TrimStart().StartsWith("LINGER ") || line.TrimStart().StartsWith("MAX_OVERDRAFT ")
                         || line.TrimStart().StartsWith("REPORTLOG ") || line.TrimStart().StartsWith("TIMEOUT ") || line.TrimStart().StartsWith("BORROW ") || line.TrimStart().StartsWith("NOLOG ")
-                        || line.TrimStart().StartsWith("DEFAULT ") || line.TrimStart().StartsWith("HIDDEN ") || line.TrimStart().StartsWith("MAX_BORROW_HOURS") || line.TrimStart().StartsWith('#') 
+                        || line.TrimStart().StartsWith("DEFAULT ") || line.TrimStart().StartsWith("HIDDEN ") || line.TrimStart().StartsWith("MAX_BORROW_HOURS") || line.TrimStart().StartsWith('#')
                         || string.IsNullOrWhiteSpace(line) || line.TrimStart().StartsWith("BORROW_LOWWATER "))
                     {
                         // Other valid line beginnings that I currently do nothing with.
+                        lastLineWasAGroupLine = false;
+                    }
+                    else if (lastLineWasAGroupLine)
+                    {
+                        string[] lineParts = line.Split(' ');
+
+                        // Stop putting in random spaces, tabs, line breaks, and backslashes!
+                        lineParts = lineParts
+                                    .Select(part => part.Trim('\n', '\r', '\t'))
+                                    .Where(part => !string.IsNullOrWhiteSpace(part) && part != "\\")
+                                    .ToArray();
+
+                        string groupUsers = string.Join(" ", lineParts);
+
+                        int groupUserCount = 0;
+
+                        // Check if groupUsers is null, empty, or whitespace. If it is, leave the count at 0.
+                        if (!string.IsNullOrWhiteSpace(groupUsers))
+                        {
+                            groupUserCount = groupUsers.Split(' ').Length;
+                        }
+
+                        // The GROUP already exists, silly.
+                        var existingEntry = groupDictionary.Values.FirstOrDefault(g => g.Item1 == groupName);
+                        if (existingEntry != null)
+                        {
+                            string combinedUsers = existingEntry.Item2 + " " + groupUsers;
+                            int combinedUserCount = existingEntry.Item3 + groupUserCount;
+
+                            // Find the key of the existing entry.
+                            var existingKey = groupDictionary.FirstOrDefault(x => x.Value.Item1 == groupName).Key;
+
+                            // Update the existing entry in the dictionary.
+                            groupDictionary[existingKey] = Tuple.Create(groupName, combinedUsers, combinedUserCount);
+                        }
+
+                        // Check for wildcards and IP addresses.
+                        if (groupUsers.Contains('*')) { _wildcardsAreUsed = true; }
+
+                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
+                        if (Regex.IsMatch(groupUsers, ipAddressPattern)) { _ipAddressesAreUsed = true; }
                     }
                     else // This should help spot my stupid typos.
                     {
@@ -1092,19 +1152,19 @@ namespace Options.File.Checker
             {
                 if (ex.Message == "The value cannot be an empty string. (Parameter 'path')")
                 {
-                    _err = "You left the license or options file text field blank.";
+                    _err = "Error: you left the license or options file text field blank.";
                 }
                 else if (ex.Message == "Index was outside the bounds of the array.")
                 {
-                    _err = $"There is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"";
+                    _err = $"Error: there is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"";
                 }
                 else if (ex.Message.Contains("is not supported in calendar 'System.Globalization.GregorianCalendar'."))
                 {
-                    _err = $"There is an issue with your license file: it contains a date not recognized in the Gregorian Calendar: {productExpirationDate}. Please regenerate your license file.";
+                    _err = $"Error: there is an issue with your license file: it contains a product expiration date not recognized in the Gregorian Calendar: {productExpirationDate}. Please regenerate your license file.";
                 }
                 else
                 {
-                    _err = $"You managed to break something. How? Here's the automatic message from the Gatherer: {ex.Message}";
+                    _err = $"Error: you managed to break something. How? Here's the automatic message from the Gatherer: {ex.Message}";
                 }
 
                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
