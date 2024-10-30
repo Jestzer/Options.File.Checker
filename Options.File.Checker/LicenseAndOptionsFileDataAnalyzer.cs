@@ -39,7 +39,7 @@ namespace Options.File.Checker
             // Gather the data from the license and options files first.
             var (serverLineHasPort,
                 daemonLineHasPort,
-                daemonPortIsCNUFriendly,
+                daemonPortIsCnuFriendly,
                 caseSensitivity,
                 optionsFileUsesMatlabParallelServer,
                 wildcardsAreUsed,
@@ -239,7 +239,7 @@ namespace Options.File.Checker
 
                 return (serverLineHasPort,
                     daemonLineHasPort,
-                    daemonPortIsCNUFriendly,
+                    daemonPortIsCnuFriendly,
                     caseSensitivity,
                     unspecifiedLicenseOrProductKey,
                     optionsFileUsesMatlabParallelServer,

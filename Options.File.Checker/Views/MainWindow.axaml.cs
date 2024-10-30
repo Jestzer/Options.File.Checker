@@ -486,7 +486,7 @@ public partial class MainWindow : Window
         // Call the AnalyzeFiles method. I'm leaving these unused variables in case I want to use them later. You're welcome future me.
         var (serverLineHasPort,
             daemonLineHasPort,
-            daemonPortIsCNUFriendly,
+            daemonPortIsCnuFriendly,
             caseSensitivity,
             unspecifiedLicenseOrProductKey,
             optionsFileUsesMatlabParallelServer,
@@ -561,7 +561,7 @@ public partial class MainWindow : Window
                 {
                     string seatOrSeats = item.Value.Item2 == 1 ? "seat" : "seats";
 
-                    if (!daemonPortIsCNUFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCNUAboutPORTFormat)
+                    if (!daemonPortIsCnuFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCNUAboutPORTFormat)
                     {
                         output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
                         alreadyYelledToCNUAboutPORTFormat = true;
