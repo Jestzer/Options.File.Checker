@@ -6,15 +6,15 @@ using System.Text.RegularExpressions;
 
 namespace Options.File.Checker
 {
-    public partial class LicenseAndOptionsFileDataGatherer
+    public abstract partial class LicenseAndOptionsFileDataGatherer
     {
         // Do Regex stuff now to be efficient and stuff blah blah blah.
         [GeneratedRegex("port=", RegexOptions.IgnoreCase, "en-US")]
-        private static partial Regex countPortEqualsRegex();
+        private static partial Regex CountPortEqualsRegex();
         [GeneratedRegex("options=", RegexOptions.IgnoreCase, "en-US")]
-        private static partial Regex countOptionsEquals();
+        private static partial Regex CountOptionsEquals();
         [GeneratedRegex("# BEGIN--------------", RegexOptions.IgnoreCase, "en-US")]
-        private static partial Regex countCommentedBeginLines();
+        private static partial Regex CountCommentedBeginLines();
 
         [GeneratedRegex("key=", RegexOptions.IgnoreCase, "en-US")]
         private static partial Regex KeyEquals();
@@ -24,6 +24,9 @@ namespace Options.File.Checker
 
         [GeneratedRegex(@"^[^Rab_\d]+$")]
         private static partial Regex LicenseNumber();
+        
+        [GeneratedRegex(@"\d{2,3}\.")]
+        private static partial Regex IpAddressRegex();
 
         private static bool _serverLineHasPort = true;
         private static bool _daemonLineHasPort = false;
@@ -46,7 +49,7 @@ namespace Options.File.Checker
         private static string? _err = string.Empty;
 
         // Putting this here so that they can be printed in try-catch error messages.
-        private static string? productExpirationDate;
+        private static string? _productExpirationDate;
 
         public static (
             bool serverLineHasPort,
@@ -262,9 +265,9 @@ namespace Options.File.Checker
                         }
 
                         // port= and options= should only appear once.
-                        int countPortEquals = countPortEqualsRegex().Matches(line).Count;
-                        int countOptionsEquals = LicenseAndOptionsFileDataGatherer.countOptionsEquals().Matches(line).Count;
-                        int countCommentedBeginLines = LicenseAndOptionsFileDataGatherer.countCommentedBeginLines().Matches(line).Count;
+                        int countPortEquals = CountPortEqualsRegex().Matches(line).Count;
+                        int countOptionsEquals = LicenseAndOptionsFileDataGatherer.CountOptionsEquals().Matches(line).Count;
+                        int countCommentedBeginLines = LicenseAndOptionsFileDataGatherer.CountCommentedBeginLines().Matches(line).Count;
 
                         // For the CNU kids.
                         if (line.Contains("PORT="))
@@ -349,7 +352,7 @@ namespace Options.File.Checker
                         string[] lineParts = line.Split(' ');
                         productName = lineParts[1];
                         int productVersion = int.Parse(lineParts[3]);
-                        productExpirationDate = lineParts[4];
+                        _productExpirationDate = lineParts[4];
                         string productKey = lineParts[6].Trim(); // I'm find with .Trim() here since it may be the end of the line.
                         string licenseOffering = string.Empty;
                         string licenseNumber = string.Empty;
@@ -492,13 +495,13 @@ namespace Options.File.Checker
                         }
 
                         // Check the product's expiration date. Year 0000 means perpetual.
-                        if (productExpirationDate == "01-jan-0000")
+                        if (_productExpirationDate == "01-jan-0000")
                         {
-                            productExpirationDate = "01-jan-2999";
+                            _productExpirationDate = "01-jan-2999";
                         }
 
                         // Convert/parse the productExpirationDate string to a DateTime object.
-                        DateTime expirationDate = DateTime.ParseExact(productExpirationDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture);
+                        DateTime expirationDate = DateTime.ParseExact(_productExpirationDate, "dd-MMM-yyyy", CultureInfo.InvariantCulture);
 
                         // Get the current system date.
                         DateTime currentDate = DateTime.Now.Date;
@@ -506,7 +509,7 @@ namespace Options.File.Checker
                         if (expirationDate < currentDate)
                         {
                             _err = $"There is an issue with the license file: The product {productName} on license number " +
-                                $"{licenseNumber} expired on {productExpirationDate}. Please update your license file appropriately before proceeding.";
+                                $"{licenseNumber} expired on {_productExpirationDate}. Please update your license file appropriately before proceeding.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
 
@@ -763,9 +766,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (clientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(clientSpecified)) { _ipAddressesAreUsed = true; }
 
                         // Listen, we all have bad ideas.
                         if (productName == "MATLAB_Distrib_Comp_Engine") { _optionsFileUsesMatlabParallelServer = true; }
@@ -781,7 +782,6 @@ namespace Options.File.Checker
                         lastLineWasAHostGroupLine = false;
 
                         string optionSpecified = string.Empty; // Could either be INCLUDEALL or EXCLUDEALL.
-                        string clientType; // Examples include GROUP or USER.                    
                         string clientSpecified = string.Empty; // Examples include "matlab_group" or "root".
                         string[] lineParts = line.Split(' ');
 
@@ -801,7 +801,7 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
 
-                        clientType = lineParts[1];
+                        string clientType = lineParts[1]; // Examples include GROUP or USER.
                         clientSpecified = string.Join(" ", lineParts.Skip(2));
 
                         if (clientType != "USER" && clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
@@ -814,9 +814,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (clientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(clientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(clientSpecified)) { _ipAddressesAreUsed = true; }
 
                         if (line.TrimStart().StartsWith("INCLUDEALL ")) { includeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified, line); }
                         else if (line.TrimStart().StartsWith("EXCLUDEALL ")) { excludeAllDictionary[optionsLineIndex] = Tuple.Create(clientType, clientSpecified); }
@@ -848,9 +846,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (maxClientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(maxClientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(maxClientSpecified)) { _ipAddressesAreUsed = true; }
 
                         if (maxProductName == "MATLAB_Distrib_Comp_Engine") { _optionsFileUsesMatlabParallelServer = true; }
 
@@ -995,9 +991,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (reserveClientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(reserveClientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(reserveClientSpecified)) { _ipAddressesAreUsed = true; }
 
                         if (reserveProductName == "MATLAB_Distrib_Comp_Engine") { _optionsFileUsesMatlabParallelServer = true; }
 
@@ -1056,8 +1050,7 @@ namespace Options.File.Checker
                         // Check for wildcards and IP addresses.
                         if (groupUsers.Contains('*')) { _wildcardsAreUsed = true; }
 
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(groupUsers, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(groupUsers)) { _ipAddressesAreUsed = true; }
                     }
                     else if (line.TrimStart().StartsWith("HOST_GROUP "))
                     {
@@ -1090,9 +1083,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (hostGroupClientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(hostGroupClientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(hostGroupClientSpecified)) { _ipAddressesAreUsed = true; }
                     }
                     else if (line.TrimStart().StartsWith("GROUPCASEINSENSITIVE ON"))
                     {
@@ -1145,9 +1136,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (groupUsers.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(groupUsers, ipAddressPattern)) { _ipAddressesAreUsed = true; }
+                        if (IpAddressRegex().IsMatch(groupUsers)) { _ipAddressesAreUsed = true; }
                     }
                     else if (lastLineWasAHostGroupLine)
                     {
@@ -1171,10 +1160,7 @@ namespace Options.File.Checker
 
                         // Check for wildcards and IP addresses.
                         if (hostGroupClientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
-
-                        string ipAddressPattern = @"\d{2,3}\."; // I'll assume your IP addresses are something like ##. and/or ###.
-                        if (Regex.IsMatch(hostGroupClientSpecified, ipAddressPattern)) { _ipAddressesAreUsed = true; }
-
+                        if (IpAddressRegex().IsMatch(hostGroupClientSpecified)) { _ipAddressesAreUsed = true; }
                     }
                     else // This should help spot my stupid typos.
                     {
@@ -1198,7 +1184,7 @@ namespace Options.File.Checker
                 }
                 else if (ex.Message.Contains("is not supported in calendar 'System.Globalization.GregorianCalendar'."))
                 {
-                    _err = $"Error: there is an issue with your license file: it contains a product expiration date not recognized in the Gregorian Calendar: {productExpirationDate}. Please regenerate your license file.";
+                    _err = $"Error: there is an issue with your license file: it contains a product expiration date not recognized in the Gregorian Calendar: {_productExpirationDate}. Please regenerate your license file.";
                 }
                 else
                 {

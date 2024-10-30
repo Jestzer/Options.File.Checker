@@ -10,7 +10,6 @@ using System.Text.Json.Serialization;
 using System.IO;
 using System.Text;
 using System;
-using Microsoft.CodeAnalysis;
 using System.Threading.Tasks;
 using Avalonia.Threading;
 
@@ -37,7 +36,7 @@ public partial class MainWindow : Window
         Closing += MainWindow_Closing;
     }
 
-    public static string SettingsPath()
+    private static string SettingsPath()
     {
         string settingsPath;
 
@@ -216,14 +215,14 @@ public partial class MainWindow : Window
                     // Check the file size.
                     if (fileSizeInBytes > fiftyMegabytes)
                     {
-                        ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
+                        ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, (hopefully) not a license file.");
                         LicenseFileLocationTextBox.Text = string.Empty;
                         return;
                     }
 
                     // If size is within the limit, read the contents.
                     string fileContents;
-                    using (var stream = await selectedFile.OpenReadAsync())
+                    await using (var stream = await selectedFile.OpenReadAsync())
                     using (var reader = new StreamReader(stream))
                     {
                         fileContents = await reader.ReadToEndAsync();
@@ -352,84 +351,73 @@ public partial class MainWindow : Window
             // Open the file dialog.
             var result = await mainWindow.StorageProvider.OpenFilePickerAsync(filePickerOptions);
 
-            if (result != null && result.Any())
+            if (!result.Any()) return;
+            var selectedFile = result[0];
             {
-                var selectedFile = result[0];
-                if (selectedFile != null)
+                // Get file properties.
+                var properties = await selectedFile.GetBasicPropertiesAsync();
+                if (properties.Size != null)
                 {
-                    // Get file properties.
-                    var properties = await selectedFile.GetBasicPropertiesAsync();
-                    if (properties.Size != null)
+                    long fileSizeInBytes = (long)properties.Size;
+                    const long fiftyMegabytes = 50L * 1024L * 1024L;
+
+                    // Check the file size.
+                    if (fileSizeInBytes > fiftyMegabytes)
                     {
-                        long fileSizeInBytes = (long)properties.Size;
-                        const long fiftyMegabytes = 50L * 1024L * 1024L;
-
-                        // Check the file size.
-                        if (fileSizeInBytes > fiftyMegabytes)
-                        {
-                            ShowErrorWindow("There is an issue with the options file: it is over 50 MB and therefore, likely (hopefully) not an options file.");
-                            OptionsFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        // If size is within the limit, read the contents.
-                        string fileContents;
-                        using (var stream = await selectedFile.OpenReadAsync())
-                        using (var reader = new StreamReader(stream))
-                        {
-                            fileContents = await reader.ReadToEndAsync();
-                        }
-
-                        if (string.IsNullOrWhiteSpace(fileContents))
-                        {
-                            ShowErrorWindow("There is an issue with the options file: it is either empty or only contains white space.");
-                            OptionsFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        if (!fileContents.Contains("INCLUDE") && !fileContents.Contains("EXCLUDE") && !fileContents.Contains("GROUP") && !fileContents.Contains("LOG") &&
-                            !fileContents.Contains("MAX") && !fileContents.Contains("TIMEOUT") && !fileContents.Contains("RESERVE") && !fileContents.Contains("BORROW") &&
-                            !fileContents.Contains("LINGER") && !fileContents.Contains("DEFAULT") && !fileContents.Contains("HIDDEN"))
-                        {
-                            ShowErrorWindow("There is an issue with the options file: it contains no recognized options.");
-                            OptionsFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        if (fileContents.Contains("Server's System Date and Time:"))
-                        {
-                            ShowErrorWindow("There is an issue with the options file: it appears to be a log file, not a options file.");
-                            OptionsFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        // You've made it this far, but I still don't trust you didn't select a pptx.
-                        static bool ContainsNonPlaintext(string fileContents)
-                        {
-                            foreach (char c in fileContents)
-                            {
-                                // Check if the character is non-printable/control character (excluding newline and tab) or beyond the ASCII range.
-                                if (char.IsControl(c) && c != '\n' && c != '\r' && c != '\t' || c > 127)
-                                {
-                                    return true;
-                                }
-                            }
-                            return false;
-                        }
-
-                        if (ContainsNonPlaintext(fileContents))
-                        {
-                            ShowErrorWindow("There is an issue with the options file: it contains non-plaintext characters and therefore, is likely not an options file.");
-                            OptionsFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
+                        ShowErrorWindow("There is an issue with the options file: it is over 50 MB and therefore, (hopefully) not an options file.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
                     }
 
-                    // Gotta convert some things, ya know?
-                    var rawFilePath = selectedFile.TryGetLocalPath;
-                    string? filePath = rawFilePath();
-                    OptionsFileLocationTextBox.Text = filePath;
+                    // If size is within the limit, read the contents.
+                    string fileContents;
+                    await using (var stream = await selectedFile.OpenReadAsync())
+                    using (var reader = new StreamReader(stream))
+                    {
+                        fileContents = await reader.ReadToEndAsync();
+                    }
+
+                    if (string.IsNullOrWhiteSpace(fileContents))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it is either empty or only contains white space.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (!fileContents.Contains("INCLUDE") && !fileContents.Contains("EXCLUDE") && !fileContents.Contains("GROUP") && !fileContents.Contains("LOG") &&
+                        !fileContents.Contains("MAX") && !fileContents.Contains("TIMEOUT") && !fileContents.Contains("RESERVE") && !fileContents.Contains("BORROW") &&
+                        !fileContents.Contains("LINGER") && !fileContents.Contains("DEFAULT") && !fileContents.Contains("HIDDEN"))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it contains no recognized options.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (fileContents.Contains("Server's System Date and Time:"))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it appears to be a log file, not a options file.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    // You've made it this far, but I still don't trust you didn't select a pptx.
+                    static bool ContainsNonPlaintext(string fileContents)
+                    {
+                        return fileContents.Any(c => char.IsControl(c) && c != '\n' && c != '\r' && c != '\t' || c > 127);
+                    }
+
+                    if (ContainsNonPlaintext(fileContents))
+                    {
+                        ShowErrorWindow("There is an issue with the options file: it contains non-plaintext characters and therefore, is likely not an options file.");
+                        OptionsFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
                 }
+
+                // Gotta convert some things, ya know?
+                var rawFilePath = selectedFile.TryGetLocalPath;
+                string? filePath = rawFilePath();
+                OptionsFileLocationTextBox.Text = filePath;
             }
         }
         else
@@ -598,24 +586,23 @@ public partial class MainWindow : Window
                     Dispatcher.UIThread.Post(() =>
                     {
                         // Finally, print the stuff we want to see!
-                        if (DataContext is MainViewModel viewModel)
+                        if (DataContext is not MainViewModel viewModel) return;
+                        
+                        // Main product/seat info.
+                        var mainItem = new MainWindowTreeViewItemModel
                         {
-                            // Main product/seat info
-                            var mainItem = new MainWindowTreeViewItemModel
-                            {
-                                Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
-                            };
+                            Title = $"{item.Value.Item1} has {item.Value.Item2}/{item.Value.Item7} unassigned {seatOrSeats} on {licenseFileLicenseOffering} license number {item.Value.Item5} (product key {item.Value.Item3})."
+                        };
 
-                            // Add subitems that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
-                            // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
-                            foreach (var subItem in item.Value.Item6)
-                            {
-                                mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
-                            }
-
-                            // Actually add the whole item to the tree now.
-                            viewModel.TreeViewItems.Add(mainItem);
+                        // Add subitems that display what INCLUDE, INCLUDEALL, and RESERVE lines are subtracting from seat count.
+                        // In case you don't look at the other subclasses, the latter 2 options will not be accepted for NNU products.
+                        foreach (var subItem in item.Value.Item6)
+                        {
+                            mainItem.Children.Add(new MainWindowTreeViewItemModel { Title = subItem });
                         }
+
+                        // Actually add the whole item to the tree now.
+                        viewModel.TreeViewItems.Add(mainItem);
                     });
                 }
             }

@@ -260,18 +260,15 @@ namespace Options.File.Checker
             }
             catch (Exception ex)
             {
-                if (ex.Message == "The value cannot be an empty string. (Parameter 'path')")
+                err = ex.Message switch
                 {
-                    err = "You left the license or options file text field blank.";
-                }
-                else if (ex.Message == "Index was outside the bounds of the array.")
-                {
-                    err = $"There is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"";
-                }
-                else
-                {
-                    err = $"You managed to break something. How? Here's the automatic message from the Analyzer: {ex.Message} Debug point: {debugPoint}.";
-                }
+                    "The value cannot be an empty string. (Parameter 'path')" =>
+                        "Error: you left the license or options file text field blank.",
+                    "Index was outside the bounds of the array." =>
+                        $"Error: there is a formatting issue in your license/options file. This is the line in question's contents: \"{line}\"",
+                    _ =>
+                        $"Error: you managed to break something. How? Here's the automatic message from the Analyzer: {ex.Message} Debug point: {debugPoint}."
+                };
 
                 return (false, false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, err);
             }
@@ -296,7 +293,7 @@ namespace Options.File.Checker
                 // Cast optionsEntry.Value to the expected Tuple type.
                 if (optionsEntry.Value is not Tuple<string, string, string, string, string, string> optionsData)
                 {
-                    err = "optionsEntry.Value is not of the expected Tuple type.";
+                    err = "Error: optionsEntry.Value is not of the expected Tuple type in the Analyzer. Please report this on GitHub.";
                     return;
                 }
                 
@@ -820,11 +817,6 @@ namespace Options.File.Checker
             ref int debugPoint) where TKey : notnull
         {
             debugPoint = 4;
-            if (optionsIndex == null)
-            {
-                const string err = "optionsIndex is null.";
-                return err;
-            }
 
             var firstEntry = optionsIndex.FirstOrDefault();
             if (firstEntry.Key == null)
