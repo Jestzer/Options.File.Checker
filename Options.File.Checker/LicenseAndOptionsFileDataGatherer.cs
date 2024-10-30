@@ -142,7 +142,7 @@ namespace Options.File.Checker
                 _serverLineHasPort = true;
                 _daemonLineHasPort = false;
                 _daemonPortIsCnuFriendly = false;
-                _caseSensitivity = false;
+                _caseSensitivity = true;
                 _optionsFileUsesMatlabParallelServer = false;
                 _wildcardsAreUsed = false;
                 _ipAddressesAreUsed = false;

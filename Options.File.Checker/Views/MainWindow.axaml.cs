@@ -27,6 +27,7 @@ public partial class MainWindow : Window
     public MainWindow()
     {
         InitializeComponent();
+        TreeViewShouldBeCleared = true;
         DataContext = new MainViewModel(); // For printing the version number.
 
         var settings = LoadSettings();
@@ -71,14 +72,14 @@ public partial class MainWindow : Window
         return settingsPath;
     }
 
-    public static void SaveSettings(Settings settings)
+    private static void SaveSettings(Settings settings)
     {
         string settingsPath = SettingsPath();
         string jsonString = JsonSerializer.Serialize(settings, SourceGenerationContext.Default.Settings);
         System.IO.File.WriteAllText(settingsPath, jsonString);
     }
 
-    public static Settings LoadSettings()
+    private static Settings LoadSettings()
     {
         string settingsPath = SettingsPath();
         if (!System.IO.File.Exists(settingsPath))
@@ -121,14 +122,15 @@ public partial class MainWindow : Window
         SaveSettings(settings);
     }
 
-    private bool treeViewShouldBeCleared = true;
+    private bool TreeViewShouldBeCleared { get; set; }
+
     private void ShowErrorWindow(string errorMessage)
     {
         Dispatcher.UIThread.Post(async () =>
         {
             // Generally speaking, the treeview should be cleared because otherwise, it'll show up after an error appears. The exception is when NNU seats are still being reported.
             OutputTextBlock.Text = string.Empty;
-            if (DataContext is MainViewModel viewModel && treeViewShouldBeCleared)
+            if (DataContext is MainViewModel viewModel && TreeViewShouldBeCleared)
             {
                 viewModel.TreeViewItems.Clear();
             }
@@ -142,7 +144,7 @@ public partial class MainWindow : Window
             ErrorWindow errorWindow = new();
             errorWindow.ErrorTextBlock.Text = errorMessage;
             OutputTextBlock.Text = "Error: " + errorMessage;
-            treeViewShouldBeCleared = true;
+            TreeViewShouldBeCleared = true;
 
             // Check if VisualRoot is not null and is a Window before casting.
             if (VisualRoot is Window window)
@@ -201,69 +203,66 @@ public partial class MainWindow : Window
             // Open the file dialog and await the user's response.
             var result = await mainWindow.StorageProvider.OpenFilePickerAsync(filePickerOptions);
 
-            if (result != null && result.Any())
+            if (!result.Any()) return;
+            var selectedFile = result[0];
             {
-                var selectedFile = result[0];
-                if (selectedFile != null)
+                // Get file properties.
+                var properties = await selectedFile.GetBasicPropertiesAsync();
+                if (properties.Size != null)
                 {
-                    // Get file properties.
-                    var properties = await selectedFile.GetBasicPropertiesAsync();
-                    if (properties.Size != null)
+                    long fileSizeInBytes = (long)properties.Size;
+                    const long fiftyMegabytes = 50L * 1024L * 1024L;
+
+                    // Check the file size.
+                    if (fileSizeInBytes > fiftyMegabytes)
                     {
-                        long fileSizeInBytes = (long)properties.Size;
-                        const long fiftyMegabytes = 50L * 1024L * 1024L;
-
-                        // Check the file size.
-                        if (fileSizeInBytes > fiftyMegabytes)
-                        {
-                            ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        // If size is within the limit, read the contents.
-                        string fileContents;
-                        using (var stream = await selectedFile.OpenReadAsync())
-                        using (var reader = new StreamReader(stream))
-                        {
-                            fileContents = await reader.ReadToEndAsync();
-                        }
-
-                        if (!fileContents.Contains("INCREMENT"))
-                        {
-                            ShowErrorWindow("There is an issue with the license file: it is either not a license file or it is corrupted.");
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        if (fileContents.Contains("lo=IN") || fileContents.Contains("lo=DC") || fileContents.Contains("lo=CIN"))
-                        {
-                            ShowErrorWindow("There is an issue with the license file: it contains an Individual or Designated Computer license, " +
-                                            "which cannot use an options file.");
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        if (fileContents.Contains("CONTRACT_ID="))
-                        {
-                            ShowErrorWindow("There is an issue with the license file: it contains at least 1 non-MathWorks product.");
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
-
-                        if (!fileContents.Contains("SERVER") || (!fileContents.Contains("DAEMON") && !fileContents.Contains("VENDOR")))
-                        {
-                            ShowErrorWindow("There is an issue with the license file: it is missing the SERVER and/or DAEMON line.");
-                            LicenseFileLocationTextBox.Text = string.Empty;
-                            return;
-                        }
+                        ShowErrorWindow("There is an issue with the license file: it is over 50 MB and therefore, likely (hopefully) not a license file.");
+                        LicenseFileLocationTextBox.Text = string.Empty;
+                        return;
                     }
 
-                    // Gotta convert some things, ya know?
-                    var rawFilePath = selectedFile.TryGetLocalPath;
-                    string? filePath = rawFilePath();
-                    LicenseFileLocationTextBox.Text = filePath;
+                    // If size is within the limit, read the contents.
+                    string fileContents;
+                    using (var stream = await selectedFile.OpenReadAsync())
+                    using (var reader = new StreamReader(stream))
+                    {
+                        fileContents = await reader.ReadToEndAsync();
+                    }
+
+                    if (!fileContents.Contains("INCREMENT"))
+                    {
+                        ShowErrorWindow("There is an issue with the license file: it is either not a license file or it is corrupted.");
+                        LicenseFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (fileContents.Contains("lo=IN") || fileContents.Contains("lo=DC") || fileContents.Contains("lo=CIN"))
+                    {
+                        ShowErrorWindow("There is an issue with the license file: it contains an Individual or Designated Computer license, " +
+                                        "which cannot use an options file.");
+                        LicenseFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (fileContents.Contains("CONTRACT_ID="))
+                    {
+                        ShowErrorWindow("There is an issue with the license file: it contains at least 1 non-MathWorks product.");
+                        LicenseFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
+
+                    if (!fileContents.Contains("SERVER") || (!fileContents.Contains("DAEMON") && !fileContents.Contains("VENDOR")))
+                    {
+                        ShowErrorWindow("There is an issue with the license file: it is missing the SERVER and/or DAEMON line.");
+                        LicenseFileLocationTextBox.Text = string.Empty;
+                        return;
+                    }
                 }
+
+                // Gotta convert some things, ya know?
+                var rawFilePath = selectedFile.TryGetLocalPath;
+                string? filePath = rawFilePath();
+                LicenseFileLocationTextBox.Text = filePath;
             }
         }
         else
@@ -292,26 +291,24 @@ public partial class MainWindow : Window
 
                 var result = await mainWindow.StorageProvider.SaveFilePickerAsync(fileSaveOptions);
 
-                if (result != null)
+                if (result == null) return;
+                // Start with the contents of the OutputTextBlock
+                string? fileContents = OutputTextBlock.Text;
+
+                // Now append the contents of the TreeView.
+                if (DataContext is MainViewModel viewModel)
                 {
-                    // Start with the contents of the OutputTextBlock
-                    string? fileContents = OutputTextBlock.Text;
-
-                    // Now append the contents of the TreeView.
-                    if (DataContext is MainViewModel viewModel)
+                    foreach (var item in viewModel.TreeViewItems)
                     {
-                        foreach (var item in viewModel.TreeViewItems)
-                        {
-                            fileContents += $"\n{item.Title}";
-                            AppendChildItems(item, ref fileContents, 1);
-                        }
+                        fileContents += $"\n{item.Title}";
+                        AppendChildItems(item, ref fileContents, 1);
                     }
-
-                    // Save the file contents.
-                    using var stream = await result.OpenWriteAsync();
-                    using var writer = new StreamWriter(stream);
-                    await writer.WriteAsync(fileContents);
                 }
+
+                // Save the file contents.
+                await using var stream = await result.OpenWriteAsync();
+                await using var writer = new StreamWriter(stream);
+                await writer.WriteAsync(fileContents);
             }
             else
             {
@@ -555,16 +552,16 @@ public partial class MainWindow : Window
             if (licenseFileDictionary != null)
             {
                 bool includeAllNNUWarningHit = false;
-                bool alreadyYelledToCNUAboutPORTFormat = false;
+                bool alreadyYelledToCnuAboutPortFormat = false;
 
                 foreach (var item in licenseFileDictionary)
                 {
                     string seatOrSeats = item.Value.Item2 == 1 ? "seat" : "seats";
 
-                    if (!daemonPortIsCnuFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCNUAboutPORTFormat)
+                    if (!daemonPortIsCnuFriendly && daemonLineHasPort && item.Value.Item4.Contains("CNU") && !alreadyYelledToCnuAboutPortFormat)
                     {
                         output.AppendLine("Please note: your license file contains a CNU license and you've specified a DAEMON port, but you did not specifically specify your DAEMON port with \"PORT=\", which is case-sensitive and recommended to do so.\n");
-                        alreadyYelledToCNUAboutPORTFormat = true;
+                        alreadyYelledToCnuAboutPortFormat = true;
                     }
 
                     string licenseFileLicenseOffering = item.Value.Item4;
@@ -584,7 +581,7 @@ public partial class MainWindow : Window
 
                     if (licenseFileLicenseOffering == "NNU" && item.Value.Item2 < 0 && !nnuOverdraftWarningDisplayed)
                     {
-                        treeViewShouldBeCleared = false;
+                        TreeViewShouldBeCleared = false;
                         ShowErrorWindow("There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
                         "Please close this window and see the full output in the main window for more information.");
                         output.AppendLine("ERROR: There is an issue with the options file: you have specified more users than available on at least 1 of your NNU products. " +
