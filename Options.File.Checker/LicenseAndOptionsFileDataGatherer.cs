@@ -350,6 +350,10 @@ namespace Options.File.Checker
                     {
                         productLinesHaveBeenReached = true;
                         string[] lineParts = line.Split(' ');
+                        
+                        // Please get rid of the blank garbage THANK YOU.
+                        lineParts = lineParts.Where(part => !string.IsNullOrWhiteSpace(part)).ToArray();
+
                         productName = lineParts[1];
                         int productVersion = int.Parse(lineParts[3]);
                         _productExpirationDate = lineParts[4];
