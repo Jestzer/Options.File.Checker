@@ -702,6 +702,7 @@ namespace Options.File.Checker
                                 }
 
                                 clientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                                clientSpecified = clientSpecified.Trim('"'); // FlexLM doesn't care if you added quotation marks to the clientSpecified if they didn't original have quotation marks.
                             }
                             else // If you have " and :
                             {
@@ -726,6 +727,7 @@ namespace Options.File.Checker
                                 }
                                 clientType = lineParts[2];
                                 clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                                clientSpecified = clientSpecified.Trim('"');
                             }
                         }
                         else if (productName.Contains(':')) // In case you decided to use a : instead of ""...
@@ -751,11 +753,13 @@ namespace Options.File.Checker
                             }
                             clientType = lineParts[2];
                             clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            clientSpecified = clientSpecified.Trim('"');
                         }
                         else
                         {
                             clientType = lineParts[2];
                             clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            clientSpecified = clientSpecified.Trim('"');
                             licenseNumber = string.Empty;
                             productKey = string.Empty;
                         }
@@ -787,6 +791,7 @@ namespace Options.File.Checker
 
                         string optionSpecified = string.Empty; // Could either be INCLUDEALL or EXCLUDEALL.
                         string clientSpecified = string.Empty; // Examples include "matlab_group" or "root".
+                        clientSpecified = clientSpecified.Trim('"');
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
@@ -807,6 +812,7 @@ namespace Options.File.Checker
 
                         string clientType = lineParts[1]; // Examples include GROUP or USER.
                         clientSpecified = string.Join(" ", lineParts.Skip(2));
+                        clientSpecified = clientSpecified.Trim('"');
 
                         if (clientType != "USER" && clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
                             clientType != "PROJECT" && clientType != "INTERNET")
@@ -847,6 +853,7 @@ namespace Options.File.Checker
                         string maxProductName = lineParts[2];
                         string maxClientType = lineParts[3];
                         string maxClientSpecified = string.Join(" ", lineParts.Skip(4));
+                        maxClientSpecified = maxClientSpecified.Trim('"');
 
                         // Check for wildcards and IP addresses.
                         if (maxClientSpecified.Contains('*')) { _wildcardsAreUsed = true; }
@@ -935,6 +942,7 @@ namespace Options.File.Checker
 
                                 reserveClientType = lineParts[4];
                                 reserveClientSpecified = string.Join(" ", lineParts.Skip(5)).TrimEnd();
+                                reserveClientSpecified = reserveClientSpecified.Trim('"');
                             }
                             // If you have " and :
                             else
@@ -959,6 +967,7 @@ namespace Options.File.Checker
                                 }
                                 reserveClientType = lineParts[3];
                                 reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                                reserveClientSpecified = reserveClientSpecified.Trim('"');
                             }
                         }
                         // In case you decided to use a : instead of ""...
@@ -984,11 +993,13 @@ namespace Options.File.Checker
                             }
                             reserveClientType = lineParts[3];
                             reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                            reserveClientSpecified = reserveClientSpecified.Trim('"');
                         }
                         else
                         {
                             reserveClientType = lineParts[3];
                             reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
+                            reserveClientSpecified = reserveClientSpecified.Trim('"');
                             reserveLicenseNumber = string.Empty;
                             reserveProductKey = string.Empty;
                         }
@@ -1022,7 +1033,8 @@ namespace Options.File.Checker
                                              .ToArray();
 
                         groupName = string.Concat(lineParts[1].Where(c => !char.IsWhiteSpace(c)));
-                        string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
+                        groupName = groupName.Trim('"');
+                        string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();                        
 
                         int groupUserCount = 0;
 
@@ -1071,6 +1083,7 @@ namespace Options.File.Checker
 
                         hostGroupName = lineParts[1];
                         string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2)).TrimEnd();
+                        hostGroupClientSpecified = hostGroupClientSpecified.Trim('"');
 
                         // Same as GROUP, combine HOST_GROUPs with duplicate names and treat them as one.
                         var existingEntry = hostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
@@ -1153,6 +1166,7 @@ namespace Options.File.Checker
                                     .ToArray();
 
                         string hostGroupClientSpecified = string.Join(" ", lineParts);
+                        hostGroupClientSpecified = hostGroupClientSpecified.Trim('"');
 
                         var existingEntry = hostGroupDictionary.Values.FirstOrDefault(g => g.Item1 == hostGroupName);
                         if (existingEntry != null)

@@ -548,6 +548,8 @@ namespace Options.File.Checker
                                                 string groupUsers = optionsGroupData.Item2;
                                                 int groupUserCount = optionsGroupData.Item3;
 
+                                                groupName = groupName.Trim('"');
+
                                                 if (groupName == clientSpecified)
                                                 {
                                                     // Subtract the appropriate number of seats.
@@ -668,6 +670,8 @@ namespace Options.File.Checker
                                                 string groupName = optionsGroupData.Item1;
                                                 //string groupUsers = optionsGroupData.Item2;
                                                 int groupUserCount = optionsGroupData.Item3;
+
+                                                groupName = groupName.Trim('"');
 
                                                 if (groupName == clientSpecified)
                                                 {
@@ -854,6 +858,7 @@ namespace Options.File.Checker
                             Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
                             string groupName = optionsGroupData.Item1;
                             string groupUsers = optionsGroupData.Item2;
+
                             debugPoint = 10;
                             if (string.IsNullOrEmpty(groupUsers))
                             {
@@ -902,6 +907,8 @@ namespace Options.File.Checker
                         {
                             Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
                             string hostGroupName = optionsHostGroupData.Item1;
+
+                            hostGroupName = hostGroupName.Trim('"');
 
                             if (hostGroupName == specified)
                             {
