@@ -16,3 +16,4 @@ Notes for user:
 To-do:
 - Make UI a little nicer looking
 - Let user know that USE_SERVER is not needed
+- Warn users when no NNU seats are being used
