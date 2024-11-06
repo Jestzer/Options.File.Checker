@@ -24,7 +24,7 @@ namespace Options.File.Checker
 
         [GeneratedRegex(@"^[^Rab_\d]+$")]
         private static partial Regex LicenseNumber();
-        
+
         [GeneratedRegex(@"\d{2,3}\.")]
         private static partial Regex IpAddressRegex();
 
@@ -350,7 +350,7 @@ namespace Options.File.Checker
                     {
                         productLinesHaveBeenReached = true;
                         string[] lineParts = line.Split(' ');
-                        
+
                         // Please get rid of the blank garbage THANK YOU.
                         lineParts = lineParts.Where(part => !string.IsNullOrWhiteSpace(part)).ToArray();
 
@@ -691,6 +691,13 @@ namespace Options.File.Checker
                                     productKey = string.Empty;
                                 }
 
+                                if (licenseNumber == "DEMO")
+                                {
+                                    _err = "There is an issue with the options file: you have incorrectly specified a trial license number as DEMO. " +
+                                    $"You need to specify the full trial license number in your options file. The line in question is \"{line}\"";
+                                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                }
+
                                 clientType = lineParts[3];
 
                                 if (clientType != "USER" && clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
@@ -703,6 +710,13 @@ namespace Options.File.Checker
 
                                 clientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
                                 clientSpecified = clientSpecified.Trim('"'); // FlexLM doesn't care if you added quotation marks to the clientSpecified if they didn't original have quotation marks.
+
+                                if (string.IsNullOrEmpty(clientSpecified))
+                                {
+                                    _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                    $"The line in question reads as \"{line}\"";
+                                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                }
                             }
                             else // If you have " and :
                             {
@@ -728,6 +742,20 @@ namespace Options.File.Checker
                                 clientType = lineParts[2];
                                 clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                                 clientSpecified = clientSpecified.Trim('"');
+
+                                if (licenseNumber == "DEMO")
+                                {
+                                    _err = "There is an issue with the options file: you have incorrectly specified a trial license number as DEMO. " +
+                                    $"You need to specify the full trial license number in your options file. The line in question is \"{line}\"";
+                                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                }
+
+                                if (string.IsNullOrEmpty(clientSpecified))
+                                {
+                                    _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                    $"The line in question reads as \"{line}\"";
+                                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                }
                             }
                         }
                         else if (productName.Contains(':')) // In case you decided to use a : instead of ""...
@@ -754,6 +782,20 @@ namespace Options.File.Checker
                             clientType = lineParts[2];
                             clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                             clientSpecified = clientSpecified.Trim('"');
+
+                            if (licenseNumber == "DEMO")
+                            {
+                                _err = "There is an issue with the options file: you have incorrectly specified a trial license number as DEMO. " +
+                                $"You need to specify the full trial license number in your options file. The line in question is \"{line}\"";
+                                return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                            }
+
+                            if (string.IsNullOrEmpty(clientSpecified))
+                            {
+                                _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                $"The line in question reads as \"{line}\"";
+                                return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                            }
                         }
                         else
                         {
@@ -762,6 +804,13 @@ namespace Options.File.Checker
                             clientSpecified = clientSpecified.Trim('"');
                             licenseNumber = string.Empty;
                             productKey = string.Empty;
+
+                            if (string.IsNullOrEmpty(clientSpecified))
+                            {
+                                _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                $"The line in question reads as \"{line}\"";
+                                return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                            }
                         }
 
                         // Validate your clientType.
@@ -813,6 +862,13 @@ namespace Options.File.Checker
                         string clientType = lineParts[1]; // Examples include GROUP or USER.
                         clientSpecified = string.Join(" ", lineParts.Skip(2));
                         clientSpecified = clientSpecified.Trim('"');
+
+                        if (string.IsNullOrEmpty(clientSpecified))
+                        {
+                            _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionSpecified} lines. " +
+                            $"The line in question reads as \"{line}\"";
+                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                        }
 
                         if (clientType != "USER" && clientType != "GROUP" && clientType != "HOST" && clientType != "HOST_GROUP" && clientType != "DISPLAY" &&
                             clientType != "PROJECT" && clientType != "INTERNET")
@@ -1034,7 +1090,7 @@ namespace Options.File.Checker
 
                         groupName = string.Concat(lineParts[1].Where(c => !char.IsWhiteSpace(c)));
                         groupName = groupName.Trim('"');
-                        string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();                        
+                        string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
 
                         int groupUserCount = 0;
 
@@ -1079,7 +1135,7 @@ namespace Options.File.Checker
                         while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
                         {
                             lineParts = lineParts.Skip(1).ToArray();
-                        }                        
+                        }
 
                         hostGroupName = lineParts[1];
                         string hostGroupClientSpecified = string.Join(" ", lineParts.Skip(2)).TrimEnd();
