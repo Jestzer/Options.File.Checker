@@ -603,7 +603,7 @@ namespace Options.File.Checker
                     else
                     {
                         _err = "There is an issue with the license file: it has an unrecognized line. You likely manually edited the license file and likely need to regenerate it. " +
-                        $"The lines contents are the following: {line}";
+                        $"The lines' contents are the following: {line}";
                         return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                     }
                 }
@@ -1259,6 +1259,10 @@ namespace Options.File.Checker
                 else if (ex.Message.Contains("is not supported in calendar 'System.Globalization.GregorianCalendar'."))
                 {
                     _err = $"Error: there is an issue with your license file: it contains a product expiration date not recognized in the Gregorian Calendar: {_productExpirationDate}. Please regenerate your license file.";
+                }
+                else if (ex.Message.Contains("was not in a correct format."))
+                {
+                    _err = $"Error: there is an issue with your license file: it seems to be improperly formatted. It is likely corrupted and needs to be regenerated.";
                 }
                 else
                 {
