@@ -991,7 +991,7 @@ namespace Options.File.Checker
                                 else
                                 {
                                     string unfixedReserveLicenseNumber = reserveLicenseNumber;
-                                    string quoteReserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase);
+                                    string quoteReserveLicenseNumber = AssetInfo().Replace(unfixedReserveLicenseNumber, "");
                                     reserveLicenseNumber = quoteReserveLicenseNumber.Replace("\"", "");
                                     reserveProductKey = string.Empty;
                                 }
@@ -1019,7 +1019,7 @@ namespace Options.File.Checker
                                 else
                                 {
                                     string unfixedReserveLicenseNumber = colonParts[1];
-                                    reserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase); reserveProductKey = string.Empty;
+                                    reserveLicenseNumber = AssetInfo().Replace(unfixedReserveLicenseNumber, ""); reserveProductKey = string.Empty;
                                 }
                                 reserveClientType = lineParts[3];
                                 reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
@@ -1045,7 +1045,7 @@ namespace Options.File.Checker
                             else
                             {
                                 string unfixedReserveLicenseNumber = colonParts[1];
-                                reserveLicenseNumber = Regex.Replace(unfixedReserveLicenseNumber, "asset_info=", "", RegexOptions.IgnoreCase); reserveProductKey = string.Empty;
+                                reserveLicenseNumber = AssetInfo().Replace(unfixedReserveLicenseNumber, ""); reserveProductKey = string.Empty;
                             }
                             reserveClientType = lineParts[3];
                             reserveClientSpecified = string.Join(" ", lineParts.Skip(4)).TrimEnd();
