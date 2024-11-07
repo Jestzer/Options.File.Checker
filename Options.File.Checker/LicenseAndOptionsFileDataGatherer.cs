@@ -616,7 +616,7 @@ namespace Options.File.Checker
                 }
 
                 // These will be used when gather Options File information. They're outside the loop since GROUPs and HOST_GROUPs may span multiple lines.
-                // Is this also true for INCLUDE/EXCLUDE lines? Hopefully not!!!!!!!!!!
+                // Is this also true for INCLUDE/EXCLUDE lines? Nope! 8-)
                 bool lastLineWasAGroupLine = false;
                 bool lastLineWasAHostGroupLine = false;
                 string groupName = string.Empty;
