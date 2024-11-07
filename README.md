@@ -16,4 +16,5 @@ Notes for user:
 To-do:
 - Make UI a little nicer looking
 - Let user know that USE_SERVER is not needed
-- Warn users when no NNU seats are being used
+- Warn users when no NNU seats are assigned
+- Identify bad INCREMENT lines (possibly counting lineParts?)
