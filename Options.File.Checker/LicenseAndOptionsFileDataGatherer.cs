@@ -511,6 +511,7 @@ namespace Options.File.Checker
                                     {
                                         // It's possible it's from a IN Windows PLP, but there's really no way to tell AFAIK.
                                         licenseOffering = "lo=DC";
+                                        containsPLP = true;
                                     }
                                 }
                                 else
@@ -573,6 +574,15 @@ namespace Options.File.Checker
                         if (seatCount < 1 && line.Contains("asset_info="))
                         {
                             _err = $"There is an issue with the license file: {productName} on license {licenseNumber} is reading with a seat count of zero or less.";
+                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                        }
+
+                        if (seatCount == 0 && containsPLP && licenseOffering == "lo=DC") { seatCount = 1; }
+
+                        if (seatCount == 0)
+                        {
+                            _err = $"There is an issue with the license file: your seat count for {productName} on license number {licenseNumber} is being registered as zero... " +
+                                "that's probably not right. Your license file has likely been tampered with. Please regenerate it.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
 
