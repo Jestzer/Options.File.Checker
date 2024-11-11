@@ -554,6 +554,8 @@ public partial class MainWindow : Window
 
                     string licenseFileLicenseOffering = item.Value.Item4;
                     if (licenseFileLicenseOffering == "lo=CN") { licenseFileLicenseOffering = "CN"; }
+                    else if (licenseFileLicenseOffering == "lo=IN") { licenseFileLicenseOffering = "PLP-era Individual"; }
+                    else if (licenseFileLicenseOffering == "lo=DC") { licenseFileLicenseOffering = "PLP-era DC"; }
 
                     if (item.Value.Item4.Contains("NNU")) // This is not an else if because I want the seat count to still print out the same.
                     {

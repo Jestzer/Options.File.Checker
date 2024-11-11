@@ -370,6 +370,12 @@ namespace Options.File.Checker
                             $"tampered with. This is what the product key is being read as: {productKey}.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
+                        else if (productKey.Length < 10)
+                        {
+                            _err = "There is an issue with the license file: one of your product keys is shorter that 10 characters long. This means it's likely been " +
+                            $"tampered with. This is what the product key is being read as: {productKey}.";
+                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                        }
 
                         // License number.
                         string pattern = @"asset_info=([^\s]+)";
@@ -461,7 +467,7 @@ namespace Options.File.Checker
                                 }
                                 else
                                 {
-                                    if (containsPLP && !line.Contains("asset_info="))
+                                    if (containsPLP && !line.Contains("asset_info=") && !line.Contains("ISSUED="))
                                     {
                                         licenseOffering = "lo=DC"; // See PLP-era explaination below.
                                     }
@@ -493,9 +499,27 @@ namespace Options.File.Checker
                             }
                             else
                             {
-                                _err = $"There is an issue with the license file: the product {productName} has an valid license offering.";
+                                if (productKey.Length == 20)
+                                {
+                                    if (!licenseFileContents.Contains("TMW_Archive"))
+                                    {
+                                        _err = $"There is an issue with the license file: it either is a Windows Individual license generated from a PLP " +
+                                                "or you are missing the TMW_Archive product in order to make your pre-R2008a product(s) work.";
+                                        return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                    }
+                                    else
+                                    {
+                                        // It's possible it's from a IN Windows PLP, but there's really no way to tell AFAIK.
+                                        licenseOffering = "lo=DC";
+                                    }
+                                }
+                                else
+                                {
+                                    _err = $"There is an issue with the license file: the product {productName} has an valid license offering.";
+                                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                }
                             }
-                            return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+
                         }
 
                         // Check the product's expiration date. Year 0000 means perpetual.
