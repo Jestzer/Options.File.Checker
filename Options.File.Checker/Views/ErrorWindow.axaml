@@ -24,7 +24,7 @@
 			Background="#FF2D2B2B"
 			Foreground="White"
 			Text="Error messages will appear here."
-			MaxWidth="430"
+			MaxWidth="410"
 			TextWrapping="Wrap" />
 		<Button Name="OKButton"
 			HorizontalAlignment="Center"
