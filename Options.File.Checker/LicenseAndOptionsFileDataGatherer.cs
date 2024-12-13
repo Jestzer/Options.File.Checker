@@ -773,8 +773,29 @@ namespace Options.File.Checker
                                     licenseNumber = AssetInfo().Replace(unfixedLicenseNumber, "");
                                     productKey = string.Empty;
                                 }
+                                
                                 clientType = lineParts[2];
-                                clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+
+                                if (string.IsNullOrEmpty(clientType))
+                                {
+                                    int partCount;
+
+                                    // I'm begging you, stop putting in random spaces!
+                                    for (partCount = 2; partCount < lineParts.Length; partCount++)
+                                    {
+                                        if (!string.IsNullOrWhiteSpace(lineParts[partCount]))
+                                        {
+                                            clientType = lineParts[partCount];
+                                            break;
+                                        }
+                                    }
+                                    clientSpecified = string.Join(" ", lineParts.Skip(partCount + 1)).TrimEnd();
+                                }
+                                else
+                                {
+                                    clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                                }
+
                                 clientSpecified = clientSpecified.Trim('"');
 
                                 if (licenseNumber == "DEMO")
@@ -813,8 +834,29 @@ namespace Options.File.Checker
                                 licenseNumber = AssetInfo().Replace(unfixedLicenseNumber, "");
                                 productKey = string.Empty;
                             }
+
                             clientType = lineParts[2];
-                            clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+
+                            if (string.IsNullOrEmpty(clientType))
+                            {
+                                int partCount;
+
+                                // I'm begging you, stop putting in random spaces!
+                                for (partCount = 2; partCount < lineParts.Length; partCount++)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(lineParts[partCount]))
+                                    {
+                                        clientType = lineParts[partCount];
+                                        break;
+                                    }
+                                }
+                                clientSpecified = string.Join(" ", lineParts.Skip(partCount + 1)).TrimEnd();
+                            }
+                            else
+                            {
+                                clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            }
+
                             clientSpecified = clientSpecified.Trim('"');
 
                             if (licenseNumber == "DEMO")
@@ -834,8 +876,29 @@ namespace Options.File.Checker
                         else
                         {
                             clientType = lineParts[2];
-                            clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+
+                            if (string.IsNullOrEmpty(clientType))
+                            {
+                                int partCount;
+
+                                // I'm begging you, stop putting in random spaces!
+                                for (partCount = 2; partCount < lineParts.Length; partCount++)
+                                {
+                                    if (!string.IsNullOrWhiteSpace(lineParts[partCount]))
+                                    {
+                                        clientType = lineParts[partCount];
+                                        break;
+                                    }
+                                }
+                                clientSpecified = string.Join(" ", lineParts.Skip(partCount + 1)).TrimEnd();
+                            }
+                            else
+                            {
+                                clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
+                            }
+
                             clientSpecified = clientSpecified.Trim('"');
+
                             licenseNumber = string.Empty;
                             productKey = string.Empty;
 
@@ -850,7 +913,7 @@ namespace Options.File.Checker
                         // Validate your clientType.
                         if (clientType != "USER" && clientType != "HOST" && clientType != "DISPLAY" && clientType != "GROUP" && clientType != "HOST_GROUP" && clientType != "INTERNET")
                         {
-                            if (clientType == "")
+                            if (string.IsNullOrEmpty(clientType))
                             {
                                 _err = "There is an issue with the options file: you have an incorrectly formatted client type. It would typically be something like USER or GROUP, but yours is being detected " +
                                 $"as nothing. Please make sure you have formatted the line with client type correctly. The line in question reads as \"{line}\".";
