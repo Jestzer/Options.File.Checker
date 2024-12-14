@@ -267,8 +267,8 @@ namespace Options.File.Checker
 
                         // port= and options= should only appear once.
                         int countPortEquals = CountPortEqualsRegex().Matches(line).Count;
-                        int countOptionsEquals = LicenseAndOptionsFileDataGatherer.CountOptionsEquals().Matches(line).Count;
-                        int countCommentedBeginLines = LicenseAndOptionsFileDataGatherer.CountCommentedBeginLines().Matches(line).Count;
+                        int countOptionsEquals = CountOptionsEquals().Matches(line).Count;
+                        int countCommentedBeginLines = CountCommentedBeginLines().Matches(line).Count;
 
                         // For the CNU kids.
                         if (line.Contains("PORT="))
@@ -758,7 +758,7 @@ namespace Options.File.Checker
                                 string[] colonParts = productName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    _err = $"There is an issue with the options file: one of your {optionType} lines has a stray colon for {productName}.";
+                                    _err = $"There is an issue with the options file: one of your {optionType} lines has a stray colon. The line in question is \"{line}\".";
                                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                                 }
                                 productName = colonParts[0];
@@ -819,7 +819,7 @@ namespace Options.File.Checker
                             string[] colonParts = productName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                _err = $"There is an issue with the options file: one of your {optionType} lines has a stray colon for {productName}.";
+                                _err = $"There is an issue with the options file: one of your {optionType} lines has a stray colon. The line in question is \"{line}\".";
                                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                             }
                             productName = colonParts[0];
@@ -1123,7 +1123,7 @@ namespace Options.File.Checker
                                 string[] colonParts = reserveProductName.Split(":");
                                 if (colonParts.Length != 2)
                                 {
-                                    _err = $"There is an issue with the options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
+                                    _err = $"There is an issue with the options file: one of your RESERVE lines has a stray colon. The line in question is \"{line}\".";
                                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                                 }
                                 reserveProductName = colonParts[0];
@@ -1149,7 +1149,7 @@ namespace Options.File.Checker
                             string[] colonParts = reserveProductName.Split(":");
                             if (colonParts.Length != 2)
                             {
-                                _err = $"There is an issue with the options file: one of your RESERVE lines has a stray colon for {reserveProductName}.";
+                                _err = $"There is an issue with the options file: one of your RESERVE lines has a stray colon. The line in question is \"{line}\".";
                                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                             }
                             reserveProductName = colonParts[0];
