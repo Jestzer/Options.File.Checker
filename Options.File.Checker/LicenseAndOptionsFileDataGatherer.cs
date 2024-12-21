@@ -695,6 +695,24 @@ namespace Options.File.Checker
                         string clientType;
                         string clientSpecified;
 
+                        if (string.IsNullOrWhiteSpace(productName))
+                        {
+                            lineParts = lineParts.Where(part => !string.IsNullOrWhiteSpace(part)).ToArray();
+
+                            if (lineParts.Length > 0)
+                            {
+                                // Wait! Is there even anything left after the mess you've made?
+                                if (lineParts.Length < 4)
+                                {
+                                    _err = $"There is an issue with the options file: you have an incorrectly formatted line. It is missing necessary information. " +
+                                        $"The line in question read as \"{line}\".";
+                                    return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
+                                }
+
+                                productName = lineParts[1];
+                            }
+                        }
+
                         if (productName.Contains('"'))
                         {
                             // Check for stray quotation marks.
@@ -776,27 +794,7 @@ namespace Options.File.Checker
                                 }
 
                                 clientType = lineParts[2];
-
-                                if (string.IsNullOrEmpty(clientType))
-                                {
-                                    int partCount;
-
-                                    // I'm begging you, stop putting in random spaces!
-                                    for (partCount = 2; partCount < lineParts.Length; partCount++)
-                                    {
-                                        if (!string.IsNullOrWhiteSpace(lineParts[partCount]))
-                                        {
-                                            clientType = lineParts[partCount];
-                                            break;
-                                        }
-                                    }
-                                    clientSpecified = string.Join(" ", lineParts.Skip(partCount + 1)).TrimEnd();
-                                }
-                                else
-                                {
-                                    clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                                }
-
+                                clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                                 clientSpecified = clientSpecified.Trim('"');
 
                                 if (licenseNumber == "DEMO")
@@ -837,27 +835,7 @@ namespace Options.File.Checker
                             }
 
                             clientType = lineParts[2];
-
-                            if (string.IsNullOrEmpty(clientType))
-                            {
-                                int partCount;
-
-                                // I'm begging you, stop putting in random spaces!
-                                for (partCount = 2; partCount < lineParts.Length; partCount++)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(lineParts[partCount]))
-                                    {
-                                        clientType = lineParts[partCount];
-                                        break;
-                                    }
-                                }
-                                clientSpecified = string.Join(" ", lineParts.Skip(partCount + 1)).TrimEnd();
-                            }
-                            else
-                            {
-                                clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            }
-
+                            clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                             clientSpecified = clientSpecified.Trim('"');
 
                             if (licenseNumber == "DEMO")
@@ -877,27 +855,7 @@ namespace Options.File.Checker
                         else
                         {
                             clientType = lineParts[2];
-
-                            if (string.IsNullOrEmpty(clientType))
-                            {
-                                int partCount;
-
-                                // I'm begging you, stop putting in random spaces!
-                                for (partCount = 2; partCount < lineParts.Length; partCount++)
-                                {
-                                    if (!string.IsNullOrWhiteSpace(lineParts[partCount]))
-                                    {
-                                        clientType = lineParts[partCount];
-                                        break;
-                                    }
-                                }
-                                clientSpecified = string.Join(" ", lineParts.Skip(partCount + 1)).TrimEnd();
-                            }
-                            else
-                            {
-                                clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
-                            }
-
+                            clientSpecified = string.Join(" ", lineParts.Skip(3)).TrimEnd();
                             clientSpecified = clientSpecified.Trim('"');
 
                             licenseNumber = string.Empty;
