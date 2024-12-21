@@ -1,12 +1,12 @@
-GROUP ratcrab_users jestzer funky_monkey three four five six seven eight nine ten eleven twelve
-HOST_GROUP wildcats 192.168.86.25 10.0.0.*
-INCLUDEALL GROUP ratcrab_users
+#GROUP ratcrab_users jestzer funky_monkey three four five six seven eight nine ten eleven twelve
+#HOST_GROUP wildcats 192.168.86.25 10.0.0.*
+#INCLUDEALL GROUP ratcrab_users
 #RESERVE 5 MATLAB_Distrib_Comp_Engine GROUP ratcrab_users
-INCLUDE MATLAB GROUP ratcrab_users
-INCLUDE MATLAB USER jimmy
-INCLUDE MATLAB USER jimmy
-INCLUDE MATLAB USER jimmy
-INCLUDE_BORROW Image_Toolbox USER fred
-BORROW_LOWWATER MATLAB 3
-EXCLUDE_BORROW image_toolbox USER donna
-MAX_BORROW_HOURS image_toolbox 72
+#INCLUDE MATLAB GROUP ratcrab_users
+    INCLUDE   MATLAB    USER    jimmy    the   destroyer
+#INCLUDE MATLAB USER jimmy
+#INCLUDE MATLAB USER jimmy
+#INCLUDE_BORROW Image_Toolbox USER fred
+#BORROW_LOWWATER MATLAB 3
+#EXCLUDE_BORROW image_toolbox USER donna
+#MAX_BORROW_HOURS image_toolbox 72
