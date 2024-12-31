@@ -677,10 +677,7 @@ namespace Options.File.Checker
                         string[] lineParts = line.Split(' ');
 
                         // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
+                        lineParts = lineParts.Where(part => !string.IsNullOrWhiteSpace(part)).ToArray();
 
                         if (lineParts.Length < 4)
                         {
@@ -870,7 +867,7 @@ namespace Options.File.Checker
                         }
 
                         // Check to see if your products are valid, in general. There is a check later on in the Analyzer to make sure the products are included on the license.
-                        bool productFoundInMasterList = masterProductsList.Contains(productName);
+                        bool productFoundInMasterList = masterProductsList.Any(p => p.Equals(productName, StringComparison.OrdinalIgnoreCase));
 
                         if (!productFoundInMasterList)
                         {
