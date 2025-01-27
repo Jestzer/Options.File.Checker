@@ -1,6 +1,7 @@
 ﻿using System; // Don't let your IDE deceive you, you need these!
 using System.Collections.Generic;
 using System.Linq;
+using Microsoft.VisualBasic;
 
 namespace Options.File.Checker
 {
@@ -296,7 +297,7 @@ namespace Options.File.Checker
                     err = "Error: optionsEntry.Value is not of the expected Tuple type in the Analyzer. Please report this on GitHub.";
                     return;
                 }
-                
+
                 // Don't listen to Rider's lies. These can be null when the application is published, as well as the other 2 sets below.
                 productName = optionsData.Item1 ?? "DefaultProductName";
                 licenseNumber = optionsData.Item2 ?? "DefaultLicenseNumber";
@@ -312,7 +313,7 @@ namespace Options.File.Checker
                     err = "optionsEntry.Value is not of the expected Tuple type for INCLUDEALL.";
                     return;
                 }
-                
+
                 clientType = optionsData.Item1 ?? "DefaultClientType";
                 clientSpecified = optionsData.Item2 ?? "DefaultClientSpecified";
                 rawOptionLine = optionsData.Item3 ?? "DefaultRawOptionLine";
@@ -324,7 +325,7 @@ namespace Options.File.Checker
                     err = "optionsEntry.Value is not of the expected Tuple type for RESERVE.";
                     return;
                 }
-                
+
                 reserveSeatCount = optionsData.Item1;
                 productName = optionsData.Item2 ?? "DefaultProductName";
                 licenseNumber = optionsData.Item3 ?? "DefaultLicenseNumber";
@@ -339,6 +340,8 @@ namespace Options.File.Checker
             }
 
             debugPoint = 34;
+            
+            int licenseFileDictionaryIndex = 0;
             bool matchingProductFoundInLicenseFile = false;
             bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
             int remainingSeatsToSubtract = 0; // The 0 has no significance and will be set accordingly later on, if used.
@@ -354,6 +357,11 @@ namespace Options.File.Checker
                 // Go through each line and subtract seats accordingly.
                 foreach (var licenseFileEntry in licenseFileDictionary)
                 {
+                    int totalEntries = licenseFileDictionary.Count;
+                    // Boo hoo, we'll try going through the file 50 times and if we still can't subtract anything, then guess what? We give up.
+                    int totalProductsChecked = totalEntries * 50;
+                    licenseFileDictionaryIndex++;
+                    bool atLastEntry = licenseFileDictionaryIndex == totalProductsChecked;
                     bool needToGoToNextEntry = false;
                     int licenseLineIndex = licenseFileEntry.Key;
                     Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
@@ -549,6 +557,8 @@ namespace Options.File.Checker
                                                 int groupUserCount = optionsGroupData.Item3;
 
                                                 groupName = groupName.Trim('"');
+                                                groupName = groupName.Trim([' ', '\t']);
+                                                clientSpecified = clientSpecified.Trim([' ', '\t']);
 
                                                 if (groupName == clientSpecified)
                                                 {
@@ -672,6 +682,8 @@ namespace Options.File.Checker
                                                 int groupUserCount = optionsGroupData.Item3;
 
                                                 groupName = groupName.Trim('"');
+                                                groupName = groupName.Trim([' ', '\t']);
+                                                clientSpecified = clientSpecified.Trim([' ', '\t']);
 
                                                 if (groupName == clientSpecified)
                                                 {
@@ -786,6 +798,8 @@ namespace Options.File.Checker
                         licenseFileDictionary[licenseLineIndex] = licenseFileData;
                         if (needToGoToNextEntry) { continue; }
                         if (optionSelected != "INCLUDEALL") { break; } // We don't need to go through any other products since we've already done seat subtraction.
+                        else if (optionSelected == "INCLUDEALL" && doneSubtractingSeats) { break; }
+                        else if (optionSelected == "INCLUDEALL" && atLastEntry && !firstAttemptToSubtractSeats){ doneSubtractingSeats = true; break; }
                     }
                     else
                     {
@@ -804,6 +818,7 @@ namespace Options.File.Checker
                 if (!doneSubtractingSeats)
                 {
                     forceSubtraction = true;
+                    firstAttemptToSubtractSeats = false;
                 }
             }
         }
@@ -847,87 +862,90 @@ namespace Options.File.Checker
                 // Use the extractor to get the groupType and specified strings.
                 (string groupType, string specified) = extractor(tuple);
 
+                specified = specified.Trim([' ', '\t']);
+
                 switch (groupType)
                 {
                     case "GROUP":
-                    {
-                        bool groupFound = false;
-                        debugPoint = 9;
-                        foreach (var optionsGroupEntry in groupIndex)
                         {
-                            Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
-                            string groupName = optionsGroupData.Item1;
-                            string groupUsers = optionsGroupData.Item2;
-
-                            debugPoint = 10;
-                            if (string.IsNullOrEmpty(groupUsers))
+                            bool groupFound = false;
+                            debugPoint = 9;
+                            foreach (var optionsGroupEntry in groupIndex)
                             {
-                                err = $"There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is {groupName}.";
+                                Tuple<string, string, int> optionsGroupData = optionsGroupEntry.Value;
+                                string groupName = optionsGroupData.Item1;
+                                string groupUsers = optionsGroupData.Item2;
+
+                                debugPoint = 10;
+                                if (string.IsNullOrEmpty(groupUsers))
+                                {
+                                    err = $"There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is {groupName}.";
+                                    return err;
+                                }
+                                debugPoint = 11;
+                                if (groupName == specified)
+                                {
+                                    debugPoint = 12;
+                                    groupFound = true;
+                                    break; // Matching GROUP found, exit the loop.
+                                }
+                            }
+
+                            debugPoint = 13;
+                            if (!groupFound)
+                            {
+                                debugPoint = 14;
+                                // No matching group found.
+                                string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
+                                debugPoint = 15;
+                                if (specified.Contains("USER"))
+                                {
+                                    debugPoint = 16;
+                                    err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                                          $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate. " +
+                                          "You cannot specify a GROUP and a USER on a single INCLUDE line.";
+                                }
+                                else
+                                {
+                                    err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
+                                          $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                                }
+
                                 return err;
                             }
-                            debugPoint = 11;
-                            if (groupName == specified)
-                            {
-                                debugPoint = 12;
-                                groupFound = true;
-                                break; // Matching GROUP found, exit the loop.
-                            }
+                            debugPoint = 17;
+                            break;
                         }
-
-                        debugPoint = 13;
-                        if (!groupFound)
+                    case "HOST_GROUP":
                         {
-                            debugPoint = 14;
-                            // No matching group found.
-                            string aOrAn = lineType == "RESERVE" ? "a" : "an"; // Grammar is important, kids!
-                            debugPoint = 15;
-                            if (specified.Contains("USER"))
+                            bool hostGroupFound = false;
+
+                            foreach (var optionsHostGroupEntry in hostGroupIndex)
                             {
-                                debugPoint = 16;
-                                err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                                      $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate. " +
-                                      "You cannot specify a GROUP and a USER on a single INCLUDE line.";
+                                Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
+                                string hostGroupName = optionsHostGroupData.Item1;
+
+                                hostGroupName = hostGroupName.Trim('"');
+                                hostGroupName = hostGroupName.Trim([' ', '\t']);
+
+                                if (hostGroupName == specified)
+                                {
+                                    hostGroupFound = true;
+                                    break; // Matching HOST_GROUP found, exit the loop.
+                                }
                             }
-                            else
+
+                            if (!hostGroupFound)
                             {
+                                // No matching host group found.
+                                string aOrAn = lineType == "RESERVE" ? "a" : "an";
                                 err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
                                       $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
+                                return err;
                             }
 
-                            return err;
+                            break;
                         }
-                        debugPoint = 17;
-                        break;
-                    }
-                    case "HOST_GROUP":
-                    {
-                        bool hostGroupFound = false;
-
-                        foreach (var optionsHostGroupEntry in hostGroupIndex)
-                        {
-                            Tuple<string, string> optionsHostGroupData = optionsHostGroupEntry.Value;
-                            string hostGroupName = optionsHostGroupData.Item1;
-
-                            hostGroupName = hostGroupName.Trim('"');
-
-                            if (hostGroupName == specified)
-                            {
-                                hostGroupFound = true;
-                                break; // Matching HOST_GROUP found, exit the loop.
-                            }
-                        }
-
-                        if (!hostGroupFound)
-                        {
-                            // No matching host group found.
-                            string aOrAn = lineType == "RESERVE" ? "a" : "an";
-                            err = $"There is an issue with the options file: you specified a {groupType} on {aOrAn} {lineType} line named \"{specified}\", " +
-                                  $"but this {groupType} does not exist in your options file. Please check your {groupType}s for any typos. HOST_GROUP and GROUP are separate.";
-                            return err;
-                        }
-
-                        break;
-                    }
                     default:
                         continue; // No need to do this for other client types.
                 }

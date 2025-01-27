@@ -28,6 +28,9 @@ namespace Options.File.Checker
         [GeneratedRegex(@"\d{2,3}\.")]
         private static partial Regex IpAddressRegex();
 
+        [GeneratedRegex(@"\s+")]
+        private static partial Regex RemoveWhiteSpacesRegex();
+
         private static bool _serverLineHasPort = true;
         private static bool _daemonLineHasPort = false;
         private static bool _daemonPortIsCnuFriendly = false;
@@ -1140,33 +1143,21 @@ namespace Options.File.Checker
 
                         reserveDictionary[optionsLineIndex] = Tuple.Create(reserveSeatCount, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified, line);
                     }
-                    else if (line.TrimStart().StartsWith("GROUP "))
+                    else if (line.TrimStart().StartsWith("GROUP ") || line.TrimStart().StartsWith("GROUP	"))
                     {
                         lastLineWasAGroupLine = true;
                         lastLineWasAHostGroupLine = false;
 
-                        string[] lineParts = line.Split(' ');
+                        // Please, I'm begging you, stop putting random spaces and tabs and other white/blankspaces.
+                        string lineWithWhiteSpacesRemoved = RemoveWhiteSpacesRegex().Replace(line, " ").Trim();
+                        string[] lineParts = lineWithWhiteSpacesRemoved.Split(' ');
 
-                        // Stop putting in random spaces.
-                        while (string.IsNullOrWhiteSpace(lineParts[0]) && lineParts.Length > 1)
-                        {
-                            lineParts = lineParts.Skip(1).ToArray();
-                        }
-
-                        // Remove any elements after lineParts[2] that are blank, whitespace, or tabs. We don't want to count them as users of the GROUP.
-                        lineParts = lineParts.Take(3)
-                                             .Concat(lineParts.Skip(3).Where(part => !string.IsNullOrWhiteSpace(part)))
-                                             .Select(part => part.Trim('\n', '\r', '\t'))
-                                             .Where(part => !string.IsNullOrWhiteSpace(part) && part != "\\")
-                                             .ToArray();
-
-                        groupName = string.Concat(lineParts[1].Where(c => !char.IsWhiteSpace(c)));
-                        groupName = groupName.Trim('"');
-                        string groupUsers = string.Join(" ", lineParts.Skip(2)).TrimEnd();
+                        groupName = lineParts[1];
+                        groupName = groupName.Trim([' ', '\t']);
+                        string groupUsers = string.Join(" ", lineParts.Skip(2));
 
                         int groupUserCount = 0;
 
-                        // Check if groupUsers is null, empty, or whitespace. If it is, leave the count at 0.
                         if (!string.IsNullOrWhiteSpace(groupUsers))
                         {
                             groupUserCount = groupUsers.Split(' ').Length;
