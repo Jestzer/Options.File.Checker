@@ -14,6 +14,7 @@ Notes for user:
 - If you combined your license file with non-MathWorks products, this will not work. Support for other products is not planned.
 
 To-do:
+- Fix INCLUDEALL seat count. Currently, it will potentially hang in the latest release and just doesn't count past the first product in "nightly build" (for the lack of a better term)
 - Make UI a little nicer looking
 - Let user know that USE_SERVER is not needed
 - Warn users when no NNU seats are assigned
