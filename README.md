@@ -15,7 +15,7 @@ Notes for user:
 
 To-do:
 - Fix INCLUDEALL seat count. Currently, it will potentially hang in the latest release and just doesn't count past the first product in "nightly build" (for the lack of a better term)
-- Make UI a little nicer looking
+- Check to see if spaces are allowed in usernames on USER lines
 - Let user know that USE_SERVER is not needed
 - Warn users when no NNU seats are assigned
 - Identify bad INCREMENT lines (possibly counting lineParts?)
