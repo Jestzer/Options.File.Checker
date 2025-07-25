@@ -14,8 +14,8 @@ Notes for user:
 - If you combined your license file with non-MathWorks products, this will not work. Support for other products is not planned.
 
 To-do:
-- Fix INCLUDEALL seat count. Currently, it will potentially hang in the latest release and just doesn't count past the first product in "nightly build" (for the lack of a better term)
 - Check to see if spaces are allowed in usernames on USER lines
 - Let user know that USE_SERVER is not needed
 - Warn users when no NNU seats are assigned
 - Identify bad INCREMENT lines (possibly counting lineParts?)
+- Investigate MAX further. Does FlexLM get angry when you specify a higher # than the seat count? What if there are multiple of the same product? Annoyingly enough, MAX looks at NNU's raw seat count, not the USER_BASED count.

@@ -341,7 +341,6 @@ namespace Options.File.Checker
 
             debugPoint = 34;
             
-            int licenseFileDictionaryIndex = 0;
             bool matchingProductFoundInLicenseFile = false;
             bool usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
             int remainingSeatsToSubtract = 0; // The 0 has no significance and will be set accordingly later on, if used.
@@ -351,17 +350,14 @@ namespace Options.File.Checker
             //... We're using the licenseFileProductKey so we can uniquely identify each INCREMENT.
             // You might be worried that this isn't enough information to separate distinct INCLUDE/whatever lines from each other, but since this List/Tuple is defined in this SeatSubtractor method, it shouldn't matter.
 
+            List<int> licenseLinesReached = [];
+            
             while (!doneSubtractingSeats)
             {
                 debugPoint = 35;
                 // Go through each line and subtract seats accordingly.
                 foreach (var licenseFileEntry in licenseFileDictionary)
                 {
-                    int totalEntries = licenseFileDictionary.Count;
-                    // Boo hoo, we'll try going through the file 50 times and if we still can't subtract anything, then guess what? We give up.
-                    int totalProductsChecked = totalEntries * 50;
-                    licenseFileDictionaryIndex++;
-                    bool atLastEntry = licenseFileDictionaryIndex == totalProductsChecked;
                     bool needToGoToNextEntry = false;
                     int licenseLineIndex = licenseFileEntry.Key;
                     Tuple<string, int, string, string, string, List<string>, int> licenseFileData = licenseFileEntry.Value;
@@ -373,6 +369,12 @@ namespace Options.File.Checker
                     string licenseFileLicenseNumber = licenseFileData.Item5;
                     List<string> linesThatSubtractSeats = licenseFileData.Item6;
                     int originalLicenseFileSeatCount = licenseFileData.Item7;
+                    
+                    // We use the license file's line index to detect if we've already tried subtracting seats. If we have, we should indicate so.
+                    // Failing to do so will result in an NNU-only license file with an INCLUDEALL line being stuck here forever.
+                    licenseLinesReached.Add(licenseLineIndex);
+                    if (licenseLinesReached.Contains(licenseLineIndex) && optionSelected == "INCLUDEALL")
+                    { firstAttemptToSubtractSeats = false;}
 
                     // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
                     // Case-senstivity does not matter, apparently.
@@ -798,8 +800,6 @@ namespace Options.File.Checker
                         licenseFileDictionary[licenseLineIndex] = licenseFileData;
                         if (needToGoToNextEntry) { continue; }
                         if (optionSelected != "INCLUDEALL") { break; } // We don't need to go through any other products since we've already done seat subtraction.
-                        else if (optionSelected == "INCLUDEALL" && doneSubtractingSeats) { break; }
-                        else if (optionSelected == "INCLUDEALL" && atLastEntry && !firstAttemptToSubtractSeats){ doneSubtractingSeats = true; break; }
                     }
                     else
                     {
@@ -818,7 +818,6 @@ namespace Options.File.Checker
                 if (!doneSubtractingSeats)
                 {
                     forceSubtraction = true;
-                    firstAttemptToSubtractSeats = false;
                 }
             }
         }
