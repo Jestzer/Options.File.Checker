@@ -1,0 +1,109 @@
+﻿/* Window shell */
+body {
+    margin: 0;
+    font-family: Segoe UI, system-ui, sans-serif;
+    background: #2d2b2b;
+    color: #fff;
+}
+
+.window {
+    width: 875px;
+    min-width: 875px;
+    height: 700px;
+    min-height: 700px;
+    margin: 30px 30px 5px 30px;
+    display: flex;
+    flex-direction: column;
+}
+
+.grid {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* consistent vertical spacing */
+}
+
+.label {
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.textbox {
+    width: 300px;
+    padding: 6px 8px;
+    border: 1px solid #464646;
+    background: #464646;
+    color: #fff;
+    border-radius: 2px;
+}
+
+.textbox::placeholder {
+    color: #aaa;
+}
+
+/* All button properties */
+.btn {
+    padding: 6px 14px;
+    margin-left: 10px;
+    border: 2px solid #1e699b;
+    background: #464646;
+    color: #fff;
+    cursor: pointer;
+    border-radius: 2px;
+}
+
+.btn:hover:not(:disabled) {
+    background: gray;
+}
+
+.btn:active:not(:disabled) {
+    background: #cecece;
+    color: #000;
+}
+
+.btn:disabled {
+    background: #858585;
+    border-color: #858585;
+    color: #a5a5a5;
+    cursor: not-allowed;
+}
+
+/* Input row */
+.input-group {
+    display: flex;
+    align-items: center;
+}
+
+/* Output text block */
+.output-text {
+    border: 2px solid gray;
+    padding: 8px;
+    height: 150px;
+    overflow-y: auto;
+    margin: 10px 0;
+}
+
+/* Output tree placeholder */
+.output-tree {
+    flex: 1; /* fills remaining vertical space */
+    border: 2px solid gray;
+    height: 150px;
+    overflow: auto;
+    margin: 10px 0;
+}
+
+/* Version bar */
+.version-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 20px;
+}
+
+/* Absolutely-positioned action buttons (like Canvas) */
+.action-buttons {
+    position: absolute;
+    top: 65px; /* matches Canvas.Top="65" */
+    left: 500px; /* matches Canvas.Left="500" */
+    display: flex;
+    gap: 10px;
+}
