@@ -16,7 +16,8 @@
 
         <!-- Row 1 – Input + Browse -->
         <div class="input-group">
-            <input type="text" class="textbox" id="licenseFileTextbox" placeholder="Browse or enter your license file path">
+            <input type="text" class="textbox" id="licenseFileTextbox"
+                   placeholder="Browse or enter your license file path">
             <button id="LicenseFileBrowseButton" class="btn">Browse</button>
             <input id="licenseFilePicker" type="file" style="display:none" accept=".dat,.lic"/>
         </div>
@@ -26,7 +27,8 @@
 
         <!-- Row 3 – Input + Browse -->
         <div class="input-group">
-            <input type="text" class="textbox" id="optionsFileTextbox" placeholder="Browse or enter your options file path">
+            <input type="text" class="textbox" id="optionsFileTextbox"
+                   placeholder="Browse or enter your options file path">
             <button id="OptionsFileBrowseButton" class="btn">Browse</button>
             <input id="optionsFilePicker" type="file" style="display:none" accept=".opt"/>
         </div>
@@ -48,13 +50,14 @@
 
         <!-- Action buttons (absolutely positioned like the original Canvas) -->
         <div class="action-buttons">
-            <button class="btn" disabled>Analyze</button>
+            <button id="analyzeButton" class="btn" disabled>Analyze</button>
             <button class="btn">Save Output</button>
         </div>
 
         <!-- JavaScript goodies -->
         <script src="licenseFilePicker.js"></script>
         <script src="optionsFilePicker.js"></script>
+        <script src="updateAnalyzerButtonState.js"></script>
         
     </div>
 </div>
