@@ -1,65 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Options File Checker</title>
     <link rel="stylesheet" href="./app.css">
 </head>
+
 <body>
-<div class="window">
-    <!-- 30 px margin all around -->
-    <div class="grid">
+    <div class="window">
+        <!-- 30 px margin all around -->
+        <div class="grid">
 
-        <!-- Row 0 – Label -->
-        <label class="label">License file path</label>
+            <!-- Row 0 – Label -->
+            <label class="label">License file path</label>
 
-        <!-- Row 1 – Input + Browse -->
-        <div class="input-group">
-            <input type="text" class="textbox" id="licenseFileTextbox"
-                   placeholder="Browse or enter your license file path">
-            <button id="LicenseFileBrowseButton" class="btn">Browse</button>
-            <input id="licenseFilePicker" type="file" style="display:none" accept=".dat,.lic"/>
+            <!-- Row 1 – Input + Browse -->
+            <div class="input-group">
+                <input type="text" class="textbox" id="licenseFileTextbox"
+                    placeholder="Browse to your license file" disabled>
+                <button id="LicenseFileBrowseButton" class="btn">Browse</button>
+                <input id="licenseFilePicker" type="file" style="display:none" accept=".dat,.lic" />
+            </div>
+
+            <!-- Row 2 – Label -->
+            <label class="label">Options file path</label>
+
+            <!-- Row 3 – Input + Browse -->
+            <div class="input-group">
+                <input type="text" class="textbox" id="optionsFileTextbox"
+                    placeholder="Browse to your options file" disabled>
+                <button id="OptionsFileBrowseButton" class="btn">Browse</button>
+                <input id="optionsFilePicker" type="file" style="display:none" accept=".opt" />
+            </div>
+
+            <!-- Row 4 – Output text block -->
+            <div class="output-text">
+                <p>Warning messages will appear here after analysis. Errors will appear in a pop-up window.</p>
+            </div>
+
+            <!-- Row 5 – Tree view placeholder -->
+            <div class="output-tree">
+                <!-- TODO: render tree view items here. :) -->
+            </div>
+
+            <!-- Row 6 – Version + Update -->
+            <div class="version-bar">
+                <span>v<span class="pkg-version">1.0.0</span></span>
+            </div>
+
+            <!-- Action buttons (absolutely positioned like the original Canvas) -->
+            <div class="action-buttons">
+                <button id="analyzerButton" class="btn" disabled>Analyze</button>
+                <button class="btn">Save Output</button>
+            </div>
         </div>
-
-        <!-- Row 2 – Label -->
-        <label class="label">Options file path</label>
-
-        <!-- Row 3 – Input + Browse -->
-        <div class="input-group">
-            <input type="text" class="textbox" id="optionsFileTextbox"
-                   placeholder="Browse or enter your options file path">
-            <button id="OptionsFileBrowseButton" class="btn">Browse</button>
-            <input id="optionsFilePicker" type="file" style="display:none" accept=".opt"/>
-        </div>
-
-        <!-- Row 4 – Output text block -->
-        <div class="output-text">
-            <p>Warning messages will appear here after analysis. Errors will appear in a pop-up window.</p>
-        </div>
-
-        <!-- Row 5 – Tree view placeholder -->
-        <div class="output-tree">
-            <!-- TODO: render tree view items here. :) -->
-        </div>
-
-        <!-- Row 6 – Version + Update -->
-        <div class="version-bar">
-            <span>v<span class="pkg-version">1.0.0</span></span>
-        </div>
-
-        <!-- Action buttons (absolutely positioned like the original Canvas) -->
-        <div class="action-buttons">
-            <button id="analyzeButton" class="btn" disabled>Analyze</button>
-            <button class="btn">Save Output</button>
-        </div>
-
-        <!-- JavaScript goodies -->
-        <script src="licenseFilePicker.js"></script>
-        <script src="optionsFilePicker.js"></script>
-        <script src="updateAnalyzerButtonState.js"></script>
-        
     </div>
-</div>
+    <!-- JavaScript goodies -->
+    <script src="licenseFilePicker.js"></script>
+    <script src="optionsFilePicker.js"></script>
+    <script src="analyzerButton.js"></script>
+    <script src="updateAnalyzerButtonState.js"></script>
 </body>
+
 </html>

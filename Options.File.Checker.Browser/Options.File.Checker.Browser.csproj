@@ -6,6 +6,7 @@
         <FileVersion>0.2.9.8</FileVersion>
         <InformationalVersion>0.2.9.8</InformationalVersion>
         <OutputType>Exe</OutputType>
+        <WasmCompatible>true</WasmCompatible>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <Nullable>enable</Nullable>
     </PropertyGroup>
@@ -17,4 +18,5 @@
     <ItemGroup>
         <ProjectReference Include="..\Options.File.Checker\Options.File.Checker.csproj"/>
     </ItemGroup>
+
 </Project>
