@@ -12,11 +12,6 @@ if (analyzerBtn) {
 
         gatherData()
 
-        if (window.errorMessage !== "No error message set.") {
-            outputTextbox.textContent = window.errorMessage;
-            alert(window.errorMessage);
-            return;
-        }
         console.log(licenseFileText);
         console.log(optionsFileText)
     });

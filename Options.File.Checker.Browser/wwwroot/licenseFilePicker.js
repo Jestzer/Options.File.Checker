@@ -14,7 +14,7 @@ function initializeLicenseFilePicker() {
             if (files.length > 0 && textBox) {
                 textBox.value = files[0].name;
             } else {
-                window.errorMessage = "The license file you've chosen appears to be empty."
+                errorMessageFunction("The license file you've chosen appears to be empty.")
                 return;
             }
 
@@ -25,7 +25,7 @@ function initializeLicenseFilePicker() {
             reader.readAsText(files[0]);
         });
     } else {
-        window.errorMessage = "Could not find required elements in the DOM for the license file."
+        errorMessageFunction("Could not find required elements in the DOM for the license file.")
         // return; Not needed at the moment.
     }
 }

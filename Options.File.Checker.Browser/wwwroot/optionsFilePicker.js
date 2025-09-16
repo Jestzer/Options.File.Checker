@@ -14,7 +14,7 @@ function initializeOptionsFilePicker() {
             if (files.length > 0 && textBox) {
                 textBox.value = files[0].name;
             } else {
-                alert("The options file you've chosen appears to be empty.")
+                errorMessageFunction("The options file you've chosen appears to be empty.")
                 return;
             }
 
@@ -25,7 +25,8 @@ function initializeOptionsFilePicker() {
             reader.readAsText(files[0]);
         });
     } else {
-        alert("Could not find required elements in the DOM for the options file.");
+        errorMessageFunction("Could not find required elements in the DOM for the options file.")
+        // return; Not needed at the moment.
     }
 }
 

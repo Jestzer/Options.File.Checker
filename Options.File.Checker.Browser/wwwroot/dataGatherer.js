@@ -17,7 +17,7 @@ function gatherData() {
     window.maxMap = new Map([])
     window.groupMap = new Map([])
     window.hostGroupMap = new Map([])
-    window.errorMessage = "No error message set."
+    // window.errorMessage = "No error message set."
     window.productExpirationDate = "No product expiration date set."
     window.currentLine = "The variable 'line' is empty."
 
@@ -40,7 +40,7 @@ function gatherData() {
     if (!window.optionsFileText.includes("INCLUDE") && !window.optionsFileText.includes("EXCLUDE") && !window.optionsFileText.includes("RESERVE")
         && !window.optionsFileText.includes("MAX") && !window.optionsFileText.includes("LINGER") && !window.optionsFileText.includes("LOG") &&
         !window.optionsFileText.includes("TIMEOUT")) {
-        window.errorMessage = "There is an issue with the options file: it is likely not an options file or contains no usable content."
+        errorMessageFunction("There is an issue with the options file: it is likely not an options file or contains no usable content.")
         return;
     }
     console.log("Here be dragons.")
