@@ -13,10 +13,20 @@ function initializeLicenseFilePicker() {
             const files = event.target.files;
             if (files.length > 0 && textBox) {
                 textBox.value = files[0].name;
+            } else {
+                window.errorMessage = "The license file you've chosen appears to be empty."
+                return;
             }
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                window.licenseFileRawText = e.target.result;
+            };
+            reader.readAsText(files[0]);
         });
     } else {
-        console.error("Could not find required elements in the DOM.");
+        window.errorMessage = "Could not find required elements in the DOM for the license file."
+        // return; Not needed at the moment.
     }
 }
 
