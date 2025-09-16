@@ -1,5 +1,5 @@
 const analyzerBtn = document.getElementById('analyzerButton');
-const outputTextbox = document.getElementById('outputTextbox');
+let outputTextbox = document.getElementById('outputTextbox');
 if (analyzerBtn) {
     analyzerBtn.addEventListener('click', async () => {
         const licensePath = document.getElementById('licenseFileTextbox')?.value.trim();
@@ -10,9 +10,12 @@ if (analyzerBtn) {
             return;
         }
 
+        window.errorOccurred = false;
         gatherData()
 
-        console.log(licenseFileText);
-        console.log(optionsFileText)
+        if (!window.errorOccurred) {
+            console.log(licenseFileText)
+            console.log(optionsFileText)
+        }
     });
 }
