@@ -370,13 +370,13 @@ namespace Options.File.Checker
                         // Product Key validation.
                         if (productKey.Length > 20)
                         {
-                            _err = "There is an issue with the license file: one of your product keys is greater that 20 characters long. This means it's likely been " +
+                            _err = "There is an issue with the license file: one of your product keys is greater than 20 characters long. This means it's likely been " +
                             $"tampered with. This is what the product key is being read as: {productKey}.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
                         else if (productKey.Length < 10)
                         {
-                            _err = "There is an issue with the license file: one of your product keys is shorter that 10 characters long. This means it's likely been " +
+                            _err = "There is an issue with the license file: one of your product keys is shorter than 10 characters long. This means it's likely been " +
                             $"tampered with. This is what the product key is being read as: {productKey}.";
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
