@@ -21,6 +21,7 @@ function gatherData() {
     // window.errorMessage = "No error message set."
     window.productExpirationDate = "No product expiration date set."
     window.currentLine = "window.currentLine has not been set. :("
+    window.licenseFileDictionary = {};
 
     // Variables that don't need to be set app-wide.
 
@@ -243,6 +244,7 @@ function gatherData() {
             let productVersion = Number(lineParts[3]);
             window.productExpirationDate = lineParts[4];
             let rawSeatCount = String(Number(lineParts[5])); // This needs to be a string since it could be "uncounted".
+            seatCount = Number(lineParts[5]);
             let productKey = lineParts[6].trim();
             let licenseOffering;
             let licenseNumber = "No plpLicenseNumber :(";
@@ -437,7 +439,7 @@ function gatherData() {
 
             let linesThatSubtractSeats = []; // This needs to be set here even if it's just going to be empty until the analyzer class potentially fills it.
             let originalLicenseFileSeatCount = seatCount;
-            let licenseFileDictionary;
+
             licenseFileDictionary[licenseLineIndex] = {
                 productName,
                 seatCount,

@@ -14,8 +14,9 @@ if (analyzerBtn) {
         gatherData()
 
         if (!window.errorOccurred) {
-            console.log(licenseFileText)
-            console.log(optionsFileText)
+            //console.log(licenseFileText)
+            //console.log(optionsFileText)
+            console.log(licenseFileDictionary)
         }
     });
 }
