@@ -32,6 +32,7 @@ function gatherData() {
     const assetInfoRegex = /asset_info=/gi;
     const assetInfoWithNumberRegex = /asset_info=(\S+)/i;
     const licenseNumberRegex = /^[^Rab_\d]+$/g;
+    const licenseNumberSnRegex = /SN=(\S+)/i;
     const ipAddressRegex = /\d{2,3}\./g;
     const whiteSpaceRegex = /\s+/g;
 
@@ -244,7 +245,7 @@ function gatherData() {
             let rawSeatCount = Number(lineParts[5]);
             let productKey = lineParts[6].trim();
             let licenseOffering;
-            let licenseNumber = 0;
+            let licenseNumber = "No plpLicenseNumber :(";
 
             if (productKey.length > 20) {
                 errorMessageFunction("There is an issue with the license file: one of your product keys is greater than 20 characters long. This means it's likely been " +
@@ -262,8 +263,126 @@ function gatherData() {
                 if (match) {
                     licenseNumber = match[1];
                 }
+            } else if (currentLine.includes("SN=")) {
+                let match = currentLine.match(licenseNumberSnRegex)
+                if (match) {
+                    licenseNumber = match[1];
+                }
+                if (productName === "TMW_Archive") {
+                    containsPLP = true;
+                    plpLicenseNumber = licenseNumber;
+                    continue;
+                }
+                // This is the best guess we can make if you're using a PLP-era product.
+            } else if (containsPLP && productName.includes("PolySpace")) {
+                licenseNumber = containsPLP
+            } else {
+                if (!licenseNumber || !licenseNumber.trim()) {
+                    errorMessageFunction(`There is an issue with the license file: the license number was not found for the product {productName} with the product key ${productKey}. ` +
+                        "Your license file has likely been tampered with. Please regenerate it for this product before proceeding.")
+                    return;
+                }
+                errorMessageFunction(`There is an issue with the license file: the license number {licenseNumber} was not found for the product ${productName}.`)
+                return;
             }
 
+            // License offering.
+            if (currentLine.includes("lo=")) {
+                if (currentLine.includes("lo=CN:")) {
+                    licenseOffering = "lo=CN";
+                } else if (currentLine.includes("lo=CNU")) {
+                    licenseOffering = "CNU";
+                } else if (currentLine.includes("lo=NNU")) {
+                    licenseOffering = "NNU";
+                } else if (currentLine.includes("lo=TH")) {
+                    if (!currentLine.includes("USER_BASED")) {
+                        licenseOffering = "lo=CN";
+                    } else {
+                        errorMessageFunction(`There is an issue with the license file: it is formatted incorrectly. ${productName}'s license offering is being read as ` +
+                            "Total Headcount, but also Network Named User, which doesn't exist.")
+                        return;
+                    }
+                } else {
+                    errorMessageFunction(`There is an issue with the license file: the product ${productName} has an invalid license offering.`)
+                    return;
+                }
+                // Figure out your trial or PLP's license offering.
+            } else if (currentLine.includes("lr=") || containsPLP || !currentLine.includes("asset_info=")) {
+                if (seatCount > 0) {
+                    if (currentLine.includes("USER_BASED")) {
+                        licenseOffering = "NNU";
+                    } else {
+                        if (containsPLP && !currentLine.includes("asset_info=") && !currentLine.includes("ISSUED=")) {
+                            licenseOffering = "lo=DC"; // See PLP-era explanation below.
+                        } else {
+                            licenseOffering = "lo=CN";
+                        }
+                    }
+                }
+                // This means you're likely using a macOS or Linux PLP-era license, which CAN use an options file... I think it has to.
+                else if (containsPLP && !currentLine.includes("asset_info=")) {
+                    licenseOffering = "lo=IN";
+                    seatCount = 1;
+                } else {
+                    errorMessageFunction(`There is an issue with the license file: the product ${productName} comes from an Individual ` +
+                        "or Designated Computer license, which cannot use an options file.")
+                    return;
+                }
+            } else {
+                if (currentLine.includes("PLATFORMS=x")) {
+                    errorMessageFunction(`There is an issue with the license file: the product ${productName} comes from an Individual ` +
+                        "or Designated Computer license generated from a PLP on Windows, which cannot use an options file.")
+                    return;
+                } else {
+                    if (productKey.length === 20) {
+                        if (!licenseFileContentsLines.includes("TMW_Archive")) {
+                            errorMessageFunction("There is an issue with the license file: it either is a Windows Individual license generated from a PLP " +
+                                "or you are missing the TMW_Archive product in order to make your pre-R2008a product(s) work.")
+                            return;
+                        } else {
+                            // It's possible it's from an IN Windows PLP, but there's really no way to tell AFAIK.
+                            licenseOffering = "lo=DC";
+                            containsPLP = true;
+                        }
+                    } else {
+                        errorMessageFunction(`There is an issue with the license file: the product ${productName} has an valid license offering.`)
+                        return;
+                    }
+                }
+            }
+
+            // Check the product's expiration date. Year 0000 means perpetual.
+            if (window.productExpirationDate === "01-jan-0000") {
+                window.productExpirationDate = "01-jan-2999";
+            }
+
+            const expirationDate = parseDdMMMyyyy(window.productExpirationDate);
+
+            // Will come to midnight, since FlexLM + MathWorks doesn't seem to care about the time.
+            const currentDate = new Date(new Date().toDateString());
+
+            if (expirationDate < currentDate) {
+                errorMessageFunction(`There is an issue with the license file: The product ${productName} on license number ` +
+                    `${licenseNumber} expired on ${window.productExpirationDate}. Please update your license file appropriately before proceeding.`)
+                return;
+            }
+
+            if (licenseOffering.includes("NNU")) {
+                if (seatCount !== 1 && !containsPLP) {
+                    seatCount /= 2;
+                }
+            }
+
+            if (licenseOffering === "lo=CN" && (seatCount === 0) && licenseNumber === "220668") {
+                if ((productVersion <= 18) || (productName.includes("Polyspace") && productVersion <= 22)) {
+                    errorMessageFunction(`There is an issue with the license file: it contains a Designated Computer license, ${licenseNumber}, " +
+                        "that is incorrectly labeled as a Concurrent license.`)
+                } else {
+                    errorMessageFunction(`There is an issue with the license file: The product ${productName} on license number ` +
+                        `${licenseNumber} expired on ${window.productExpirationDate}. Please update your license file appropriately before proceeding.`)
+                }
+                return;
+            }
 
         } else if (window.currentLine.trimEnd().startsWith("#") || window.currentLine === "") {
 
@@ -283,4 +402,16 @@ function gatherData() {
             return;
         }
     }
+}
+
+// Parse "dd-MMM-yyyy" into Date.
+function parseDdMMMyyyy(str) {
+    const months = {
+        jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5,
+        jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11
+    };
+    const [day, mon, yr] = str.split('-');
+    return new Date(parseInt(yr, 10),
+        months[mon.toLowerCase()],
+        parseInt(day, 10));
 }
