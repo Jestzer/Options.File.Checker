@@ -420,7 +420,7 @@ namespace Options.File.Checker
                             if (string.IsNullOrWhiteSpace(licenseNumber))
                             {
                                 _err = $"There is an issue with the license file: the license number was not found for the product {productName} with the product key {productKey}. " +
-                                "Your license file has likely been tampered with. Please regenate it for this product before proceeding.";
+                                "Your license file has likely been tampered with. Please regenerate it for this product before proceeding.";
                                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                             }
                             _err = $"There is an issue with the license file: the license number {licenseNumber} was not found for the product {productName}.";
