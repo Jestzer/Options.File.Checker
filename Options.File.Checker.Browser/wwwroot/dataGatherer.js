@@ -97,7 +97,7 @@ function gatherData() {
                 errorMessageFunction("There is an issue with the license file: your SERVER line(s) are listed after a product.")
                 return;
             }
-        serverLineCount++
+            serverLineCount++
             let lineParts = currentLine.split(" ");
             let theWordServer = lineParts[0];
             let serverHostID = lineParts[2];
@@ -113,14 +113,44 @@ function gatherData() {
                 return;
             }
 
-            if (lineParts.length < 3) {
-                errorMessageFunction("There is an issue with the license file: you are missing information from your SERVER line. See documentation online on how to format it.")
+            switch (lineParts.length) {
+                case 0:
+                case 1:
+                case 2:
+                    errorMessageFunction("There is an issue with the license file: you are missing information from your SERVER line. See documentation online on how to format it.")
+                    return;
+                case 3:
+                    window.serverLineHasPort = false;
+                    break;
+                case 4:
+                    let serverPort = Number(lineParts[3]);
+                    if (!Number.isInteger(serverPort)) {
+                        errorMessageFunction("There is an issue with the license file: you have stray information on your SERVER line.")
+                        return;
+                    }
+
+                    if (!serverHostID.includes('INTERNET=') && serverHostID.length !== 12) {
+                        errorMessageFunction("There is an issue with the license file: you have not specified your Host ID correctly.")
+                        return;
+                    }
+                    // Congrats, you /likely/ have not made any mistakes on your SERVER line.
+                    break;
+                case 5:
+                    if (lineParts[4] === "") {
+                        continue; // Your stray space shall be ignored... for now.
+                    } else {
+                        errorMessageFunction("There is an issue with the license file: you have stray information on your SERVER line.")
+                        return;
+                    }
+                default:
+                    errorMessageFunction("There is an issue with the license file: you have stray information on your SERVER line.")
+                    return;
+            }
+        } else if (window.currentLine.trimEnd().startsWith("DAEMON") || window.currentLine.trimEnd().startsWith("VENDOR")) {
+            if (productLinesHaveBeenReached) {
+                errorMessageFunction("There is an issue with the license file: your DAEMON line is listed after a product.")
                 return;
             }
-
-
-        } else if (window.currentLine.trimEnd().startsWith("DAEMON") || window.currentLine.trimEnd().startsWith("VENDOR")) {
-
         } else if (window.currentLine.trimEnd().startsWith("INCREMENT")) {
 
         } else if (window.currentLine.trimEnd().startsWith("#") || window.currentLine.trim()) {

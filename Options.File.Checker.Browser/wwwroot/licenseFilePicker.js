@@ -11,12 +11,18 @@ function initializeLicenseFilePicker() {
 
         licenseFilePicker.addEventListener('change', (event) => {
             const files = event.target.files;
-            if (files.length > 0 && textBox) {
-                textBox.value = files[0].name;
-            } else {
-                errorMessageFunction("The license file you've chosen appears to be empty.")
+
+            // AFAIK, this means the user likely cancelled their selection, so move on with our lives.
+            if (!files.length) return;
+
+            const file = files[0];
+
+            if (file.size === 0) {
+                errorMessageFunction("The license file you've chosen appears to be empty.");
                 return;
             }
+
+            textBox.value = file.name;
 
             const reader = new FileReader();
             reader.onload = (e) => {
