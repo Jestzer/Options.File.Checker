@@ -500,6 +500,7 @@ namespace Options.File.Checker
                             {
                                 _err = $"There is an issue with the license file: the product {productName} comes from an Individual " +
                                      "or Designated Computer license generated from a PLP on Windows, which cannot use an options file.";
+                                return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                             }
                             else
                             {
