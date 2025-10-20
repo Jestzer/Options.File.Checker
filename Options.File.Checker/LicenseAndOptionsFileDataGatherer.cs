@@ -473,7 +473,7 @@ namespace Options.File.Checker
                                 {
                                     if (containsPLP && !line.Contains("asset_info=") && !line.Contains("ISSUED="))
                                     {
-                                        licenseOffering = "lo=DC"; // See PLP-era explaination below.
+                                        licenseOffering = "lo=DC"; // See PLP-era explanation below.
                                     }
                                     else
                                     {
