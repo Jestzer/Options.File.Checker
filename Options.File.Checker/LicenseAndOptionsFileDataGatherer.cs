@@ -514,7 +514,7 @@ namespace Options.File.Checker
                                     }
                                     else
                                     {
-                                        // It's possible it's from a IN Windows PLP, but there's really no way to tell AFAIK.
+                                        // It's possible it's from an IN Windows PLP, but there's really no way to tell AFAIK.
                                         licenseOffering = "lo=DC";
                                         containsPLP = true;
                                     }
