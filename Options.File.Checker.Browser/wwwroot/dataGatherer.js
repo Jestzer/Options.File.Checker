@@ -242,7 +242,7 @@ function gatherData() {
             productName = lineParts[1];
             let productVersion = Number(lineParts[3]);
             window.productExpirationDate = lineParts[4];
-            let rawSeatCount = Number(lineParts[5]);
+            let rawSeatCount = String(Number(lineParts[5])); // This needs to be a string since it could be "uncounted".
             let productKey = lineParts[6].trim();
             let licenseOffering;
             let licenseNumber = "No plpLicenseNumber :(";
@@ -383,9 +383,74 @@ function gatherData() {
                 }
                 return;
             }
+            if (rawSeatCount === "uncounted") {
+                errorMessageFunction("There is an issue with the license file: it contains an Individual or Designated Computer license, " +
+                    `which cannot use an options file. The license number is question is ${licenseNumber}.`)
+                return;
+            }
+
+            if (seatCount < 1 && currentLine.includes("asset_info=")) {
+                errorMessageFunction(`There is an issue with the license file: ${productName} on license ${licenseNumber} is reading with a seat count of zero or less.`)
+                return;
+            }
+
+            if (seatCount === 0 && containsPLP && licenseOffering === "lo=DC") {
+                seatCount = 1;
+            }
+
+            if (seatCount === 0) {
+                errorMessageFunction(`There is an issue with the license file: your seat count for ${productName} on license number ${licenseNumber} is being registered as zero... ` +
+                    "that's probably not right. Your license file has likely been tampered with. Please regenerate it.")
+                return;
+            }
+
+            // Before proceeding, make sure the values we've collected are valid.
+            if (!productName || !productName.trim()) {
+                errorMessageFunction(`There is an issue with the license file: a product name is being detected as blank on ${licenseNumber}.`)
+                return;
+            }
+
+            if (!licenseNumber || !licenseNumber.trim() || licenseNumberRegex.test(licenseNumber)) {
+                if (licenseNumber === "DEMO") {
+                    errorMessageFunction(`There is an issue with the license file: an invalid license number is detected for your trial license of ${productName}. ` +
+                        "Your trial license file has likely been tampered with. Please regenerate it before proceeding.")
+                    return;
+                }
+                errorMessageFunction(`There is an issue with the license file: an invalid license number, ${licenseNumber}, is detected for ${productName}.`)
+                return;
+            }
+            if (!licenseOffering || !licenseOffering.trim()) {
+                errorMessageFunction(`There is an issue with the license file: a license offering could not be detected for ${productName} on license number ${licenseNumber}.`)
+                return;
+            }
+
+            if (!productKey || !productName.trim()) {
+                errorMessageFunction(`There is an issue with the license file: a product key could not be detected for ${productName} on license number ${licenseNumber}.`)
+                return;
+            }
+
+            if (productName === "MATLAB_Distrib_Comp_Engine" && licenseOffering === "NNU") {
+                errorMessageFunction("There is an issue with the license file: you have a license for MATLAB Parallel Server, but it is being registered as part of an " +
+                    "NNU license, which is not possible. Please regenerate your MATLAB Parallel Server license and then replace it with the existing contents in your license file.")
+                return;
+            }
+
+            let linesThatSubtractSeats = []; // This needs to be set here even if it's just going to be empty until the analyzer class potentially fills it.
+            let originalLicenseFileSeatCount = seatCount;
+            let licenseFileDictionary;
+            licenseFileDictionary[licenseLineIndex] = {
+                productName,
+                seatCount,
+                productKey,
+                licenseOffering,
+                licenseNumber,
+                linesThatSubtractSeats,
+                originalLicenseFileSeatCount
+            };
+
 
         } else if (window.currentLine.trimEnd().startsWith("#") || window.currentLine === "") {
-
+            // Ignore empty and commented out lines.
         } else if (window.currentLine.trimEnd().startsWith("USE_SERVER")) {
             // Someday, there will be code here to yell at your for your sins, no matter how minor they are.
         } else {
@@ -393,13 +458,42 @@ function gatherData() {
                 "and likely need to regenerate it. The lines' contents are the following: " + window.currentLine)
             return;
         }
+    } // End of for loop for license file parsing.
 
-        if (serverLineCount > 3 || serverLineCount === 2) {
-            errorMessageFunction("There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.")
-            return;
-        } else if (serverLineCount === 0) {
-            errorMessageFunction("There is an issue with the license file: it has no SERVER lines. You must insert one manually. See instructions online on how to do so.")
-            return;
+    if (serverLineCount > 3 || serverLineCount === 2) {
+        errorMessageFunction("There is an issue with the license file: it has too many SERVER lines. Only 1 or 3 are accepted.")
+        return;
+    } else if (serverLineCount === 0) {
+        errorMessageFunction("There is an issue with the license file: it has no SERVER lines. You must insert one manually. See instructions online on how to do so.")
+        return;
+    }
+
+    // These will be used when gather Options File information. They're outside the loop since GROUPs and HOST_GROUPs may span multiple lines.
+    // Is this also true for INCLUDE/EXCLUDE lines? Nope! 8-)
+    let lastLineWasAGroupLine = false;
+    let lastLineWasAHostGroupLine = false;
+    let groupName = "No groupName set. :(";
+    let hostGroupName = "No hostGroupName set. :(";
+
+    // Options file information gathering.
+    for (let optionsLineIndex = 0; optionsLineIndex < optionsFileContentsLines.length; optionsLineIndex++) {
+        window.currentLine = optionsFileContentsLines[optionsLineIndex];
+
+        if (currentLine.trim().startsWith("INCLUDE ") || currentLine.trim().startsWith("INCLUDE_BORROW ") || currentLine.trim().startsWith("EXCLUDE ") || currentLine.trim().startsWith("EXCLUDE_BORROW ")) {
+            lastLineWasAGroupLine = false;
+            lastLineWasAHostGroupLine = false;
+
+            let optionType = "No optionType set. :(";
+
+            if (currentLine.trim().startsWith("INCLUDE ")) {
+                optionType = "INCLUDE";
+            } else if (currentLine.trim().startsWith("INCLUDE_BORROW ")) {
+                optionType = "INCLUDE_BORROW";
+            } else if (currentLine.trim().startsWith("EXCLUDE ")) {
+                optionType = "EXCLUDE";
+            } else if (currentLine.trim().startsWith("EXCLUDE_BORROW ")) {
+                optionType = "EXCLUDE_BORROW";
+            }
         }
     }
 }
