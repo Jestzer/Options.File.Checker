@@ -25,14 +25,15 @@ function gatherData() {
     // Variables that don't need to be set app-wide.
 
     // Regex.
-    const portEqualsRegex = /port=/i;
-    const optionsEqualsRegex = /options=/i;
-    const commentedBeginLineRegex = /# BEGIN--------------/i;
-    const keyEqualsRegex = /key=/i;
-    const assetInfoRegex = /asset_info=/i;
-    const licenseNumberRegex = /^[^Rab_\d]+$/;
-    const ipAddressRegex = /\d{2,3}\./;
-    const whiteSpaceRegex = /\s+/;
+    const portEqualsRegex = /port=/gi;
+    const optionsEqualsRegex = /options=/gi;
+    const commentedBeginLineRegex = /# BEGIN--------------/gi;
+    const keyEqualsRegex = /key=/gi;
+    const assetInfoRegex = /asset_info=/gi;
+    const assetInfoWithNumberRegex = /asset_info=(\S+)/i;
+    const licenseNumberRegex = /^[^Rab_\d]+$/g;
+    const ipAddressRegex = /\d{2,3}\./g;
+    const whiteSpaceRegex = /\s+/g;
 
     // Other.
     let containsPLP = false;
@@ -151,9 +152,120 @@ function gatherData() {
                 errorMessageFunction("There is an issue with the license file: your DAEMON line is listed after a product.")
                 return;
             }
-        } else if (window.currentLine.trimEnd().startsWith("INCREMENT")) {
 
-        } else if (window.currentLine.trimEnd().startsWith("#") || window.currentLine.trim()) {
+            // There should only be 1 DAEMON line.
+            daemonLineCount++
+            if (daemonLineCount > 1) {
+                errorMessageFunction("There is an issue with the license file: you have more than 1 DAEMON line.")
+                return;
+            }
+
+            const countPortEquals = (window.currentLine.match(portEqualsRegex) || []).length;
+            const countOptionsEquals = (window.currentLine.match(optionsEqualsRegex) || []).length;
+            const countCommentedBeginLines = (window.currentLine.match(commentedBeginLineRegex) || []).length;
+
+            // For all the homies out there using CNU.
+            if (window.currentLine.includes("PORT=")) {
+                window.daemonPortIsCnuFriendly = true;
+            }
+
+            if (countCommentedBeginLines > 0) {
+                errorMessageFunction("There is an issue with the license file: it has content that is intended to be commented out in your DAEMON line.")
+                return;
+            }
+
+            if (countPortEquals > 1) {
+                errorMessageFunction("There is an issue with the license file: you have specified more than 1 port number for MLM.")
+                return;
+            }
+
+            if (countOptionsEquals > 1) {
+                errorMessageFunction("There is an issue with the license file: you have specified the path to more than 1 options file.")
+                return;
+            }
+
+            if (countOptionsEquals === 0) {
+                errorMessageFunction("There is an issue with the license file: you did not specify the path to the options file. " +
+                    "If you included the path, but did not use options= to specify it, MathWorks licenses ask that you do so, even if they technically work without options=.")
+                return;
+            }
+
+            // daemonProperty1 and 2 could either be a port number or path to an options file.
+            let lineParts = currentLine.split(" ");
+
+            // Just having the word "DAEMON" isn't enough.
+            if (lineParts.length === 1) {
+                errorMessageFunction("There is an issue with the license file: you have a DAEMON line, but did not specify the daemon to be used (MLM) nor the path to it.")
+                return;
+            }
+
+            // Checking out how you could've possibly messed up the vendor daemon.
+            let daemonVendor = lineParts[1];
+
+            // Try using this as a replacement for IsNullorWhiteSpace.
+            if (!daemonVendor || !daemonVendor.trim()) {
+                errorMessageFunction("There is an issue with the license file: there are too many spaces between \"DAEMON\" and \"MLM\".")
+                return;
+            }
+
+            // The vendor daemon needs to read exactly as MLM. Not as a lowercase "mlm", or anything else.
+            if (daemonVendor !== "MLM") {
+                errorMessageFunction("There is an issue with the license file: you have incorrectly specified the vendor daemon MLM. " +
+                    "It must read exactly as \"MLM\", with all uppercase letters.")
+                return;
+            }
+
+            switch (lineParts.length) {
+                case 2:
+                    errorMessageFunction("There is an issue with the license file: you did not specify the path to the vendor daemon MLM.")
+                    return;
+                case 3:
+                    errorMessageFunction("There is an issue with the license file: you did not specify the path to the options file.")
+                    return;
+                default:
+                    break;
+            }
+
+            if (countOptionsEquals === 1) {
+                window.daemonLineHasPort = true;
+            }
+        } else if (window.currentLine.trimEnd().startsWith("INCREMENT")) {
+            productLinesHaveBeenReached = true;
+            let lineParts = currentLine.split(" ");
+
+            // Please get rid of the blank garbage. THANK YOU.
+            lineParts = lineParts.filter(part => part && part.trim());
+
+
+            // The stuff we really care about!
+            productName = lineParts[1];
+            let productVersion = Number(lineParts[3]);
+            window.productExpirationDate = lineParts[4];
+            let rawSeatCount = Number(lineParts[5]);
+            let productKey = lineParts[6].trim();
+            let licenseOffering;
+            let licenseNumber = 0;
+
+            if (productKey.length > 20) {
+                errorMessageFunction("There is an issue with the license file: one of your product keys is greater than 20 characters long. This means it's likely been " +
+                    `tampered with. This is what the product key is being read as: ${productKey}.`)
+                return;
+            } else if (productKey.length < 10) {
+                errorMessageFunction("There is an issue with the license file: one of your product keys is shorter than 10 characters long. This means it's likely been " +
+                    `tampered with. This is what the product key is being read as: ${productKey}.`)
+                return;
+            }
+
+            // License number.
+            if (currentLine.includes("asset_info=")) {
+                let match = currentLine.match(assetInfoWithNumberRegex);
+                if (match) {
+                    licenseNumber = match[1];
+                }
+            }
+
+
+        } else if (window.currentLine.trimEnd().startsWith("#") || window.currentLine === "") {
 
         } else if (window.currentLine.trimEnd().startsWith("USE_SERVER")) {
             // Someday, there will be code here to yell at your for your sins, no matter how minor they are.
