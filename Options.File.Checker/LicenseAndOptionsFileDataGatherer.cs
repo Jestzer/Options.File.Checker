@@ -323,7 +323,7 @@ namespace Options.File.Checker
                             return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                         }
 
-                        // The vendor daemon needs to MLM. Not mlm or anything else.
+                        // The vendor daemon needs to be MLM exactly. Not mlm or anything else.
                         if (daemonVendor != "MLM")
                         {
                             _err = "There is an issue with the license file: you have incorrectly specified the vendor daemon MLM.";
@@ -361,7 +361,7 @@ namespace Options.File.Checker
                         productName = lineParts[1];
                         int productVersion = int.Parse(lineParts[3]);
                         _productExpirationDate = lineParts[4];
-                        string productKey = lineParts[6].Trim(); // I'm find with .Trim() here since it may be the end of the line.
+                        string productKey = lineParts[6].Trim(); // I'm fine with .Trim() here since it may be the end of the line.
                         string licenseOffering = string.Empty;
                         string licenseNumber = string.Empty;
                         _ = int.TryParse(lineParts[5], out seatCount);
