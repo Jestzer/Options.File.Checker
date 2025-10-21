@@ -18,6 +18,7 @@ if (analyzerBtn) {
             //console.log(optionsFileText)
             console.log(licenseFileDictionary);
             console.log(includeDictionary);
+            console.log(groupDictionary);
         }
     });
 }

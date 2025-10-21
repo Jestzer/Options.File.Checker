@@ -986,7 +986,22 @@ function gatherData() {
             }
 
             // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
+            let optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(groupDictionaryGroupNameEntry => groupDictionary[groupDictionaryGroupNameEntry][0] === groupName);
 
+            if (optionsLineIndexToWriteTo !== undefined) {
+                let [, oldUsers, oldCount] = groupDictionary[optionsLineIndexToWriteTo];
+                let combinedUsers = `${oldUsers} ${groupUsers}`;
+                let combinedCount = oldCount + groupUserCount;
+
+                groupDictionary[optionsLineIndexToWriteTo] = [groupName, combinedUsers, combinedCount];
+
+            } else { // If no existing entry can be found, create a new one.
+                // Ready for entry into the array.
+                groupDictionary[optionsLineIndex] = [groupName, groupUsers, groupUserCount];
+
+
+                // Left off on line 1183 in the .cs file.
+            }
         }
     }
 }
