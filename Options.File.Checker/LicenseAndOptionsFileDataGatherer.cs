@@ -767,7 +767,7 @@ namespace Options.File.Checker
 
                                 if (string.IsNullOrEmpty(clientSpecified))
                                 {
-                                    _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                    _err = $"There is an issue with the options file: you have not specified the {clientSpecified} you want to use on one your {optionType} lines. " +
                                     $"The line in question reads as \"{line}\"";
                                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                                 }
@@ -807,7 +807,7 @@ namespace Options.File.Checker
 
                                 if (string.IsNullOrEmpty(clientSpecified))
                                 {
-                                    _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                    _err = $"There is an issue with the options file: you have not specified the {clientSpecified} you want to use on one your {optionType} lines. " +
                                     $"The line in question reads as \"{line}\"";
                                     return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                                 }
@@ -848,7 +848,7 @@ namespace Options.File.Checker
 
                             if (string.IsNullOrEmpty(clientSpecified))
                             {
-                                _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                _err = $"There is an issue with the options file: you have not specified the {clientSpecified} you want to use on one your {optionType} lines. " +
                                 $"The line in question reads as \"{line}\"";
                                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                             }
@@ -864,7 +864,7 @@ namespace Options.File.Checker
 
                             if (string.IsNullOrEmpty(clientSpecified))
                             {
-                                _err = $"There is an issue with the options file: you have not specified the {clientType} you want to use on one your {optionType} lines. " +
+                                _err = $"There is an issue with the options file: you have not specified the {clientSpecified} you want to use on one your {optionType} lines. " +
                                 $"The line in question reads as \"{line}\"";
                                 return (false, false, false, false, false, false, false, null, null, null, null, null, null, null, null, null, null, null, _err);
                             }
