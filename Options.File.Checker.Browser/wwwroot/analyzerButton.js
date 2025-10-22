@@ -19,6 +19,7 @@ if (analyzerBtn) {
             console.log(licenseFileDictionary);
             console.log(includeDictionary);
             console.log(groupDictionary);
+            console.log(hostGroupDictionary);
         }
     });
 }

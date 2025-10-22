@@ -748,7 +748,7 @@ function gatherData() {
             clientSpecified = clientSpecified.replace('"', "");
 
             if (!clientSpecified || !clientSpecified.trim()) {
-                errorMessageFunction(`There is an issue with the options file: you have not specified the ${clientSpecified} you want to use on one your ${optionType} lines. ` +
+                errorMessageFunction(`There is an issue with the options file: you have not specified the ${clientSpecified} you want to use on one your ${optionSpecified} lines. ` +
                     `The line in question reads as this: \"${currentLine}\".`)
                 return;
             }
@@ -971,9 +971,8 @@ function gatherData() {
             lastLineWasAGroupLine = true;
             lastLineWasAHostGroupLine = false;
 
-            let lineWithWhiteSpacesRemoved = currentLine.replace(whiteSpaceRegex, "");
-
-            let lineParts = currentLine.split(" ");
+            let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
+            let lineParts = lineWithTabsRemoved.split(" ");
 
             groupName = lineParts[1];
             groupName = groupName.replace(" ", ""); // Hopefully just removing them in general and not at the beginning + end of lines works...
@@ -998,10 +997,56 @@ function gatherData() {
             } else { // If no existing entry can be found, create a new one.
                 // Ready for entry into the array.
                 groupDictionary[optionsLineIndex] = [groupName, groupUsers, groupUserCount];
-
-
-                // Left off on line 1183 in the .cs file.
             }
+
+            // Check for wildcards and IP addresses.
+            if (groupUsers.includes("*")) {
+                window.wildCardsAreUsed = true;
+            }
+
+            if (ipAddressRegex.test(groupUsers)) {
+                window.ipAddressesAreUsed = true;
+            }
+        } else if (currentLine.trim().startsWith("HOST_GROUP ") || currentLine.trim().startsWith("HOST_GROUP\t")) {
+            lastLineWasAGroupLine = false;
+            lastLineWasAHostGroupLine = true;
+
+            let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
+            let lineParts = lineWithTabsRemoved.split(" ");
+
+            hostGroupName = lineParts[1];
+            hostGroupName = hostGroupName.replace(" ", ""); // Hopefully just removing them in general and not at the beginning + end of lines works...
+            hostGroupName = hostGroupName.replace("\t", "");
+            let hostGroupClientSpecified = lineParts.slice(2).join(' ').trimEnd();
+            hostGroupClientSpecified = hostGroupClientSpecified.replace('"', "");
+
+            // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
+            let optionsLineIndexToWriteTo = Object.keys(hostGroupDictionary)
+                .find(hostGroupDictionaryGroupNameEntry => hostGroupDictionary[hostGroupDictionaryGroupNameEntry][0] === hostGroupName);
+
+            if (optionsLineIndexToWriteTo !== undefined) {
+                let [, oldUsers] = hostGroupDictionary[optionsLineIndexToWriteTo];
+                let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
+
+                hostGroupDictionary[optionsLineIndexToWriteTo] = [hostGroupName, combinedUsers];
+
+            } else { // If no existing entry can be found, create a new one.
+                // Ready for entry into the array.
+                hostGroupDictionary[optionsLineIndex] = [hostGroupName, hostGroupClientSpecified];
+            }
+
+            // Check for wildcards and IP addresses.
+            if (hostGroupClientSpecified.includes("*")) {
+                window.wildCardsAreUsed = true;
+            }
+
+            if (ipAddressRegex.test(hostGroupClientSpecified)) {
+                window.ipAddressesAreUsed = true;
+            }
+        } else if (currentLine.trim().startsWith("GROUPCASEINSENSITIVE ON")) {
+            lastLineWasAGroupLine = false;
+            lastLineWasAHostGroupLine = false;
+            window.caseSensitivity = false;
         }
     }
 }
