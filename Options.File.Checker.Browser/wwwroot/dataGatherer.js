@@ -972,6 +972,8 @@ function gatherData() {
             lastLineWasAHostGroupLine = false;
 
             let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\n", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\r", "");
             let lineParts = lineWithTabsRemoved.split(" ");
 
             groupName = lineParts[1];
@@ -1012,6 +1014,8 @@ function gatherData() {
             lastLineWasAHostGroupLine = true;
 
             let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\n", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\r", "");
             let lineParts = lineWithTabsRemoved.split(" ");
 
             hostGroupName = lineParts[1];
@@ -1047,6 +1051,18 @@ function gatherData() {
             lastLineWasAGroupLine = false;
             lastLineWasAHostGroupLine = false;
             window.caseSensitivity = false;
+        } else if (currentLine.trim().startsWith("TIMEOUTALL ") || currentLine.trim().startsWith("DEBUGLOG ") || currentLine.trim().startsWith("LINGER ") || currentLine.trim().startsWith("MAX_OVERDRAFT ")
+            || currentLine.trim().startsWith("REPORTLOG ") || currentLine.trim().startsWith("TIMEOUT ") || currentLine.trim().startsWith("BORROW ") || currentLine.trim().startsWith("NOLOG ")
+            || currentLine.trim().startsWith("DEFAULT ") || currentLine.trim().startsWith("HIDDEN ") || currentLine.trim().startsWith("MAX_BORROW_HOURS") || currentLine.trim().startsWith('#')
+            || !currentLine || !currentLine.trim() || currentLine.trim().startsWith("BORROW_LOWWATER ")) {
+
+            // Other valid line beginnings that I currently do nothing with.
+            lastLineWasAGroupLine = false;
+            lastLineWasAHostGroupLine = false;
+        } else if (lastLineWasAGroupLine) {
+
+        } else if (lastLineWasAGroupLine) {
+
         }
     }
 }
