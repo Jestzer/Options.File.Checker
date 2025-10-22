@@ -829,6 +829,7 @@ function gatherData() {
             if (lineParts.length < 5) {
                 errorMessageFunction("There is an issue with the options file: you have an incorrectly formatted RESERVE line. It is missing necessary information. " +
                     `The line in question reads as this: \"${currentLine}\".`)
+                return;
             }
 
             // Check for stray quotation marks.
@@ -1060,8 +1061,67 @@ function gatherData() {
             lastLineWasAGroupLine = false;
             lastLineWasAHostGroupLine = false;
         } else if (lastLineWasAGroupLine) {
+            let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\n", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\r", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\\", "");
+            let lineParts = lineWithTabsRemoved.split(" ");
 
-        } else if (lastLineWasAGroupLine) {
+            let groupUsers = lineParts.slice(2).join(' ').trimEnd();
+            let groupUserCount = 0;
+
+            // Check if groupUsers is null, empty, or whitespace. If it is, leave the count at 0.
+            if (groupUsers?.trim()) {
+                groupUserCount = groupUsers.split(whiteSpaceRegex).length;
+            }
+
+            // The GROUP already exists, silly.
+            let optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(groupDictionaryGroupNameEntry => groupDictionary[groupDictionaryGroupNameEntry][0] === groupName);
+
+            if (optionsLineIndexToWriteTo !== undefined) {
+                let [, oldUsers, oldCount] = groupDictionary[optionsLineIndexToWriteTo];
+                let combinedUsers = `${oldUsers} ${groupUsers}`;
+                let combinedCount = oldCount + groupUserCount;
+                groupDictionary[optionsLineIndexToWriteTo] = [groupName, combinedUsers, combinedCount];
+            }
+
+            // Check for wildcards and IP addresses.
+            if (groupUsers.includes("*")) {
+                window.wildCardsAreUsed = true;
+            }
+
+            if (ipAddressRegex.test(groupUsers)) {
+                window.ipAddressesAreUsed = true;
+            }
+        } else if (lastLineWasAHostGroupLine) {
+            let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\n", "");
+            lineWithTabsRemoved = currentLine.replaceAll("\r", "");
+            let lineParts = lineWithTabsRemoved.split(" ");
+
+            let hostGroupClientSpecified = lineParts.slice(2).join(' ').trimEnd();
+            hostGroupClientSpecified = hostGroupClientSpecified.replace('"', "");
+
+            // The HOST_GROUP already exists, silly.
+            let optionsLineIndexToWriteTo = Object.keys(hostGroupDictionary)
+                .find(hostGroupDictionaryGroupNameEntry => hostGroupDictionary[hostGroupDictionaryGroupNameEntry][0] === hostGroupName);
+
+            if (optionsLineIndexToWriteTo !== undefined) {
+                let [, oldUsers] = hostGroupDictionary[optionsLineIndexToWriteTo];
+                let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
+
+                hostGroupDictionary[optionsLineIndexToWriteTo] = [hostGroupName, combinedUsers];
+            }
+
+            // Check for wildcards and IP addresses.
+            if (hostGroupClientSpecified.includes("*")) {
+                window.wildCardsAreUsed = true;
+            }
+
+            if (ipAddressRegex.test(hostGroupClientSpecified)) {
+                window.ipAddressesAreUsed = true;
+            }
+        } else { // This should help spot my stupid typos.
 
         }
     }
