@@ -37,6 +37,7 @@ function gatherData() {
     const ipAddressRegex = /\d{2,3}\./g;
     const quoteRegex = /"/g;
     const whiteSpaceRegex = /\s+/g;
+    const tabRegex = /t/g;
 
     // Other.
     let containsPLP = false;
@@ -974,8 +975,8 @@ function gatherData() {
                 lastLineWasAHostGroupLine = false;
 
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\n", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\r", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
                 let lineParts = lineWithTabsRemoved.split(" ");
 
                 groupName = lineParts[1];
@@ -1016,8 +1017,8 @@ function gatherData() {
                 lastLineWasAHostGroupLine = true;
 
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\n", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\r", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
                 let lineParts = lineWithTabsRemoved.split(" ");
 
                 hostGroupName = lineParts[1];
@@ -1063,9 +1064,9 @@ function gatherData() {
                 lastLineWasAHostGroupLine = false;
             } else if (lastLineWasAGroupLine) {
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\n", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\r", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\\", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\\", "");
                 let lineParts = lineWithTabsRemoved.split(" ");
 
                 let groupUsers = lineParts.slice(2).join(' ').trimEnd();
@@ -1096,8 +1097,8 @@ function gatherData() {
                 }
             } else if (lastLineWasAHostGroupLine) {
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\n", "");
-                lineWithTabsRemoved = currentLine.replaceAll("\r", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
+                lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
                 let lineParts = lineWithTabsRemoved.split(" ");
 
                 let hostGroupClientSpecified = lineParts.slice(2).join(' ').trimEnd();
