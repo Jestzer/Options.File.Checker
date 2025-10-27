@@ -1129,7 +1129,7 @@ function gatherData() {
             }
         }
     } catch (rawErrorMessage) {
-        errorMessageFunction(`\`Something broke really badly. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
+        errorMessageFunction(`\`Something broke really badly in the Gatherer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
     }
 }
 
