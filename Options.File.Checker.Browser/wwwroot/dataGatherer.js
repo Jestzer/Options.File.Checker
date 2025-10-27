@@ -817,7 +817,7 @@ function gatherData() {
                 }
 
                 // Ready for entry into the array.
-                maxDictionary[optionsLineIndex] = [maxSeats, maxProductName, maxClientType, maxClientSpecified]
+                maxDictionary[optionsLineIndex] = [maxSeats, maxProductName, maxClientType, maxClientSpecified, currentLine]
             } else if (currentLine.trim().startsWith("RESERVE ")) {
                 lastLineWasAGroupLine = false;
                 lastLineWasAHostGroupLine = false;
