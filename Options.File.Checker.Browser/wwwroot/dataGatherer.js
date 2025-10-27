@@ -18,7 +18,6 @@ function gatherData() {
     window.maxDictionary = {};
     window.groupDictionary = {};
     window.hostGroupDictionary = {};
-    // window.errorMessage = "No error message set."
     window.productExpirationDate = "No product expiration date set."
     window.currentLine = "window.currentLine has not been set. :("
 
