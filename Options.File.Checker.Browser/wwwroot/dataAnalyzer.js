@@ -6,40 +6,45 @@ function analyzeData() {
     try {
         if (includeDictionary !== null && groupDictionary !== null && hostGroupDictionary !== null && excludeDictionary !== null && reserveDictionary !== null && includeAllDictionary !== null && excludeAllDictionary !== null) {
             let dictionaryToUse;
-            if (includeDictionary.count !== 0) {
+            if (Object.keys(includeDictionary).length > 0) {
                 dictionaryToUse = includeDictionary;
-                let dictionaryToUseString = "includeDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "INCLUDE";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
-            if (includeBorrowDictionary.count !== 0) {
+            if (Object.keys(includeBorrowDictionary).length > 0) {
                 dictionaryToUse = includeBorrowDictionary;
-                let dictionaryToUseString = "includeBorrowDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "INCLUDE_BORROW";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
-            if (includeAllDictionary.count !== 0) {
+            if (Object.keys(includeAllDictionary).length > 0) {
                 dictionaryToUse = includeAllDictionary;
-                let dictionaryToUseString = "includeAllDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "INCLUDEALL";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
-            if (excludeDictionary.count !== 0) {
+            if (Object.keys(excludeDictionary).length > 0) {
                 dictionaryToUse = excludeDictionary;
-                let dictionaryToUseString = "excludeDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "EXCLUDE";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
-            if (excludeBorrowDictionary.count !== 0) {
+            if (Object.keys(excludeBorrowDictionary).length > 0) {
                 dictionaryToUse = excludeBorrowDictionary;
-                let dictionaryToUseString = "excludeBorrowDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "EXCLUDE_BORROW";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
-            if (excludeAllDictionary.count !== 0) {
+            if (Object.keys(excludeAllDictionary).length > 0) {
                 dictionaryToUse = excludeAllDictionary;
-                let dictionaryToUseString = "excludeAllDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "EXCLUDEALL";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
-            if (reserveDictionary.count !== 0) {
+            if (Object.keys(reserveDictionary).length > 0) {
                 dictionaryToUse = reserveDictionary;
-                let dictionaryToUseString = "reserveDictionary";
-                performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                let dictionaryTypeToUse = "RESERVE";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+            }
+            if (Object.keys(maxDictionary).length > 0) {
+                dictionaryToUse = maxDictionary;
+                let dictionaryTypeToUse = "MAX";
+                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
             }
 
         } else {
@@ -47,56 +52,80 @@ function analyzeData() {
                 `The line in question reads as this: \"${currentLine}\".`);
             return;
         }
+
+        console.log("shut up, something happens, okay?")
     } catch (rawErrorMessage) {
         errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
     }
 }
 
-function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
+function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
 
     let entries = Object.entries(dictionaryToUse);
     for (let [dictionaryKey, dictionaryEntry] of entries) {
 
         let clientType;
         let clientSpecified;
-        switch (dictionaryToUseString) {
-            case "includeDictionary":
+
+        switch (dictionaryTypeToUse) {
+            case "INCLUDE":
                 [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
-            case "includeBorrowDictionary":
+            case "INCLUDE_BORROW":
                 [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
-            case "includeAllDictionary":
+            case "INCLUDEALL":
                 [clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
-            case "excludeDictionary":
+            case "EXCLUDE":
                 [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
-            case "excludeBorrowDictionary":
+            case "EXCLUDE_BORROW":
                 [clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
-            case "excludeAllDictionary":
+            case "EXCLUDEALL":
                 [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
-            case "reserveDictionary":
+            case "RESERVE":
                 [reserveSeatsNumber, productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
+                break;
+            case "MAX":
+                [maxSeats, productName, clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
         }
 
         switch (clientType) {
             case "GROUP":
-                let groupFound = false;
+                let groupName;
+                let groupUsers;
+                let matchingGroupFound = false;
+                let groupEntries = Object.entries(groupDictionary);
+                let hostGroupEntries = Object.entries(hostGroupDictionary);
 
-                for (let [groupDictionaryKey, groupEntry] of entries) {
+                for (let [groupDictionaryKey, groupEntry] of groupEntries) {
                     [groupName, groupUsers, groupUserCount] = groupEntry
 
                     if (!groupUsers || !groupUsers.trim()) {
                         errorMessageFunction(`There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is ${groupName}.`);
+                        return;
                     }
 
+                    if (groupName === clientSpecified) {
+                        matchingGroupFound = true;
+                        break;
+                    }
+                }
+
+                if (matchingGroupFound === false) {
+                    let aOrAn = (dictionaryTypeToUse === "RESERVE" || dictionaryTypeToUse === "MAX") ? "a" : "an"; // Grammar is important, kids!
+                    errorMessageFunction(`There is an issue with the options file: you specified a ${clientType} on ${aOrAn} ${dictionaryTypeToUse} named \"${clientSpecified}\", ` +
+                        `but this ${clientType} does not exist in your options file. Please check your ${clientType}s for any typos. HOST_GROUP and GROUP are separate.`);
+                    return;
                 }
                 break;
+
             case "HOST_GROUP":
+                hostGroupFound = false;
                 break;
             default:
                 continue;
