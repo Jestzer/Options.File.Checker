@@ -100,7 +100,8 @@ function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
                 let groupUsers;
                 let matchingGroupFound = false;
                 let groupEntries = Object.entries(groupDictionary);
-                let hostGroupEntries = Object.entries(hostGroupDictionary);
+                clientSpecified = clientSpecified.replace('"', '')
+                clientSpecified = clientSpecified.replace('\t', '')
 
                 for (let [groupDictionaryKey, groupEntry] of groupEntries) {
                     [groupName, groupUsers, groupUserCount] = groupEntry
@@ -125,10 +126,37 @@ function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
                 break;
 
             case "HOST_GROUP":
-                hostGroupFound = false;
+                let hostGroupName;
+                let hostGroupUsers;
+                let matchingHostGroupFound = false;
+                let hostGroupEntries = Object.entries(hostGroupDictionary);
+
+                for (let [hostGroupDictionaryKey, hostGroupEntry] of hostGroupEntries) {
+                    [hostGroupName, hostGroupUsers, hostGroupUserCount] = hostGroupEntry
+
+                    hostGroupName = hostGroupName.replace('"', '');
+                    hostGroupName = hostGroupName.replace('\t', '');
+
+                    if (!hostGroupUsers || !hostGroupUsers.trim()) {
+                        errorMessageFunction(`There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is ${hostGroupName}.`);
+                        return;
+                    }
+
+                    if (hostGroupName === clientSpecified) {
+                        matchingHostGroupFound = true;
+                        break;
+                    }
+                }
+
+                if (matchingHostGroupFound === false) {
+                    let aOrAn = (dictionaryTypeToUse === "RESERVE" || dictionaryTypeToUse === "MAX") ? "a" : "an"; // Grammar is important, kids!
+                    errorMessageFunction(`There is an issue with the options file: you specified a ${clientType} on ${aOrAn} ${dictionaryTypeToUse} named \"${clientSpecified}\", ` +
+                        `but this ${clientType} does not exist in your options file. Please check your ${clientType}s for any typos. HOST_GROUP and GROUP are separate.`);
+                    return;
+                }
                 break;
             default:
-                continue;
+                // continue;
         }
     }
 }
