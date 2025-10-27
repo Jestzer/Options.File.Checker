@@ -48,7 +48,7 @@ function analyzeData() {
             return;
         }
     } catch (rawErrorMessage) {
-        errorMessageFunction(`\`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
+        errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
     }
 }
 
@@ -85,6 +85,16 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
 
         switch (clientType) {
             case "GROUP":
+                let groupFound = false;
+
+                for (let [groupDictionaryKey, groupEntry] of entries) {
+                    [groupName, groupUsers, groupUserCount] = groupEntry
+
+                    if (!groupUsers || !groupUsers.trim()) {
+                        errorMessageFunction(`There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is ${groupName}.`);
+                    }
+
+                }
                 break;
             case "HOST_GROUP":
                 break;
