@@ -1,7 +1,6 @@
 function analyzeData() {
     let dictionaryToUse;
-    let unspecifiedLicenseOrProductKey = false;
-    let optionSelected;
+    window.unspecifiedLicenseOrProductKey = false;
 
     try {
         // Let's start with ensuring that the arrays exist and that any groups you've specified exist.
@@ -56,8 +55,8 @@ function analyzeData() {
         // Now we may subtract seats.
         if (Object.keys(includeDictionary).length > 0) {
             dictionaryToUse = includeDictionary;
-            let dictionaryTypeToUse = "INCLUDE";
-            seatSubtractor(dictionaryToUse, dictionaryTypeToUse)
+            let dictionaryToUseString = "INCLUDE";
+            seatSubtractor(dictionaryToUse, dictionaryToUseString)
         }
 
         if (Object.keys(includeAllDictionary).length > 0) {
@@ -80,13 +79,7 @@ function analyzeData() {
 
         for (let [licenseFileDictionaryKey, licenseFileDictionaryEntry] of licenseFileDictionaryEntries) {
 
-            let licenseFileProductName = licenseFileDictionaryEntry.productName;
-            let licenseFileSeatCount = licenseFileDictionaryEntry.seatCount;
-            let licenseFileProductKey = licenseFileDictionaryEntry.productKey;
             let licenseFileLicenseOffering = licenseFileDictionaryEntry.licenseOffering;
-            let licenseFileLicenseNumber = licenseFileDictionaryEntry.licenseNumber;
-
-            //[licenseFileProductName, licenseFileSeatCount, licenseFileProductKey, licenseFileLicenseOffering, licenseFileLicenseNumber] = licenseFileDictionaryEntry;
 
             if (licenseFileLicenseOffering !== "NNU") {
                 nnuExclusiveLicense = false;
@@ -94,6 +87,29 @@ function analyzeData() {
             }
         }
 
+        if (nnuExclusiveLicense === true) {
+
+            if (Object.keys(includeDictionary).length > 0) {
+                errorMessageFunction("There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.");
+                return;
+            }
+
+            let foundValidIncludeLine = false;
+            let includeDictionaryEntries = Object.entries(includeDictionary);
+
+            for (let [includeDictionaryKey, includeDictionaryEntry] of includeDictionaryEntries) {
+
+                let includeClientSpecified = includeDictionaryEntry.clientSpecified;
+
+                if (includeClientSpecified === "USER" || includeClientSpecified === "GROUP") {
+                    foundValidIncludeLine = true;
+                    break;
+                }
+            }
+            if (foundValidIncludeLine === false) {
+                errorMessageFunction("There is an issue with the options file: you have no INCLUDE lines with a USER or GROUP. You need these to use an NNU license.");
+            }
+        }
     } catch (rawErrorMessage) {
         errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}.`);
     }
@@ -169,11 +185,27 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
                 }
                 break;
             default:
-                // continue;
+            // continue;
         }
     }
 }
 
 function seatSubtractor(dictionaryToUse, dictionaryToUseString) {
 
+    let entries = Object.entries(dictionaryToUse);
+
+    let forceSeatSubtraction = false;
+    let reserveSeatCount = dictionaryToUse.reserveSeatsNumber;
+    let productName = dictionaryToUse.productName;
+    let licenseNumber = dictionaryToUse.licenseNumber;
+    let productKey = dictionaryToUse.productKey;
+    let clientType = dictionaryToUse.clientType;
+    let clientSpecified = dictionaryToUse.clientSpecified;
+    let rawOptionLine = dictionaryToUse.savedLine;
+
+    switch (dictionaryToUseString) {
+        case "INCLUDE":
+        case "INCLUDEALL":
+        case "RESERVE":
+    }
 }

@@ -712,6 +712,8 @@ function gatherData() {
                     licenseNumber = licenseNumber.replace('"', '');
                 }
 
+                let savedLine = currentLine;
+
                 // Ready for entry into the object.
                 if (currentLine.trimStart().startsWith("INCLUDE ")) {
                     includeDictionary[optionsLineIndex] = {
@@ -720,7 +722,7 @@ function gatherData() {
                         productKey,
                         clientType,
                         clientSpecified,
-                        currentLine
+                        savedLine
                     };
                 } else if (currentLine.trimEnd().startsWith("INCLUDE_BORROW ")) {
                     includeBorrowDictionary[optionsLineIndex] = {
@@ -729,7 +731,7 @@ function gatherData() {
                         productKey,
                         clientType,
                         clientSpecified,
-                        currentLine
+                        savedLine
                     };
                 } else if (currentLine.trimEnd().startsWith("EXCLUDE ")) {
                     excludeDictionary[optionsLineIndex] = {
@@ -738,7 +740,7 @@ function gatherData() {
                         productKey,
                         clientType,
                         clientSpecified,
-                        currentLine
+                        savedLine
                     };
                 } else if (currentLine.trimEnd().startsWith("EXCLUDE_BORROW ")) {
                     excludeBorrowDictionary[optionsLineIndex] = {
@@ -747,7 +749,7 @@ function gatherData() {
                         productKey,
                         clientType,
                         clientSpecified,
-                        currentLine
+                        savedLine
                     };
                 }
 
@@ -807,11 +809,13 @@ function gatherData() {
 
                 // No checking for MATLAB Parallel Server since INCLUDEALL/EXCLUDEALL don't specify products; it's all of them!
 
+                let savedLine = currentLine;
+
                 // Ready for entry into the object.
                 if (currentLine.trimEnd().startsWith("INCLUDEALL ")) {
-                    includeAllDictionary[optionsLineIndex] = {clientType, clientSpecified, currentLine};
+                    includeAllDictionary[optionsLineIndex] = {clientType, clientSpecified, savedLine};
                 } else if (currentLine.trimEnd().startsWith("EXCLUDEALL ")) {
-                    excludeBorrowDictionary[optionsLineIndex] = {clientType, clientSpecified, currentLine};
+                    excludeBorrowDictionary[optionsLineIndex] = {clientType, clientSpecified, savedLine};
                 }
             } else if (currentLine.trim().startsWith("MAX ")) {
                 lastLineWasAGroupLine = false;
@@ -845,8 +849,16 @@ function gatherData() {
                     window.optionsFileUsesMatlabParallelServer = true;
                 }
 
+                let savedLine = currentLine;
+
                 // Ready for entry into the object.
-                maxDictionary[optionsLineIndex] = {maxSeats, maxProductName, maxClientType, maxClientSpecified, currentLine};
+                maxDictionary[optionsLineIndex] = {
+                    maxSeats,
+                    maxProductName,
+                    maxClientType,
+                    maxClientSpecified,
+                    savedLine
+                };
             } else if (currentLine.trim().startsWith("RESERVE ")) {
                 lastLineWasAGroupLine = false;
                 lastLineWasAHostGroupLine = false;
@@ -996,8 +1008,18 @@ function gatherData() {
                     reserveLicenseNumber = reserveLicenseNumber.replace('"', '');
                 }
 
+                let savedLine = currentLine;
+
                 // Ready for entry into the object.
-                reserveDictionary[optionsLineIndex] = {reserveSeatsNumber, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified, currentLine};
+                reserveDictionary[optionsLineIndex] = {
+                    reserveSeatsNumber,
+                    reserveProductName,
+                    reserveLicenseNumber,
+                    reserveProductKey,
+                    reserveClientType,
+                    reserveClientSpecified,
+                    savedLine
+                };
             } else if (currentLine.trim().startsWith("GROUP ") || currentLine.trim().startsWith("GROUP\t")) {
                 lastLineWasAGroupLine = true;
                 lastLineWasAHostGroupLine = false;
