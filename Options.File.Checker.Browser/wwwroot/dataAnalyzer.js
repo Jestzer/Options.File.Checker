@@ -53,6 +53,7 @@ function analyzeData() {
         }
 
         // Now we may subtract seats.
+        // #Add some code that goes through each entry in each of the objects below.
         if (Object.keys(includeDictionary).length > 0) {
             dictionaryToUse = includeDictionary;
             let dictionaryToUseString = "INCLUDE";
@@ -117,8 +118,8 @@ function analyzeData() {
 
 function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
 
-    let entries = Object.entries(dictionaryToUse);
-    for (let [dictionaryKey, dictionaryEntry] of entries) {
+    let dictionaryEntries = Object.entries(dictionaryToUse);
+    for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
 
         let clientType = dictionaryEntry.clientType;
         let clientSpecified = dictionaryEntry.clientSpecified;
@@ -192,20 +193,21 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
 
 function seatSubtractor(dictionaryToUse, dictionaryToUseString) {
 
-    let entries = Object.entries(dictionaryToUse);
+    let dictionaryEntries = Object.entries(dictionaryToUse);
+    let [dictionaryKey, dictionaryEntry] = dictionaryEntries;
 
     let forceSeatSubtraction = false;
-    let reserveSeatCount = dictionaryToUse.reserveSeatsNumber;
-    let productName = dictionaryToUse.productName;
-    let licenseNumber = dictionaryToUse.licenseNumber;
-    let productKey = dictionaryToUse.productKey;
-    let clientType = dictionaryToUse.clientType;
-    let clientSpecified = dictionaryToUse.clientSpecified;
-    let rawOptionLine = dictionaryToUse.savedLine;
+    let reserveSeatCount = dictionaryEntry?.reserveSeatsNumber ?? 0;
+    let productName = dictionaryEntry?.productName ?? "No productName found. :(";
+    let licenseNumber = dictionaryEntry?.licenseNumber ?? "No licenseNumber found. :(";
+    let productKey = dictionaryEntry?.productKey ?? "No productKey found. :(";
+    let clientType = dictionaryEntry?.clientType ?? "No clientType found. :(";
+    let clientSpecified = dictionaryEntry?.clientSpecified ?? "No clientSpecified found. :(";
+    let rawOptionLine = dictionaryEntry?.savedLine ?? "No rawOptionLine found. :(";
 
-    switch (dictionaryToUseString) {
-        case "INCLUDE":
-        case "INCLUDEALL":
-        case "RESERVE":
-    }
+    // switch (dictionaryToUseString) {
+    //     case "INCLUDE":
+    //     case "INCLUDEALL":
+    //     case "RESERVE":
+    // }
 }
