@@ -4,47 +4,48 @@ function analyzeData() {
     let optionSelected;
 
     try {
+        // Let's start with ensuring that the arrays exist and that any groups you've specified exist.
         if (includeDictionary !== null && groupDictionary !== null && hostGroupDictionary !== null && excludeDictionary !== null && reserveDictionary !== null && includeAllDictionary !== null && excludeAllDictionary !== null) {
             let dictionaryToUse;
             if (Object.keys(includeDictionary).length > 0) {
                 dictionaryToUse = includeDictionary;
-                let dictionaryTypeToUse = "INCLUDE";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "INCLUDE";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(includeBorrowDictionary).length > 0) {
                 dictionaryToUse = includeBorrowDictionary;
-                let dictionaryTypeToUse = "INCLUDE_BORROW";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "INCLUDE_BORROW";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(includeAllDictionary).length > 0) {
                 dictionaryToUse = includeAllDictionary;
-                let dictionaryTypeToUse = "INCLUDEALL";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "INCLUDEALL";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(excludeDictionary).length > 0) {
                 dictionaryToUse = excludeDictionary;
-                let dictionaryTypeToUse = "EXCLUDE";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "EXCLUDE";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(excludeBorrowDictionary).length > 0) {
                 dictionaryToUse = excludeBorrowDictionary;
-                let dictionaryTypeToUse = "EXCLUDE_BORROW";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "EXCLUDE_BORROW";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(excludeAllDictionary).length > 0) {
                 dictionaryToUse = excludeAllDictionary;
-                let dictionaryTypeToUse = "EXCLUDEALL";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "EXCLUDEALL";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(reserveDictionary).length > 0) {
                 dictionaryToUse = reserveDictionary;
-                let dictionaryTypeToUse = "RESERVE";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "RESERVE";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
             if (Object.keys(maxDictionary).length > 0) {
                 dictionaryToUse = maxDictionary;
-                let dictionaryTypeToUse = "MAX";
-                performGroupCheck(dictionaryToUse, dictionaryTypeToUse)
+                let dictionaryToUseString = "MAX";
+                performGroupCheck(dictionaryToUse, dictionaryToUseString)
             }
 
         } else {
@@ -53,13 +54,16 @@ function analyzeData() {
             return;
         }
 
+        // Now we may subtract seats.
+
+
         console.log("shut up, something happens, okay?")
     } catch (rawErrorMessage) {
         errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
     }
 }
 
-function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
+function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
 
     let entries = Object.entries(dictionaryToUse);
     for (let [dictionaryKey, dictionaryEntry] of entries) {
@@ -67,7 +71,7 @@ function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
         let clientType;
         let clientSpecified;
 
-        switch (dictionaryTypeToUse) {
+        switch (dictionaryToUseString) {
             case "INCLUDE":
                 [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
                 break;
@@ -118,8 +122,8 @@ function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
                 }
 
                 if (matchingGroupFound === false) {
-                    let aOrAn = (dictionaryTypeToUse === "RESERVE" || dictionaryTypeToUse === "MAX") ? "a" : "an"; // Grammar is important, kids!
-                    errorMessageFunction(`There is an issue with the options file: you specified a ${clientType} on ${aOrAn} ${dictionaryTypeToUse} named \"${clientSpecified}\", ` +
+                    let aOrAn = (dictionaryToUseString === "RESERVE" || dictionaryToUseString === "MAX") ? "a" : "an"; // Grammar is important, kids!
+                    errorMessageFunction(`There is an issue with the options file: you specified a ${clientType} on ${aOrAn} ${dictionaryToUseString} named \"${clientSpecified}\", ` +
                         `but this ${clientType} does not exist in your options file. Please check your ${clientType}s for any typos. HOST_GROUP and GROUP are separate.`);
                     return;
                 }
@@ -149,8 +153,8 @@ function performGroupCheck(dictionaryToUse, dictionaryTypeToUse) {
                 }
 
                 if (matchingHostGroupFound === false) {
-                    let aOrAn = (dictionaryTypeToUse === "RESERVE" || dictionaryTypeToUse === "MAX") ? "a" : "an"; // Grammar is important, kids!
-                    errorMessageFunction(`There is an issue with the options file: you specified a ${clientType} on ${aOrAn} ${dictionaryTypeToUse} named \"${clientSpecified}\", ` +
+                    let aOrAn = (dictionaryToUseString === "RESERVE" || dictionaryToUseString === "MAX") ? "a" : "an"; // Grammar is important, kids!
+                    errorMessageFunction(`There is an issue with the options file: you specified a ${clientType} on ${aOrAn} ${dictionaryToUseString} named \"${clientSpecified}\", ` +
                         `but this ${clientType} does not exist in your options file. Please check your ${clientType}s for any typos. HOST_GROUP and GROUP are separate.`);
                     return;
                 }
