@@ -15,13 +15,15 @@ if (analyzerBtn) {
         analyzeData()
 
         if (!window.errorOccurred) {
-            //console.log(licenseFileText)
-            //console.log(optionsFileText)
-            //console.log(licenseFileDictionary);
-            //console.log(includeDictionary);
+            // console.log(licenseFileText)
+            // console.log(optionsFileText)
+            console.log("licenseFileDictionary:");
+            console.log(licenseFileDictionary);
+            console.log("includeDictionary:");
+            console.log(includeDictionary);
             // console.log(groupDictionary);
             // console.log(hostGroupDictionary);
-            console.log(reserveDictionary);
+            // console.log(reserveDictionary);
         }
     });
 }

@@ -442,6 +442,7 @@ function gatherData() {
                 let linesThatSubtractSeats = []; // This needs to be set here even if it's just going to be empty until the analyzer class potentially fills it.
                 let originalLicenseFileSeatCount = seatCount;
 
+                // Ready for entry into the object.
                 licenseFileDictionary[licenseLineIndex] = {
                     productName,
                     seatCount,
@@ -711,15 +712,43 @@ function gatherData() {
                     licenseNumber = licenseNumber.replace('"', '');
                 }
 
-                // Ready for entry into the array.
+                // Ready for entry into the object.
                 if (currentLine.trimStart().startsWith("INCLUDE ")) {
-                    includeDictionary[optionsLineIndex] = [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine];
+                    includeDictionary[optionsLineIndex] = {
+                        productName,
+                        licenseNumber,
+                        productKey,
+                        clientType,
+                        clientSpecified,
+                        currentLine
+                    };
                 } else if (currentLine.trimEnd().startsWith("INCLUDE_BORROW ")) {
-                    includeBorrowDictionary[optionsLineIndex] = [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine];
+                    includeBorrowDictionary[optionsLineIndex] = {
+                        productName,
+                        licenseNumber,
+                        productKey,
+                        clientType,
+                        clientSpecified,
+                        currentLine
+                    };
                 } else if (currentLine.trimEnd().startsWith("EXCLUDE ")) {
-                    excludeDictionary[optionsLineIndex] = [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine];
+                    excludeDictionary[optionsLineIndex] = {
+                        productName,
+                        licenseNumber,
+                        productKey,
+                        clientType,
+                        clientSpecified,
+                        currentLine
+                    };
                 } else if (currentLine.trimEnd().startsWith("EXCLUDE_BORROW ")) {
-                    excludeBorrowDictionary[optionsLineIndex] = [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine];
+                    excludeBorrowDictionary[optionsLineIndex] = {
+                        productName,
+                        licenseNumber,
+                        productKey,
+                        clientType,
+                        clientSpecified,
+                        currentLine
+                    };
                 }
 
             } else if (currentLine.trim().startsWith("INCLUDEALL ") || currentLine.trim().startsWith("EXCLUDEALL ")) {
@@ -778,11 +807,11 @@ function gatherData() {
 
                 // No checking for MATLAB Parallel Server since INCLUDEALL/EXCLUDEALL don't specify products; it's all of them!
 
-                // Ready for entry into the array.
+                // Ready for entry into the object.
                 if (currentLine.trimEnd().startsWith("INCLUDEALL ")) {
-                    includeAllDictionary[optionsLineIndex] = [clientType, clientSpecified, currentLine];
+                    includeAllDictionary[optionsLineIndex] = {clientType, clientSpecified, currentLine};
                 } else if (currentLine.trimEnd().startsWith("EXCLUDEALL ")) {
-                    excludeBorrowDictionary[optionsLineIndex] = [clientType, clientSpecified, currentLine];
+                    excludeBorrowDictionary[optionsLineIndex] = {clientType, clientSpecified, currentLine};
                 }
             } else if (currentLine.trim().startsWith("MAX ")) {
                 lastLineWasAGroupLine = false;
@@ -816,8 +845,8 @@ function gatherData() {
                     window.optionsFileUsesMatlabParallelServer = true;
                 }
 
-                // Ready for entry into the array.
-                maxDictionary[optionsLineIndex] = [maxSeats, maxProductName, maxClientType, maxClientSpecified, currentLine]
+                // Ready for entry into the object.
+                maxDictionary[optionsLineIndex] = {maxSeats, maxProductName, maxClientType, maxClientSpecified, currentLine};
             } else if (currentLine.trim().startsWith("RESERVE ")) {
                 lastLineWasAGroupLine = false;
                 lastLineWasAHostGroupLine = false;
@@ -967,8 +996,8 @@ function gatherData() {
                     reserveLicenseNumber = reserveLicenseNumber.replace('"', '');
                 }
 
-                // Ready for entry into the array.
-                reserveDictionary[optionsLineIndex] = [reserveSeatsNumber, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified, currentLine];
+                // Ready for entry into the object.
+                reserveDictionary[optionsLineIndex] = {reserveSeatsNumber, reserveProductName, reserveLicenseNumber, reserveProductKey, reserveClientType, reserveClientSpecified, currentLine};
             } else if (currentLine.trim().startsWith("GROUP ") || currentLine.trim().startsWith("GROUP\t")) {
                 lastLineWasAGroupLine = true;
                 lastLineWasAHostGroupLine = false;
@@ -996,11 +1025,11 @@ function gatherData() {
                     let combinedUsers = `${oldUsers} ${groupUsers}`;
                     let combinedCount = oldCount + groupUserCount;
 
-                    groupDictionary[optionsLineIndexToWriteTo] = [groupName, combinedUsers, combinedCount];
+                    groupDictionary[optionsLineIndexToWriteTo] = {groupName, combinedUsers, combinedCount};
 
                 } else { // If no existing entry can be found, create a new one.
-                    // Ready for entry into the array.
-                    groupDictionary[optionsLineIndex] = [groupName, groupUsers, groupUserCount];
+                    // Ready for entry into the object.
+                    groupDictionary[optionsLineIndex] = {groupName, groupUsers, groupUserCount};
                 }
 
                 // Check for wildcards and IP addresses.
@@ -1034,11 +1063,11 @@ function gatherData() {
                     let [, oldUsers] = hostGroupDictionary[optionsLineIndexToWriteTo];
                     let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
 
-                    hostGroupDictionary[optionsLineIndexToWriteTo] = [hostGroupName, combinedUsers];
+                    hostGroupDictionary[optionsLineIndexToWriteTo] = {hostGroupName, combinedUsers};
 
                 } else { // If no existing entry can be found, create a new one.
-                    // Ready for entry into the array.
-                    hostGroupDictionary[optionsLineIndex] = [hostGroupName, hostGroupClientSpecified];
+                    // Ready for entry into the object.
+                    hostGroupDictionary[optionsLineIndex] = {hostGroupName, hostGroupClientSpecified};
                 }
 
                 // Check for wildcards and IP addresses.
@@ -1083,7 +1112,7 @@ function gatherData() {
                     let [, oldUsers, oldCount] = groupDictionary[optionsLineIndexToWriteTo];
                     let combinedUsers = `${oldUsers} ${groupUsers}`;
                     let combinedCount = oldCount + groupUserCount;
-                    groupDictionary[optionsLineIndexToWriteTo] = [groupName, combinedUsers, combinedCount];
+                    groupDictionary[optionsLineIndexToWriteTo] = {groupName, combinedUsers, combinedCount};
                 }
 
                 // Check for wildcards and IP addresses.
@@ -1111,7 +1140,7 @@ function gatherData() {
                     let [, oldUsers] = hostGroupDictionary[optionsLineIndexToWriteTo];
                     let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
 
-                    hostGroupDictionary[optionsLineIndexToWriteTo] = [hostGroupName, combinedUsers];
+                    hostGroupDictionary[optionsLineIndexToWriteTo] = {hostGroupName, combinedUsers};
                 }
 
                 // Check for wildcards and IP addresses.

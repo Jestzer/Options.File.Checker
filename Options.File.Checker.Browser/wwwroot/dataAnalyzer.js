@@ -1,12 +1,11 @@
 function analyzeData() {
-    let line;
+    let dictionaryToUse;
     let unspecifiedLicenseOrProductKey = false;
     let optionSelected;
 
     try {
         // Let's start with ensuring that the arrays exist and that any groups you've specified exist.
         if (includeDictionary !== null && groupDictionary !== null && hostGroupDictionary !== null && excludeDictionary !== null && reserveDictionary !== null && includeAllDictionary !== null && excludeAllDictionary !== null) {
-            let dictionaryToUse;
             if (Object.keys(includeDictionary).length > 0) {
                 dictionaryToUse = includeDictionary;
                 let dictionaryToUseString = "INCLUDE";
@@ -55,11 +54,48 @@ function analyzeData() {
         }
 
         // Now we may subtract seats.
+        if (Object.keys(includeDictionary).length > 0) {
+            dictionaryToUse = includeDictionary;
+            let dictionaryTypeToUse = "INCLUDE";
+            seatSubtractor(dictionaryToUse, dictionaryTypeToUse)
+        }
 
+        if (Object.keys(includeAllDictionary).length > 0) {
+            dictionaryToUse = includeAllDictionary;
+            let dictionaryToUseString = "INCLUDEALL";
+            seatSubtractor(dictionaryToUse, dictionaryToUseString)
+        }
 
-        console.log("shut up, something happens, okay?")
+        if (Object.keys(reserveDictionary).length > 0) {
+            dictionaryToUse = reserveDictionary;
+            let dictionaryToUseString = "RESERVE";
+            seatSubtractor(dictionaryToUse, dictionaryToUseString)
+        }
+
+        // If you're only using NNU license(s), we need to make sure you've included at LEAST one INCLUDE line...
+        // ...We'll first check if you're using an NNU only license. If you are, then we'll see if you have any INCLUDE lines...
+        // ...If you do, then we'll make sure at least one of those INCLUDE lines uses a GROUP or USER.
+        let nnuExclusiveLicense = true;
+        let licenseFileDictionaryEntries = Object.entries(licenseFileDictionary);
+
+        for (let [licenseFileDictionaryKey, licenseFileDictionaryEntry] of licenseFileDictionaryEntries) {
+
+            let licenseFileProductName = licenseFileDictionaryEntry.productName;
+            let licenseFileSeatCount = licenseFileDictionaryEntry.seatCount;
+            let licenseFileProductKey = licenseFileDictionaryEntry.productKey;
+            let licenseFileLicenseOffering = licenseFileDictionaryEntry.licenseOffering;
+            let licenseFileLicenseNumber = licenseFileDictionaryEntry.licenseNumber;
+
+            //[licenseFileProductName, licenseFileSeatCount, licenseFileProductKey, licenseFileLicenseOffering, licenseFileLicenseNumber] = licenseFileDictionaryEntry;
+
+            if (licenseFileLicenseOffering !== "NNU") {
+                nnuExclusiveLicense = false;
+                break;
+            }
+        }
+
     } catch (rawErrorMessage) {
-        errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}`);
+        errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}.`);
     }
 }
 
@@ -68,47 +104,20 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
     let entries = Object.entries(dictionaryToUse);
     for (let [dictionaryKey, dictionaryEntry] of entries) {
 
-        let clientType;
-        let clientSpecified;
-
-        switch (dictionaryToUseString) {
-            case "INCLUDE":
-                [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "INCLUDE_BORROW":
-                [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "INCLUDEALL":
-                [clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "EXCLUDE":
-                [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "EXCLUDE_BORROW":
-                [clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "EXCLUDEALL":
-                [productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "RESERVE":
-                [reserveSeatsNumber, productName, licenseNumber, productKey, clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-            case "MAX":
-                [maxSeats, productName, clientType, clientSpecified, currentLine] = dictionaryEntry;
-                break;
-        }
+        let clientType = dictionaryEntry.clientType;
+        let clientSpecified = dictionaryEntry.clientSpecified;
 
         switch (clientType) {
             case "GROUP":
-                let groupName;
-                let groupUsers;
                 let matchingGroupFound = false;
                 let groupEntries = Object.entries(groupDictionary);
                 clientSpecified = clientSpecified.replace('"', '')
                 clientSpecified = clientSpecified.replace('\t', '')
 
                 for (let [groupDictionaryKey, groupEntry] of groupEntries) {
-                    [groupName, groupUsers, groupUserCount] = groupEntry
+
+                    let groupName = groupEntry.groupName;
+                    let groupUsers = groupEntry.combinedUsers ?? groupEntry.groupUsers;
 
                     if (!groupUsers || !groupUsers.trim()) {
                         errorMessageFunction(`There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is ${groupName}.`);
@@ -130,13 +139,13 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
                 break;
 
             case "HOST_GROUP":
-                let hostGroupName;
-                let hostGroupUsers;
                 let matchingHostGroupFound = false;
                 let hostGroupEntries = Object.entries(hostGroupDictionary);
 
                 for (let [hostGroupDictionaryKey, hostGroupEntry] of hostGroupEntries) {
-                    [hostGroupName, hostGroupUsers, hostGroupUserCount] = hostGroupEntry
+
+                    let hostGroupName = hostGroupEntry.hostGroupName;
+                    let hostGroupUsers = hostGroupEntry.combinedUsers ?? hostGroupEntry.hostGroupClientSpecified;
 
                     hostGroupName = hostGroupName.replace('"', '');
                     hostGroupName = hostGroupName.replace('\t', '');
@@ -163,4 +172,8 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
                 // continue;
         }
     }
+}
+
+function seatSubtractor(dictionaryToUse, dictionaryToUseString) {
+
 }
