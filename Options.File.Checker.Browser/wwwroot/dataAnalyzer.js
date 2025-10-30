@@ -257,7 +257,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                 if (licenseNumber === licenseFileLicenseNumber || productKey === licenseFileProductKey) {
                     usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                 } else {
-                    if (licenseNumber || licenseNumber.trim() || productKey || productKey.trim() || licenseNumber === "No licenseNumber found. :(" || productKey === "No productKey found. :(") {
+                    if (licenseNumber || licenseNumber.trim() || productKey || productKey.trim()) {
                         if (forceSeatSubtraction === true) { // Don't make sure search all day for something that doesn't exist, unless we must.
                             if (usableLicenseNumberOrProductKeyFoundInLicenseFile === false) {
                                 if (licenseNumber || licenseNumber.trim()) {
