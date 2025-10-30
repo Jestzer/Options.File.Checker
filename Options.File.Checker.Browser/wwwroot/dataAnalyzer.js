@@ -210,13 +210,67 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
     let rawOptionLine = dictionaryEntry?.savedLine ?? "No rawOptionLine found. :(";
 
     let forceSeatSubtraction = false;
-    let matchingProductFoundInLicenses = false;
+    let matchingProductFoundInLicenseFile = false;
+    let usableLicenseNumberOrProductKeyFoundInLicenseFile = false;
     let remainingSeatsToSubtract = 0;
     let doneSubtractingSeats = false;
     let firstAttemptToSubtractSeats = true;
-    let linesThatHaveBeenRecorded = [];
+    let allLinesThatHaveBeenRecorded = [];
 
     while (doneSubtractingSeats === false) {
+        // We have the information as to how many seats we need to subtract, so now we will start going through each line of the license file and subtract seats accordingly.
+        let licenseFileDictionaryEntries = Object.entries(licenseFileDictionary);
+        for (let [licenseFileDictionaryKey, licenseFileDictionaryEntry] of licenseFileDictionaryEntries) {
 
+            let needToGoToNextEntry = false;
+            let licenseFileLineIndex = licenseFileDictionaryKey;
+            let licenseFileProductName = licenseFileDictionaryEntry.productName;
+            let licenseFileSeatCount = licenseFileDictionaryEntry.seatCount;
+            let licenseFileProductKey = licenseFileDictionaryEntry.productKey;
+            let licenseFileLicenseOffering = licenseFileDictionaryEntry.licenseOffering;
+            let licenseFileLicenseNumber = licenseFileDictionaryEntry.licenseNumber;
+            let linesThatSubtractSeats = [];
+            let originalLicenseFileSeatCount = licenseFileDictionaryEntry.originalLicenseFileSeatCount;
+
+            // We use the license file's line index to detect if we've already tried subtracting seats. If we have, we should indicate so.
+            // Failing to do so will result in an NNU-only license file with an INCLUDEALL line being stuck here forever.
+            allLinesThatHaveBeenRecorded.push(licenseFileLineIndex);
+
+            if (allLinesThatHaveBeenRecorded.includes(licenseFileLineIndex) && dictionaryToUseString === "INCLUDEALL") {
+                firstAttemptToSubtractSeats = false;
+            }
+
+            // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
+            if (productName.toLowerCase() === licenseFileProductName.toLowerCase() || dictionaryToUseString === "INCLUDEALL") {
+                matchingProductFoundInLicenseFile = true;
+
+                if (licenseNumber === licenseFileLicenseNumber || productKey === licenseFileProductKey) {
+                    usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
+                } else {
+                    if (!licenseNumber || !licenseNumber.trim() || !productKey || !productKey.trim()) {
+                        if (forceSeatSubtraction === true) { // Don't make sure search all day for something that doesn't exist, unless we must.
+                            if (usableLicenseNumberOrProductKeyFoundInLicenseFile === false) {
+                                if (!licenseNumber || !licenseNumber.trim()) {
+                                    errorMessageFunction(`There is an issue with the options file: you have specified a license number, ${licenseNumber}, ` +
+                                        `which does not exist in the license file for the product ${productName}.`);
+                                    return;
+                                } else if (!productKey || !productKey.trim()) {
+                                    errorMessageFunction(`There is an issue with the options file: you have specified a product key, ${productKey}, ` +
+                                        "which does not exist in the license file.");
+                                    return;
+                                }
+                                errorMessageFunction("There is an issue with the options file: you have specified either a license number or product key, " +
+                                    `(${licenseNumber}, ${productKey}), which does not exist in the license file.`);
+                                return;
+                            }
+                        }
+                        continue;
+                        // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
+                    } else {
+                        // Left off on line 413.
+                    }
+                }
+            }
+        }
     }
 }
