@@ -53,23 +53,31 @@ function analyzeData() {
         }
 
         // Now we may subtract seats.
-        // #Add some code that goes through each entry in each of the objects below.
         if (Object.keys(includeDictionary).length > 0) {
             dictionaryToUse = includeDictionary;
             let dictionaryToUseString = "INCLUDE";
-            seatSubtractor(dictionaryToUse, dictionaryToUseString)
+            let dictionaryEntries = Object.entries(dictionaryToUse);
+            for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
+                seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries);
+            }
         }
 
         if (Object.keys(includeAllDictionary).length > 0) {
             dictionaryToUse = includeAllDictionary;
             let dictionaryToUseString = "INCLUDEALL";
-            seatSubtractor(dictionaryToUse, dictionaryToUseString)
+            let dictionaryEntries = Object.entries(dictionaryToUse);
+            for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
+                seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries);
+            }
         }
 
         if (Object.keys(reserveDictionary).length > 0) {
             dictionaryToUse = reserveDictionary;
             let dictionaryToUseString = "RESERVE";
-            seatSubtractor(dictionaryToUse, dictionaryToUseString)
+            let dictionaryEntries = Object.entries(dictionaryToUse);
+            for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
+                seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries);
+            }
         }
 
         // If you're only using NNU license(s), we need to make sure you've included at LEAST one INCLUDE line...
@@ -191,23 +199,24 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
     }
 }
 
-function seatSubtractor(dictionaryToUse, dictionaryToUseString) {
+function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries) {
 
-    let dictionaryEntries = Object.entries(dictionaryToUse);
-    let [dictionaryKey, dictionaryEntry] = dictionaryEntries;
-
-    let forceSeatSubtraction = false;
     let reserveSeatCount = dictionaryEntry?.reserveSeatsNumber ?? 0;
-    let productName = dictionaryEntry?.productName ?? "No productName found. :(";
-    let licenseNumber = dictionaryEntry?.licenseNumber ?? "No licenseNumber found. :(";
-    let productKey = dictionaryEntry?.productKey ?? "No productKey found. :(";
-    let clientType = dictionaryEntry?.clientType ?? "No clientType found. :(";
-    let clientSpecified = dictionaryEntry?.clientSpecified ?? "No clientSpecified found. :(";
+    let productName = dictionaryEntry?.productName ?? dictionaryEntry?.reserveProductName ?? "No productName found. :(";
+    let licenseNumber = dictionaryEntry?.licenseNumber ?? dictionaryEntry?.reserveLicenseNumber ?? "No licenseNumber found. :(";
+    let productKey = dictionaryEntry?.productKey ?? dictionaryEntry?.reserveProductKey ?? "No productKey found. :(";
+    let clientType = dictionaryEntry?.clientType ?? dictionaryEntry?.reserveClientType ?? "No clientType found. :(";
+    let clientSpecified = dictionaryEntry?.clientSpecified ?? dictionaryEntry?.reserveClientSpecified ?? "No clientSpecified found. :(";
     let rawOptionLine = dictionaryEntry?.savedLine ?? "No rawOptionLine found. :(";
 
-    // switch (dictionaryToUseString) {
-    //     case "INCLUDE":
-    //     case "INCLUDEALL":
-    //     case "RESERVE":
-    // }
+    let forceSeatSubtraction = false;
+    let matchingProductFoundInLicenses = false;
+    let remainingSeatsToSubtract = 0;
+    let doneSubtractingSeats = false;
+    let firstAttemptToSubtractSeats = true;
+    let linesThatHaveBeenRecorded = [];
+
+    while (doneSubtractingSeats === false) {
+
+    }
 }
