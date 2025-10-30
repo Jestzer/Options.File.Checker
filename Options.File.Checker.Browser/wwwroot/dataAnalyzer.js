@@ -251,7 +251,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                 licenseFileProductName = "";
             }
 
-            if ((productName.toLowerCase() ===  licenseFileProductName.toLowerCase()) || dictionaryToUseString === "INCLUDEALL") {
+            if ((productName.toLowerCase() === licenseFileProductName.toLowerCase()) || dictionaryToUseString === "INCLUDEALL") {
                 matchingProductFoundInLicenseFile = true;
 
                 if (licenseNumber === licenseFileLicenseNumber || productKey === licenseFileProductKey) {
@@ -289,6 +289,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                 }
 
                 switch (dictionaryToUseString) {
+                    // RESERVE lines don't care about your clientType. You explicitly selected a number of seats to reserve, so that's all we'll be using for subtraction.
                     case "RESERVE":
                         if (firstAttemptToSubtractSeats) {
                             if (reserveSeatCount > licenseFileLicenseNumber && forceSeatSubtraction === false) {
@@ -336,10 +337,44 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                         linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
                                     }
                                 }
+                            } else {
+                                licenseFileSeatCount -= remainingSeatsToSubtract;
+
+                                let needToSkipRawOptionLineRecording = false;
+
+                                for (let recordedLine of linesThatHaveBeenRecorded) {
+                                    if (recordedLine[0] === rawOptionLine && recordedLine[1] === licenseFileProductKey) {
+                                        needToSkipRawOptionLineRecording = true;
+                                        break;
+                                    }
+                                }
+
+                                if (needToSkipRawOptionLineRecording === false) {
+                                    linesThatSubtractSeats.push(rawOptionLine);
+                                    linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+                                }
+
+                                doneSubtractingSeats = true;
+                                forceSeatSubtraction = false;
                             }
                         }
                         break;
+                    // INCLUDEALL should be simpler because we are subtracting a set seat count from every product listed, no matter what.
+                    // Spreading out seats between multiple instances of the same product will not be done because of this.
                     case "INCLUDEALL":
+                        // Without this, the recorded product name will be blank.
+                        productName = licenseFileProductKey;
+
+                        if (licenseFileLicenseOffering !== "NNU") {
+                            if (clientType === "USER") {
+                                // Subtract 1 from seatCount, since you only specified a single user.
+                                licenseFileSeatCount--;
+
+                                // Record the line used to subtract this seat.
+
+                            }
+                        }
+
                         break;
                     case "INCLUDE":
                         break;
