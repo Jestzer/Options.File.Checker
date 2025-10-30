@@ -202,12 +202,12 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
 function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries) {
 
     let reserveSeatCount = dictionaryEntry?.reserveSeatsNumber ?? 0;
-    let productName = dictionaryEntry?.productName ?? dictionaryEntry?.reserveProductName ?? "No productName found. :(";
-    let licenseNumber = dictionaryEntry?.licenseNumber ?? dictionaryEntry?.reserveLicenseNumber ?? "No licenseNumber found. :(";
-    let productKey = dictionaryEntry?.productKey ?? dictionaryEntry?.reserveProductKey ?? "No productKey found. :(";
-    let clientType = dictionaryEntry?.clientType ?? dictionaryEntry?.reserveClientType ?? "No clientType found. :(";
-    let clientSpecified = dictionaryEntry?.clientSpecified ?? dictionaryEntry?.reserveClientSpecified ?? "No clientSpecified found. :(";
-    let rawOptionLine = dictionaryEntry?.savedLine ?? "No rawOptionLine found. :(";
+    let productName = dictionaryEntry?.productName ?? dictionaryEntry?.reserveProductName;
+    let licenseNumber = dictionaryEntry?.licenseNumber ?? dictionaryEntry?.reserveLicenseNumber;
+    let productKey = dictionaryEntry?.productKey ?? dictionaryEntry?.reserveProductKey;
+    let clientType = dictionaryEntry?.clientType ?? dictionaryEntry?.reserveClientType;
+    let clientSpecified = dictionaryEntry?.clientSpecified ?? dictionaryEntry?.reserveClientSpecified;
+    let rawOptionLine = dictionaryEntry?.savedLine;
 
     let forceSeatSubtraction = false;
     let matchingProductFoundInLicenseFile = false;
@@ -215,7 +215,8 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
     let remainingSeatsToSubtract = 0;
     let doneSubtractingSeats = false;
     let firstAttemptToSubtractSeats = true;
-    let allLinesThatHaveBeenRecorded = [];
+    let linesThatHaveBeenRecorded = [];
+    let licenseLinesReached = [];
 
     while (doneSubtractingSeats === false) {
         // We have the information as to how many seats we need to subtract, so now we will start going through each line of the license file and subtract seats accordingly.
@@ -223,7 +224,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
         for (let [licenseFileDictionaryKey, licenseFileDictionaryEntry] of licenseFileDictionaryEntries) {
 
             let needToGoToNextEntry = false;
-            let licenseFileLineIndex = licenseFileDictionaryKey;
+            let licenseLineIndex = licenseFileDictionaryKey;
             let licenseFileProductName = licenseFileDictionaryEntry.productName;
             let licenseFileSeatCount = licenseFileDictionaryEntry.seatCount;
             let licenseFileProductKey = licenseFileDictionaryEntry.productKey;
@@ -234,27 +235,36 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
 
             // We use the license file's line index to detect if we've already tried subtracting seats. If we have, we should indicate so.
             // Failing to do so will result in an NNU-only license file with an INCLUDEALL line being stuck here forever.
-            allLinesThatHaveBeenRecorded.push(licenseFileLineIndex);
+            licenseLinesReached.push(licenseLineIndex);
 
-            if (allLinesThatHaveBeenRecorded.includes(licenseFileLineIndex) && dictionaryToUseString === "INCLUDEALL") {
+            if (licenseLinesReached.includes(licenseLineIndex) && dictionaryToUseString === "INCLUDEALL") {
                 firstAttemptToSubtractSeats = false;
             }
 
             // We start seat subtraction by checking to see if the product you're specifying exists in the license file.
-            if (productName.toLowerCase() === licenseFileProductName.toLowerCase() || dictionaryToUseString === "INCLUDEALL") {
+            // Stupid JS being stupid.
+            if (productName === undefined) {
+                productName = "";
+            }
+
+            if (licenseFileProductName === undefined) {
+                licenseFileProductName = "";
+            }
+
+            if ((productName.toLowerCase() ===  licenseFileProductName.toLowerCase()) || dictionaryToUseString === "INCLUDEALL") {
                 matchingProductFoundInLicenseFile = true;
 
                 if (licenseNumber === licenseFileLicenseNumber || productKey === licenseFileProductKey) {
                     usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
                 } else {
-                    if (!licenseNumber || !licenseNumber.trim() || !productKey || !productKey.trim()) {
+                    if (licenseNumber || licenseNumber.trim() || productKey || productKey.trim() || licenseNumber === "No licenseNumber found. :(" || productKey === "No productKey found. :(") {
                         if (forceSeatSubtraction === true) { // Don't make sure search all day for something that doesn't exist, unless we must.
                             if (usableLicenseNumberOrProductKeyFoundInLicenseFile === false) {
-                                if (!licenseNumber || !licenseNumber.trim()) {
+                                if (licenseNumber || licenseNumber.trim()) {
                                     errorMessageFunction(`There is an issue with the options file: you have specified a license number, ${licenseNumber}, ` +
                                         `which does not exist in the license file for the product ${productName}.`);
                                     return;
-                                } else if (!productKey || !productKey.trim()) {
+                                } else if (productKey || productKey.trim()) {
                                     errorMessageFunction(`There is an issue with the options file: you have specified a product key, ${productKey}, ` +
                                         "which does not exist in the license file.");
                                     return;
@@ -264,13 +274,112 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                 return;
                             }
                         }
-                        continue;
-                        // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
-                    } else {
-                        // Left off on line 413.
+                        continue; // If the option entry in question has specified a license number or product key (ew), then we actually need to find a matching license number/product key.
+                    } else { // If you're here, your option entry does not use a license number/product key...
+                        // ...so we'll check if the current license file license number/product key has any remaining seats we can use/subtract from.
+                        if (licenseFileSeatCount === 0 && forceSeatSubtraction === false) {
+                            continue; // See if we can find another entry with the same product that does not have a seat count of 0.
+                        } else {
+                            if (dictionaryToUseString === "INCLUDEALL") {
+                                window.unspecifiedLicenseOrProductKey = true;
+                                usableLicenseNumberOrProductKeyFoundInLicenseFile = true;
+                            }
+                        }
+                    }
+                }
+
+                switch (dictionaryToUseString) {
+                    case "RESERVE":
+                        if (firstAttemptToSubtractSeats) {
+                            if (reserveSeatCount > licenseFileLicenseNumber && forceSeatSubtraction === false) {
+                                // Subtract as much as possible from licenseFileSeatCount.
+                                let seatsToSubtract = (reserveSeatCount - licenseFileSeatCount);
+                                licenseFileSeatCount -= seatsToSubtract;
+
+                                // Calculate the remaining seats that couldn't be subtracted, if any.
+                                remainingSeatsToSubtract = (reserveSeatCount - seatsToSubtract);
+                                firstAttemptToSubtractSeats = false;
+
+                                // Record the line used to subtract this seat.
+                                linesThatSubtractSeats.push(rawOptionLine);
+                                linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+
+                                needToGoToNextEntry = true;
+                            } else {
+                                licenseFileSeatCount -= reserveSeatCount;
+
+                                linesThatSubtractSeats.push(rawOptionLine);
+                                linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+
+                                doneSubtractingSeats = true;
+                                forceSeatSubtraction = false;
+                            }
+                        } else {
+                            if (remainingSeatsToSubtract > licenseFileSeatCount) {
+                                if (licenseFileSeatCount !== 0 || forceSeatSubtraction === true) {
+                                    let seatsToSubtract = (remainingSeatsToSubtract - licenseFileSeatCount);
+                                    licenseFileSeatCount -= remainingSeatsToSubtract;
+
+                                    // Calculate the remaining seats that couldn't be subtracted.
+                                    remainingSeatsToSubtract = (reserveSeatCount - seatsToSubtract);
+                                    let needToSkipRawOptionLineRecording = false;
+
+                                    for (let recordedLine of linesThatHaveBeenRecorded) {
+                                        if (recordedLine[0] === rawOptionLine && recordedLine[1] === licenseFileProductKey) {
+                                            needToSkipRawOptionLineRecording = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (needToSkipRawOptionLineRecording === false) {
+                                        linesThatSubtractSeats.push(rawOptionLine);
+                                        linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+                                    }
+                                }
+                            }
+                        }
+                        break;
+                    case "INCLUDEALL":
+                        break;
+                    case "INCLUDE":
+                        break;
+                    default:
+                        // What's the meaning of this? Who are you and how did you get in here?
+                        return;
+
+                }
+
+                // Ready for entry into the object.
+                licenseFileDictionary[licenseLineIndex] = {
+                    productName: licenseFileProductName,
+                    seatCount: licenseFileSeatCount,
+                    productKey: licenseFileProductKey,
+                    licenseOffering: licenseFileLicenseOffering,
+                    licenseNumber: licenseFileLicenseNumber,
+                    linesThatSubtractSeats,
+                    originalLicenseFileSeatCount
+                };
+
+                if (needToGoToNextEntry === true) {
+                    continue;
+                }
+
+                if (dictionaryToUseString !== "INCLUDEALL") {
+                    break;
+                }
+            } else {
+                if (forceSeatSubtraction === true) {
+                    // You can't give away what you don't have.
+                    if (matchingProductFoundInLicenseFile === false && dictionaryToUseString !== "INCLUDEALL") {
+                        errorMessageFunction(`There is an issue with the options file: you specified a product, ${productName}, but this product is not in your license file. ` +
+                            "Product names must match the ones found in the license file after the word INCREMENT. Any typos will result in this error being shown.");
+                        return;
                     }
                 }
             }
+        }
+        if (doneSubtractingSeats === false) {
+            forceSeatSubtraction = true;
         }
     }
 }
