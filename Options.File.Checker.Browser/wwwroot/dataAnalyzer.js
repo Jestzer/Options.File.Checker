@@ -366,20 +366,89 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                         productName = licenseFileProductKey;
 
                         if (licenseFileLicenseOffering !== "NNU") {
-                            if (clientType === "USER") {
-                                // Subtract 1 from seatCount, since you only specified a single user.
-                                licenseFileSeatCount--;
+                            switch (clientType) {
+                                case "USER":
+                                    // Subtract 1 from seatCount, since you only specified a single user.
+                                    licenseFileSeatCount--;
 
-                                // Record the line used to subtract this seat.
+                                    // Record the line used to subtract this seat.
+                                    linesThatHaveBeenRecorded.push([rawOptionLine]);
 
+                                    doneSubtractingSeats = true;
+                                    forceSeatSubtraction = false;
+                                    break;
+                                case "GROUP":
+                                    if (!clientSpecified || clientSpecified.trim()) {
+                                        errorMessageFunction("There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP. " +
+                                            `The line in question reads as this: ${rawOptionLine}`);
+                                        return;
+                                    }
+
+                                    // Subtract from seat count based on the number of users in the GROUP.
+                                    let groupDictionaryEntries = Object.entries(groupDictionary);
+                                    for (let [groupDictionaryKey, groupDictionaryEntry] of groupDictionaryEntries) {
+                                        let groupName = groupDictionaryEntry.groupName;
+                                        let groupUsers = groupDictionaryEntry.groupUsers;
+                                        let groupUserCount = groupDictionaryEntry.groupUserCount;
+
+                                        // Juuuuuust in case...
+                                        groupName = groupName.replace('"', '');
+                                        groupName = groupName.replace('\t', '');
+                                        clientSpecified = clientSpecified.replace('\t', '')
+
+                                        if (groupName === clientSpecified) {
+                                            // Subtract the appropriate number of seats.
+                                            licenseFileSeatCount -= groupUserCount;
+
+                                            linesThatSubtractSeats.push(rawOptionLine);
+
+                                            doneSubtractingSeats = true;
+                                            forceSeatSubtraction = false;
+                                            break;
+                                        }
+                                    }
+                                    break; // This is for case "GROUP".
+                                case "HOST_GROUP":
+                                case "HOST":
+                                case "DISPLAY":
+                                case "PROJECT":
+                                case "INTERNET":
+                                    break;
+                                default:
+                                    errorMessageFunction("There is an issue with the options file: you specified an invalid client type for an INCLUDEALL line. " +
+                                        `It is being recognized as this: \"${clientType}\".`);
+                                    return;
+                            }
+                        } else { // For NNU cases.
+                            // If we've already attempted to subtract seats and there are only NNU licenses remaining, then we have nothing left we can subtract from.
+                            if (firstAttemptToSubtractSeats === false) {
+                                doneSubtractingSeats = true;
                             }
                         }
-
                         break;
                     case "INCLUDE":
+                        switch (clientType) {
+                            case "USER":
+                                // Check that a user has actually been specified.
+                                if (!clientSpecified || !clientSpecified.trim()) {
+                                    errorMessageFunction(`There is an issue with the options file: you have specified a USER to be able to use ${licenseFileProductName}, ` +
+                                        `but you did not define the USER. The line in question is this: ${rawOptionLine}`);
+                                    return;
+                                }
+
+                                if (licenseFileSeatCount <= 0){
+                                    if (forceSeatSubtraction === true) {
+                                        licenseFileSeatCount --;
+
+                                        let needToSkipRawOptionLineRecording = false;
+                                        
+                                    }
+                                }
+
+                        }
                         break;
                     default:
-                        // What's the meaning of this? Who are you and how did you get in here?
+                        // What's the meaning of this?! Who are you? How did you get in here?
                         return;
 
                 }
