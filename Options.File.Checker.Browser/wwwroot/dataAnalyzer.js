@@ -490,11 +490,12 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                     let optionsGroupLineIndex = groupDictionaryKey;
                                     let groupName = groupEntry.groupName;
                                     //let groupUsers = groupEntry.combinedUsers ?? groupEntry.groupUsers;
+                                    let groupUserCount = groupEntry.groupUserCount;
 
-                                    groupName = groupName.replace('"', '')
-                                    groupName = groupName.replace('\t', '')
-                                    clientSpecified = clientSpecified.replace('"', '')
-                                    clientSpecified = clientSpecified.replace('\t', '')
+                                    groupName = groupName.replace('"', '');
+                                    groupName = groupName.replace('\t', '');
+                                    clientSpecified = clientSpecified.replace('"', '');
+                                    clientSpecified = clientSpecified.replace('\t', '');
 
 
                                     if (groupName === clientSpecified) {
@@ -503,12 +504,89 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                         // ... is always unique and therefore, we won't bother looking for another license file entry.
                                         // If we've hit forceSubtraction, that means we've already gone through every license file entry and didn't find any other candidates...
                                         // ... with a positive seat count (1 or greater), so we're just going to subtract it from whatever (likely the first instance of the product.)
+                                        if (firstAttemptToSubtractSeats === true) {
+                                            if (groupUserCount > licenseFileSeatCount && forceSeatSubtraction === false) {
+
+                                                // Subtract as much as possible from licenseFileSeatCount.
+                                                let seatsToSubtract = (groupUserCount - licenseFileSeatCount);
+                                                licenseFileSeatCount -= seatsToSubtract;
+
+                                                // Calculate the remaining seats that couldn't be subtracted.
+                                                remainingSeatsToSubtract = groupUserCount - seatsToSubtract;
+                                                firstAttemptToSubtractSeats = false;
+
+                                                // Record the line used to subtract this seat.
+                                                linesThatSubtractSeats.push(rawOptionLine);
+                                                linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+
+                                                needToGoToNextEntry = true;
+                                            } else {
+                                                // Subtract the appropriate number of seats.
+                                                licenseFileSeatCount -= groupUserCount;
+
+                                                // Record the line used to subtract this seat.
+                                                linesThatSubtractSeats.push(rawOptionLine);
+                                                linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+
+                                                doneSubtractingSeats = true;
+                                                forceSeatSubtraction = false;
+                                            }
+                                        } else {
+                                            if (remainingSeatsToSubtract > licenseFileSeatCount) {
+                                                if (licenseFileSeatCount !== 0 || forceSeatSubtraction === true) {
+                                                    let seatsToSubtract = (remainingSeatsToSubtract - licenseFileSeatCount);
+                                                    licenseFileSeatCount -= remainingSeatsToSubtract;
+
+                                                    remainingSeatsToSubtract = (groupUserCount - seatsToSubtract);
+
+                                                    let needToSkipRawOptionLineRecording = false;
+
+                                                    for (let recordedLine of linesThatHaveBeenRecorded) {
+                                                        if (recordedLine[0] === rawOptionLine && recordedLine[1] === licenseFileProductKey) {
+                                                            needToSkipRawOptionLineRecording = true;
+                                                            break;
+                                                        }
+                                                    }
+                                                    if (needToSkipRawOptionLineRecording === false) {
+                                                        linesThatSubtractSeats.push(rawOptionLine);
+                                                        linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+                                                    }
+
+                                                    doneSubtractingSeats = true;
+                                                    forceSeatSubtraction = false;
+                                                }
+                                            } else {
+                                                licenseFileSeatCount -= remainingSeatsToSubtract;
+
+                                                let needToSkipRawOptionLineRecording = false;
+
+                                                for (let recordedLine of linesThatHaveBeenRecorded) {
+                                                    if (recordedLine[0] === rawOptionLine && recordedLine[1] === licenseFileProductKey) {
+                                                        needToSkipRawOptionLineRecording = true;
+                                                        break;
+                                                    }
+                                                }
+                                                if (needToSkipRawOptionLineRecording === false) {
+                                                    linesThatSubtractSeats.push(rawOptionLine);
+                                                    linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+                                                }
+
+                                                doneSubtractingSeats = true;
+                                                forceSeatSubtraction = false;
+                                            }
+                                        }
+                                        break;
                                     }
                                 }
+                                break;
+                            // You have a clientType that does not require subtraction because we cannot subtract a definitive number of seats from it.
+                            default: doneSubtractingSeats = true;
+                            break;
                         }
                         break;
                     default:
                         // What's the meaning of this?! Who are you? How did you get in here?
+                        errorMessageFunction(`What's the meaning of this?! Who are you? How did you get in here?`);
                         return;
 
                 }
