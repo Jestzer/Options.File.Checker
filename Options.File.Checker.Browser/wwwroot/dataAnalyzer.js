@@ -436,15 +436,75 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                     return;
                                 }
 
-                                if (licenseFileSeatCount <= 0){
+                                if (licenseFileSeatCount <= 0) {
                                     if (forceSeatSubtraction === true) {
-                                        licenseFileSeatCount --;
+                                        licenseFileSeatCount--;
 
                                         let needToSkipRawOptionLineRecording = false;
-                                        
+                                        for (let recordedLine of linesThatHaveBeenRecorded) {
+                                            if (recordedLine[0] === rawOptionLine && recordedLine[1] === licenseFileProductKey) {
+                                                needToSkipRawOptionLineRecording = true;
+                                                break;
+                                            }
+                                        }
+                                        if (needToSkipRawOptionLineRecording === false) {
+                                            linesThatSubtractSeats.push(rawOptionLine);
+                                            linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+                                        }
+
+                                        doneSubtractingSeats = true;
+                                        forceSeatSubtraction = false;
+                                    } else {
+                                        continue;
+                                    }
+                                } else {
+                                    licenseFileSeatCount--;
+
+                                    let needToSkipRawOptionLineRecording = false;
+                                    for (let recordedLine of linesThatHaveBeenRecorded) {
+                                        if (recordedLine[0] === rawOptionLine && recordedLine[1] === licenseFileProductKey) {
+                                            needToSkipRawOptionLineRecording = true;
+                                            break;
+                                        }
+                                    }
+                                    if (needToSkipRawOptionLineRecording === false) {
+                                        linesThatSubtractSeats.push(rawOptionLine);
+                                        linesThatHaveBeenRecorded.push([rawOptionLine, licenseFileProductKey]);
+                                    }
+
+                                    doneSubtractingSeats = true;
+                                    forceSeatSubtraction = false;
+                                }
+                                break;
+                            case "GROUP":
+                                // Check that the GROUP has actually been specified.
+                                if (!clientSpecified || !clientSpecified.trim()) {
+                                    errorMessageFunction(`There is an issue with the options file: you have specified a GROUP to be able to use ${licenseFileProductName}, ` +
+                                        `but you did not define the GROUP. The line in question is this: ${rawOptionLine}`);
+                                    return;
+                                }
+                                let groupEntries = Object.entries(groupDictionary);
+
+                                for (let [groupDictionaryKey, groupEntry] of groupEntries) {
+
+                                    let optionsGroupLineIndex = groupDictionaryKey;
+                                    let groupName = groupEntry.groupName;
+                                    //let groupUsers = groupEntry.combinedUsers ?? groupEntry.groupUsers;
+
+                                    groupName = groupName.replace('"', '')
+                                    groupName = groupName.replace('\t', '')
+                                    clientSpecified = clientSpecified.replace('"', '')
+                                    clientSpecified = clientSpecified.replace('\t', '')
+
+
+                                    if (groupName === clientSpecified) {
+                                        // If we're going to get a negative seat count, we need to subtract as many seats as we can from as many matching products as we can...
+                                        // ... If you specified a license number, then it needs to match (we already checked for this earlier.) However, a product key...
+                                        // ... is always unique and therefore, we won't bother looking for another license file entry.
+                                        // If we've hit forceSubtraction, that means we've already gone through every license file entry and didn't find any other candidates...
+                                        // ... with a positive seat count (1 or greater), so we're just going to subtract it from whatever (likely the first instance of the product.)
                                     }
                                 }
-
                         }
                         break;
                     default:
