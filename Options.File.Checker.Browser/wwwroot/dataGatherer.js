@@ -586,7 +586,7 @@ function gatherData() {
                         }
                     } else { // If the productName has " and :
                         let colonParts = productName.split(":");
-                        if (colonParts.length !== 2 && colonParts.length !== 3) {
+                        if (colonParts.length !== 2) {
                             errorMessageFunction(`There is an issue with the options file: one of your ${optionType} lines has a stray colon. ` +
                                 `The line in question reads as this: \"${currentLine}\".`);
                             return;
@@ -625,7 +625,7 @@ function gatherData() {
                     // Also, people who aren't developers will say something stupid, such as, "Well, how many lines is your code???" to judge how complex it is. Well, here's some...
                     // ... "added complexity" AKA being lazy. Who knew not using things such as for loops made for such impressive programmers???
                     let colonParts = productName.split(":");
-                    if (colonParts.length !== 2 && colonParts.length !== 3) {
+                    if (colonParts.length !== 2) {
                         errorMessageFunction(`There is an issue with the options file: one of your ${optionType} lines has a stray colon. ` +
                             `The line in question reads as this: \"${currentLine}\".`);
                         return;
@@ -935,7 +935,7 @@ function gatherData() {
                         reserveClientSpecified = reserveClientSpecified.replace('"', "");
                     } else { // If you have " and :
                         let colonParts = reserveProductName.split(":");
-                        if (colonParts.length !== 2 && colonParts.length !== 3) {
+                        if (colonParts.length !== 2) {
                             errorMessageFunction(`There is an issue with the options file: one of your RESERVE lines has a stray colon. ` +
                                 `The line in question reads as this: \"${currentLine}\".`);
                             return;
@@ -965,7 +965,7 @@ function gatherData() {
                     }
                 } else if (reserveProductName.includes(':')) { // If the user used a : instead of a "
                     let colonParts = reserveProductName.split(":");
-                    if (colonParts.length !== 2 && colonParts.length !== 3) {
+                    if (colonParts.length !== 2) {
                         errorMessageFunction(`There is an issue with the options file: one of your RESERVE lines has a stray colon. ` +
                             `The line in question reads as this: \"${currentLine}\".`);
                         return;
