@@ -29,8 +29,8 @@ function gatherData() {
     const optionsEqualsRegex = /options=/gi;
     const commentedBeginLineRegex = /# BEGIN--------------/gi;
     const keyEqualsRegex = /key=/gi;
-    const assetInfoRegex = /asset_info=/gi;
-    const assetInfoWithNumberRegex = /asset_info=(\S+)/i;
+    const assetInfoRegex = /asset_info[=:]/gi;
+    const assetInfoWithNumberRegex = /asset_info[=:](\S+)/i;
     const licenseNumberRegex = /^[^Rab_\d]+$/g;
     const licenseNumberSnRegex = /SN=(\S+)/i;
     const ipAddressRegex = /\d{2,3}\./g;
@@ -551,7 +551,7 @@ function gatherData() {
                             let quotedProductKey = productKey.replace(keyEqualsRegex, "");
                             productKey = quotedProductKey.replace('"', "");
                             licenseNumber = ""; // Unspecified by the user.
-                        } else { // asset_info=
+                        } else { // asset_info= or asset_info:. The latter is acceptable for options files. I have tested it.
                             let quotedLicenseNumber = licenseNumber.replace(assetInfoRegex, "");
                             licenseNumber = quotedLicenseNumber.replace('"', "");
                             productKey = "";
@@ -586,7 +586,7 @@ function gatherData() {
                         }
                     } else { // If the productName has " and :
                         let colonParts = productName.split(":");
-                        if (colonParts.length !== 2) {
+                        if (colonParts.length !== 2 && colonParts.length !== 3) {
                             errorMessageFunction(`There is an issue with the options file: one of your ${optionType} lines has a stray colon. ` +
                                 `The line in question reads as this: \"${currentLine}\".`);
                             return;
@@ -625,7 +625,7 @@ function gatherData() {
                     // Also, people who aren't developers will say something stupid, such as, "Well, how many lines is your code???" to judge how complex it is. Well, here's some...
                     // ... "added complexity" AKA being lazy. Who knew not using things such as for loops made for such impressive programmers???
                     let colonParts = productName.split(":");
-                    if (colonParts.length !== 2) {
+                    if (colonParts.length !== 2 && colonParts.length !== 3) {
                         errorMessageFunction(`There is an issue with the options file: one of your ${optionType} lines has a stray colon. ` +
                             `The line in question reads as this: \"${currentLine}\".`);
                         return;
@@ -639,6 +639,9 @@ function gatherData() {
                         licenseNumber = "";
                     } else {
                         let unfixedLicenseNumber = colonParts[1];
+                        if (unfixedLicenseNumber === "asset_info") {
+                            unfixedLicenseNumber = colonParts[2];
+                        }
                         licenseNumber = unfixedLicenseNumber.replace(assetInfoRegex, "");
                         productKey = "";
                     }
@@ -917,7 +920,7 @@ function gatherData() {
                             let quotedReserveProductKey = reserveProductKey.replace(keyEqualsRegex, "");
                             reserveProductKey = quotedReserveProductKey.replace('"', "");
                             reserveLicenseNumber = ""; // Unspecified by the user.
-                        } else { // asset_info=
+                        } else { // asset_info= or asset_info:. The latter is acceptable for options files. I have tested it.
                             let quotedReserveLicenseNumber = reserveLicenseNumber.replace(assetInfoRegex, "");
                             reserveLicenseNumber = quotedReserveLicenseNumber.replace('"', "");
                             reserveProductKey = "";
@@ -934,7 +937,7 @@ function gatherData() {
                         reserveClientSpecified = reserveClientSpecified.replace('"', "");
                     } else { // If you have " and :
                         let colonParts = reserveProductName.split(":");
-                        if (colonParts.length !== 2) {
+                        if (colonParts.length !== 2 && colonParts.length !== 3) {
                             errorMessageFunction(`There is an issue with the options file: one of your RESERVE lines has a stray colon. ` +
                                 `The line in question reads as this: \"${currentLine}\".`);
                             return;
@@ -964,7 +967,7 @@ function gatherData() {
                     }
                 } else if (reserveProductName.includes(':')) { // If the user used a : instead of a "
                     let colonParts = reserveProductName.split(":");
-                    if (colonParts.length !== 2) {
+                    if (colonParts.length !== 2 && colonParts.length !== 3) {
                         errorMessageFunction(`There is an issue with the options file: one of your RESERVE lines has a stray colon. ` +
                             `The line in question reads as this: \"${currentLine}\".`);
                         return;
@@ -978,6 +981,10 @@ function gatherData() {
                         reserveLicenseNumber = ""; // This was never specified by the user in the options file, so we leave it blank.
                     } else {
                         let unfixedLicenseNumber = colonParts[1];
+
+                        if (unfixedLicenseNumber === "asset_info") {
+                            unfixedLicenseNumber = colonParts[2];
+                        }
                         reserveLicenseNumber = unfixedLicenseNumber.replace(assetInfoRegex, "");
                         reserveProductKey = ""; // Same as above.
                     }

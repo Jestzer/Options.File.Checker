@@ -18,10 +18,13 @@ if (analyzerBtn) {
             if (!window.errorOccurred) {
                 //console.log(licenseFileText)
                 //console.log(optionsFileText)
-                //console.log(licenseFileDictionary);
-                //console.log(includeDictionary);
+                console.log("licenseFileDicitionary:")
+                console.log(licenseFileDictionary);
+                console.log("includeDicitionary:")
+                console.log(includeDictionary);
                 // console.log(groupDictionary);
                 // console.log(hostGroupDictionary);
+                console.log("reserveDicitionary:")
                 console.log(reserveDictionary);
             }
         }
