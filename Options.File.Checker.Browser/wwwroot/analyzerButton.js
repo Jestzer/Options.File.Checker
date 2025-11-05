@@ -12,18 +12,18 @@ if (analyzerBtn) {
 
         window.errorOccurred = false;
         gatherData()
-        analyzeData()
 
         if (!window.errorOccurred) {
-            // console.log(licenseFileText)
-            // console.log(optionsFileText)
-            console.log("licenseFileDictionary:");
-            console.log(licenseFileDictionary);
-            console.log("includeDictionary:");
-            console.log(includeDictionary);
-            // console.log(groupDictionary);
-            // console.log(hostGroupDictionary);
-            // console.log(reserveDictionary);
+            analyzeData()
+            if (!window.errorOccurred) {
+                //console.log(licenseFileText)
+                //console.log(optionsFileText)
+                //console.log(licenseFileDictionary);
+                //console.log(includeDictionary);
+                // console.log(groupDictionary);
+                // console.log(hostGroupDictionary);
+                console.log(reserveDictionary);
+            }
         }
     });
 }
