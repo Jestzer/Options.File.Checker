@@ -131,7 +131,7 @@ function analyzeData() {
 
         if (nnuExclusiveLicense === true) {
 
-            if (Object.keys(includeDictionary).length > 0) {
+            if (Object.keys(includeDictionary).length <= 0) {
                 errorMessageFunction("There is an issue with the options file: you have no INCLUDE lines with an all-NNU license. You need these to use an NNU license.");
                 return;
             }
@@ -141,9 +141,9 @@ function analyzeData() {
 
             for (let [includeDictionaryKey, includeDictionaryEntry] of includeDictionaryEntries) {
 
-                let includeClientSpecified = includeDictionaryEntry.clientSpecified;
+                let includeClientType = includeDictionaryEntry.clientType;
 
-                if (includeClientSpecified === "USER" || includeClientSpecified === "GROUP") {
+                if (includeClientType === "USER" || includeClientType === "GROUP") {
                     foundValidIncludeLine = true;
                     break;
                 }

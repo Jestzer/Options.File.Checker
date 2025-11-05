@@ -29,8 +29,8 @@ function gatherData() {
     const optionsEqualsRegex = /options=/gi;
     const commentedBeginLineRegex = /# BEGIN--------------/gi;
     const keyEqualsRegex = /key=/gi;
-    const assetInfoRegex = /asset_info[=:]/gi;
-    const assetInfoWithNumberRegex = /asset_info[=:](\S+)/i;
+    const assetInfoRegex = /asset_info=/gi;
+    const assetInfoWithNumberRegex = /asset_info=(\S+)/i;
     const licenseNumberRegex = /^[^Rab_\d]+$/g;
     const licenseNumberSnRegex = /SN=(\S+)/i;
     const ipAddressRegex = /\d{2,3}\./g;
@@ -551,7 +551,7 @@ function gatherData() {
                             let quotedProductKey = productKey.replace(keyEqualsRegex, "");
                             productKey = quotedProductKey.replace('"', "");
                             licenseNumber = ""; // Unspecified by the user.
-                        } else { // asset_info= or asset_info:. The latter is acceptable for options files. I have tested it.
+                        } else { // asset_info=
                             let quotedLicenseNumber = licenseNumber.replace(assetInfoRegex, "");
                             licenseNumber = quotedLicenseNumber.replace('"', "");
                             productKey = "";
@@ -639,9 +639,7 @@ function gatherData() {
                         licenseNumber = "";
                     } else {
                         let unfixedLicenseNumber = colonParts[1];
-                        if (unfixedLicenseNumber === "asset_info") {
-                            unfixedLicenseNumber = colonParts[2];
-                        }
+
                         licenseNumber = unfixedLicenseNumber.replace(assetInfoRegex, "");
                         productKey = "";
                     }
@@ -920,7 +918,7 @@ function gatherData() {
                             let quotedReserveProductKey = reserveProductKey.replace(keyEqualsRegex, "");
                             reserveProductKey = quotedReserveProductKey.replace('"', "");
                             reserveLicenseNumber = ""; // Unspecified by the user.
-                        } else { // asset_info= or asset_info:. The latter is acceptable for options files. I have tested it.
+                        } else { // asset_info=
                             let quotedReserveLicenseNumber = reserveLicenseNumber.replace(assetInfoRegex, "");
                             reserveLicenseNumber = quotedReserveLicenseNumber.replace('"', "");
                             reserveProductKey = "";
@@ -982,9 +980,6 @@ function gatherData() {
                     } else {
                         let unfixedLicenseNumber = colonParts[1];
 
-                        if (unfixedLicenseNumber === "asset_info") {
-                            unfixedLicenseNumber = colonParts[2];
-                        }
                         reserveLicenseNumber = unfixedLicenseNumber.replace(assetInfoRegex, "");
                         reserveProductKey = ""; // Same as above.
                     }
