@@ -9,41 +9,65 @@ function analyzeData() {
                 dictionaryToUse = includeDictionary;
                 let dictionaryToUseString = "INCLUDE";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(includeBorrowDictionary).length > 0) {
                 dictionaryToUse = includeBorrowDictionary;
                 let dictionaryToUseString = "INCLUDE_BORROW";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(includeAllDictionary).length > 0) {
                 dictionaryToUse = includeAllDictionary;
                 let dictionaryToUseString = "INCLUDEALL";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(excludeDictionary).length > 0) {
                 dictionaryToUse = excludeDictionary;
                 let dictionaryToUseString = "EXCLUDE";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(excludeBorrowDictionary).length > 0) {
                 dictionaryToUse = excludeBorrowDictionary;
                 let dictionaryToUseString = "EXCLUDE_BORROW";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(excludeAllDictionary).length > 0) {
                 dictionaryToUse = excludeAllDictionary;
                 let dictionaryToUseString = "EXCLUDEALL";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(reserveDictionary).length > 0) {
                 dictionaryToUse = reserveDictionary;
                 let dictionaryToUseString = "RESERVE";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
             if (Object.keys(maxDictionary).length > 0) {
                 dictionaryToUse = maxDictionary;
                 let dictionaryToUseString = "MAX";
                 performGroupCheck(dictionaryToUse, dictionaryToUseString)
+                if (window.errorOccurred) {
+                    return;
+                }
             }
 
         } else {
@@ -59,6 +83,9 @@ function analyzeData() {
             let dictionaryEntries = Object.entries(dictionaryToUse);
             for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
                 seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries);
+                if (window.errorOccurred) {
+                    return;
+                }
             }
         }
 
@@ -68,6 +95,9 @@ function analyzeData() {
             let dictionaryEntries = Object.entries(dictionaryToUse);
             for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
                 seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries);
+                if (window.errorOccurred) {
+                    return;
+                }
             }
         }
 
@@ -77,6 +107,9 @@ function analyzeData() {
             let dictionaryEntries = Object.entries(dictionaryToUse);
             for (let [dictionaryKey, dictionaryEntry] of dictionaryEntries) {
                 seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry, dictionaryEntries);
+                if (window.errorOccurred) {
+                    return;
+                }
             }
         }
 
@@ -176,7 +209,7 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
                     hostGroupName = hostGroupName.replace('\t', '');
 
                     if (!hostGroupUsers || !hostGroupUsers.trim()) {
-                        errorMessageFunction(`There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is ${hostGroupName}.`);
+                        errorMessageFunction(`There is an issue with the options file: you attempted to use an empty HOST_GROUP. The HOST_GROUP name is ${hostGroupName}.`);
                         return;
                     }
 

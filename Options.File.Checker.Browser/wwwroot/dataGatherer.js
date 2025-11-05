@@ -361,6 +361,9 @@ function gatherData() {
                 }
 
                 const expirationDate = parseDdMmmYyyy(window.productExpirationDate);
+                if (window.errorOccurred) {
+                    return;
+                }
 
                 // Will come to midnight, since FlexLM + MathWorks doesn't seem to care about the time.
                 const currentDate = new Date(new Date().toDateString());
