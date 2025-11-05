@@ -1030,7 +1030,8 @@ function gatherData() {
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
-                let lineParts = lineWithTabsRemoved.split(" ");
+                let lineParts = lineWithTabsRemoved.split(" ").filter(part => /\S/.test(part));
+
 
                 groupName = lineParts[1];
                 groupName = groupName.replace(" ", ""); // Hopefully just removing them in general and not at the beginning + end of lines works...
@@ -1072,7 +1073,7 @@ function gatherData() {
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
-                let lineParts = lineWithTabsRemoved.split(" ");
+                let lineParts = lineWithTabsRemoved.split(" ").filter(part => /\S/.test(part));
 
                 hostGroupName = lineParts[1];
                 hostGroupName = hostGroupName.replace(" ", ""); // Hopefully just removing them in general and not at the beginning + end of lines works...
