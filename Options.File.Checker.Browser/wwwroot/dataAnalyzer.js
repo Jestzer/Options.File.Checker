@@ -622,7 +622,6 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                         // What's the meaning of this?! Who are you? How did you get in here?
                         errorMessageFunction(`What's the meaning of this?! Who are you? How did you get in here?`);
                         return;
-
                 }
 
                 // Ready for entry into the object.
