@@ -1046,7 +1046,7 @@ function gatherData() {
                 }
 
                 // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
-                let optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(groupDictionaryGroupNameEntry => groupDictionary[groupDictionaryGroupNameEntry][0] === groupName);
+                const optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(key => groupDictionary[key].groupName === groupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
                     let [, oldUsers, oldCount] = groupDictionary[optionsLineIndexToWriteTo];
@@ -1118,14 +1118,14 @@ function gatherData() {
                 // Other valid line beginnings that I currently do nothing with.
                 lastLineWasAGroupLine = false;
                 lastLineWasAHostGroupLine = false;
-            } else if (lastLineWasAGroupLine) {
+            } else if (lastLineWasAGroupLine === true) {
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\\", "");
-                let lineParts = lineWithTabsRemoved.split(" ");
+                let lineParts = lineWithTabsRemoved.split(" ").filter(part => /\S/.test(part));
 
-                let groupUsers = lineParts.slice(2).join(' ').trimEnd();
+                let groupUsers = lineParts.join(' ').trimEnd();
                 let groupUserCount = 0;
 
                 // Check if groupUsers is null, empty, or whitespace. If it is, leave the count at 0.
@@ -1134,13 +1134,17 @@ function gatherData() {
                 }
 
                 // The GROUP already exists, silly.
-                let optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(groupDictionaryGroupNameEntry => groupDictionary[groupDictionaryGroupNameEntry][0] === groupName);
+                const optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(key => groupDictionary[key].groupName === groupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
-                    let [, oldUsers, oldCount] = groupDictionary[optionsLineIndexToWriteTo];
-                    let combinedUsers = `${oldUsers} ${groupUsers}`;
-                    let combinedCount = oldCount + groupUserCount;
-                    groupDictionary[optionsLineIndexToWriteTo] = {groupName, combinedUsers, combinedCount};
+                    const existingGroupEntry = groupDictionary[optionsLineIndexToWriteTo];
+                    const combinedUsers = `${existingGroupEntry.groupUsers} ${groupUsers}`;
+                    const combinedCount = existingGroupEntry.groupUserCount + groupUserCount;
+                    groupDictionary[optionsLineIndexToWriteTo] = {
+                        ...existingGroupEntry,
+                        groupUsers: combinedUsers,
+                        groupUserCount: combinedCount
+                    };
                 }
 
                 // Check for wildcards and IP addresses.
@@ -1151,24 +1155,25 @@ function gatherData() {
                 if (ipAddressRegex.test(groupUsers)) {
                     window.ipAddressesAreUsed = true;
                 }
-            } else if (lastLineWasAHostGroupLine) {
+            } else if (lastLineWasAHostGroupLine === true) {
                 let lineWithTabsRemoved = currentLine.replaceAll("\t", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\n", "");
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
-                let lineParts = lineWithTabsRemoved.split(" ");
+                let lineParts = lineWithTabsRemoved.split(" ").filter(part => /\S/.test(part));
 
-                let hostGroupClientSpecified = lineParts.slice(2).join(' ').trimEnd();
+                let hostGroupClientSpecified = lineParts.join(' ').trimEnd();
                 hostGroupClientSpecified = hostGroupClientSpecified.replace('"', "");
 
                 // The HOST_GROUP already exists, silly.
-                let optionsLineIndexToWriteTo = Object.keys(hostGroupDictionary)
-                    .find(hostGroupDictionaryGroupNameEntry => hostGroupDictionary[hostGroupDictionaryGroupNameEntry][0] === hostGroupName);
+                const optionsLineIndexToWriteTo = Object.keys(hostGroupDictionary).find(key => hostGroupDictionary[key].hostGroupName === hostGroupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
-                    let [, oldUsers] = hostGroupDictionary[optionsLineIndexToWriteTo];
-                    let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
-
-                    hostGroupDictionary[optionsLineIndexToWriteTo] = {hostGroupName, combinedUsers};
+                    const existingHostGroupEntry = hostGroupDictionary[optionsLineIndexToWriteTo];
+                    const combinedUsers = `${existingHostGroupEntry.groupUsers} ${hostGroupClientSpecified}`;
+                    hostGroupDictionary[optionsLineIndexToWriteTo] = {
+                        ...existingHostGroupEntry,
+                        groupUsers: combinedUsers,
+                    };
                 }
 
                 // Check for wildcards and IP addresses.
