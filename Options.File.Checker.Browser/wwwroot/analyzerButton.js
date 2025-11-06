@@ -20,16 +20,6 @@ if (analyzerBtn) {
         if (!window.errorOccurred) {
             analyzeData()
             if (!window.errorOccurred) {
-                //console.log(licenseFileText)
-                //console.log(optionsFileText)
-                console.log("licenseFileDicitionary:")
-                console.log(licenseFileDictionary);
-                console.log("includeDicitionary:")
-                console.log(includeDictionary);
-                // console.log(groupDictionary);
-                // console.log(hostGroupDictionary);
-                console.log("reserveDicitionary:")
-                console.log(reserveDictionary);
 
                 if (window.serverLineHasPort === false) {
                     outputTextbox.textContent = "Warning: you did not specify a port number on your SERVER line.\n";
@@ -42,19 +32,22 @@ if (analyzerBtn) {
                 Object.entries(licenseFileDictionary).forEach(([idx, obj]) => {
                     const details = document.createElement('details');
                     const summary = document.createElement('summary');
-                    summary.textContent = `${obj.productName} Seats remaining: ${obj.seatCount}. Original seat count: ${obj.originalLicenseFileSeatCount}. ${obj.licenseOffering}. ${obj.licenseNumber}.`; // The label.
+                    summary.textContent = `${obj.productName} Seats remaining: ${obj.seatCount}. Original seat count: ${obj.originalLicenseFileSeatCount}. ${obj.licenseOffering}. ${obj.licenseNumber}. Product Key: ${obj.productKey}.`;
                     details.appendChild(summary);
 
-                    const ul = document.createElement('ul');
-                    Object.entries(obj).forEach(([productDetail, productDetailValue]) => {
-                        if (productDetail === 'productName' || productDetail === 'seatCount' || productDetail === 'originalLicenseFileSeatCount'|| productDetail === 'licenseOffering'|| productDetail === 'licenseNumber') return;
-                        const li = document.createElement('li');
-                        li.textContent = `${productDetail}: ${productDetailValue}`;
-                        ul.appendChild(li); // The children!!! Think about the children!!!
-                    });
-                    details.appendChild(ul);
+                    // Children for linesThatSubtractSeats.
+                    if (obj.linesThatSubtractSeats?.length) {
+                        const ul = document.createElement('ul');
+                        obj.linesThatSubtractSeats.forEach(line => {
+                            const li = document.createElement('li');
+                            li.textContent = line;          // one <li> per array element
+                            ul.appendChild(li);
+                        });
+                        details.appendChild(ul);
+                    }
                     treeRoot.appendChild(details);
                 });
+
             }
         }
     });
