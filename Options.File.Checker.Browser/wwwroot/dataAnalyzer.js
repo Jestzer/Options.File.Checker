@@ -613,8 +613,9 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                 }
                                 break;
                             // You have a clientType that does not require subtraction because we cannot subtract a definitive number of seats from it.
-                            default: doneSubtractingSeats = true;
-                            break;
+                            default:
+                                doneSubtractingSeats = true;
+                                break;
                         }
                         break;
                     default:
@@ -625,15 +626,19 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                 }
 
                 // Ready for entry into the object.
-                licenseFileDictionary[licenseLineIndex] = {
+                licenseFileDictionary[licenseLineIndex] ??= {
                     productName: licenseFileProductName,
                     seatCount: licenseFileSeatCount,
                     productKey: licenseFileProductKey,
                     licenseOffering: licenseFileLicenseOffering,
                     licenseNumber: licenseFileLicenseNumber,
-                    linesThatSubtractSeats,
+                    linesThatSubtractSeats: [],
                     originalLicenseFileSeatCount
                 };
+
+                // We need to actually write the values of the things that actually changed.
+                licenseFileDictionary[licenseLineIndex].linesThatSubtractSeats.push(...linesThatSubtractSeats);
+                licenseFileDictionary[licenseLineIndex].seatCount = licenseFileSeatCount;
 
                 if (needToGoToNextEntry === true) {
                     continue;
