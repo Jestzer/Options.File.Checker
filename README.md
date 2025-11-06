@@ -14,10 +14,10 @@ Notes for user:
 - If you combined your license file with non-MathWorks products, this will not work. Support for other products is not planned.
 
 To-do:
-- Allow GROUP lines formatted like this in the JS version.
-GROUP people 
-    person1 \
-    person2
+- Check if this formatting works for HOST_GROUPs and if so, add support for it:
+HOST_GROUP people 
+    *.*.*.* \
+    192.168.68.1
 - Check to see if spaces are allowed in usernames on USER lines
 - Let user know that USE_SERVER is not needed
 - Warn users when no NNU seats are assigned
