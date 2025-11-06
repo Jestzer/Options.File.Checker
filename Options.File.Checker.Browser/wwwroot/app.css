@@ -7,19 +7,21 @@ body {
 }
 
 .window {
-    width: 875px;
-    min-width: 875px;
-    height: 700px;
-    min-height: 700px;
-    margin: 30px 30px 5px 30px;
+    width: auto;
+    max-width: 100%;
+    height: 100vh;          /* fill the viewport height */
+    max-height: 100vh;      /* cap it there */
+    min-height: 0;          /* allow children to shrink */
+    margin: 30px;
     display: flex;
     flex-direction: column;
+    box-sizing: border-box;
 }
 
 .grid {
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* consistent vertical spacing */
+    display: grid;
+    grid-template-columns: 1fr;   /* one flexible column */
+    gap: 10px;
 }
 
 .label {
@@ -80,15 +82,17 @@ body {
     height: 150px;
     overflow-y: auto;
     margin: 10px 0;
+    width: 100%;
+    box-sizing: border-box;
 }
-
-/* Output tree placeholder */
+/* Output tree view */
 .output-tree {
-    flex: 1; /* fills remaining vertical space */
+    flex: 1 1 0;            /* consume remaining vertical space */
+    overflow: auto;         /* scroll when content overflows */
     border: 2px solid gray;
-    height: 150px;
-    overflow: auto;
     margin: 10px 0;
+    width: 100%;
+    box-sizing: border-box;
 }
 
 /* Version bar */
