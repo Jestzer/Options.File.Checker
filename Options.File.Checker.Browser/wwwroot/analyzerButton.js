@@ -51,18 +51,28 @@ if (analyzerBtn) {
                     outputTextbox.textContent += "Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n";
                 }
 
+                let cnOverdraftWarningHasBeenDisplayed = false;
                 let nnuOverdraftWarningHasBeenDisplayed = false;
 
                 Object.entries(licenseFileDictionary).forEach(([idx, obj]) => {
                     const details = document.createElement('details');
                     const summary = document.createElement('summary');
-                    summary.textContent = `${obj.productName} Seats remaining: ${obj.seatCount}. Original seat count: ${obj.originalLicenseFileSeatCount}. ${obj.licenseOffering}. ${obj.licenseNumber}. Product Key: ${obj.productKey}.`;
+                    summary.textContent = `${obj.productName} Seats remaining: ${obj.seatCount}. Original seat count: ${obj.originalLicenseFileSeatCount}. License offering: ${obj.licenseOffering}. ` +
+                    `License ${obj.licenseNumber}. Product Key: ${obj.productKey}.`;
 
                     // Wait!! I might have some things to tell you...
-                    if (obj.licenseOffering === "lo=CN" && obj.seatCount < 0 && nnuOverdraftWarningHasBeenDisplayed === false) {
+
+                    if (obj.licenseOffering === "NNU" && obj.seatCount < 0 && nnuOverdraftWarningHasBeenDisplayed === false) {
+                        cnOverdraftWarningHasBeenDisplayed = true;
+                        let message = `There is an issue with the options file: you have specified more users than available on the NNU product ${obj.productName} on license ${obj.licenseNumber}. ` +
+                            `The original seat count was ${obj.originalLicenseFileSeatCount}, it is now counting as ${obj.seatCount}.`;
+                        outputTextbox.textContent += message;
+                        errorMessageFunction(message);
+                    }
+                    if (obj.licenseOffering === "lo=CN" && obj.seatCount < 0 && cnOverdraftWarningHasBeenDisplayed === false) {
                         outputTextbox.textContent += "Warning: you have specified more users on a CN license than the number of seats available. " +
                             "This is introduces the possibility of License Manager Error -4 appearing, since there is not a seat available for every user to use at once.\n"
-                        nnuOverdraftWarningHasBeenDisplayed = true;
+                        cnOverdraftWarningHasBeenDisplayed = true;
                     }
 
                     // Okay, back to the tree view construction.
@@ -71,14 +81,46 @@ if (analyzerBtn) {
                     // Children for linesThatSubtractSeats.
                     if (obj.linesThatSubtractSeats?.length) {
                         const ul = document.createElement('ul');
+
                         obj.linesThatSubtractSeats.forEach(line => {
                             const li = document.createElement('li');
-                            li.textContent = line;          // one <li> per array element
+                            li.textContent = line;
                             ul.appendChild(li);
+
+                            // Sub child if you are using a GROUP.
+                            const groupMatch = line.match(/GROUP\s+(\S+)/i);
+                            if (groupMatch) {
+                                const wantedName = groupMatch[1].toLowerCase();
+                                const entry = Object.values(groupDictionary).find(
+                                    o => o.groupName.toLowerCase() === wantedName
+                                );
+
+                                if (entry) {
+                                    const details = document.createElement('details');   // <- wrapper
+                                    const summary = document.createElement('summary'); // <- clickable title
+                                    summary.textContent = 'Show GROUP users';
+                                    details.appendChild(summary);
+
+                                    const subUl = document.createElement('ul');
+                                    const items = Array.isArray(entry.groupUsers)
+                                        ? entry.groupUsers
+                                        : [entry.groupUsers];
+                                    items.forEach(item => {
+                                        const subLi = document.createElement('li');
+                                        subLi.textContent = item;
+                                        subUl.appendChild(subLi);
+                                    });
+                                    details.appendChild(subUl);   // content that expands/collapses
+                                    li.appendChild(details);      // attach under the main <li>
+                                }
+                            }
                         });
+
                         details.appendChild(ul);
                     }
                     treeRoot.appendChild(details);
+
+
                 });
 
             }
