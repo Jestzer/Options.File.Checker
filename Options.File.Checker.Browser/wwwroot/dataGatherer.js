@@ -49,7 +49,8 @@ function gatherData() {
         // Remove line breaks from license file.
         window.licenseFileText = window.licenseFileRawText
             .replace(/\\\r\n/g, '')
-            .replace(/\\\n/g, '');
+            .replace(/\\\n/g, '')
+            .replace(/\n\t/g, '');
 
         // Break into lines, for later usage.
         const licenseFileContentsLines = window.licenseFileText.split(/\r\n|\r|\n/);
@@ -249,7 +250,7 @@ function gatherData() {
                 seatCount = Number(lineParts[5]);
                 let productKey = lineParts[6].trim();
                 let licenseOffering;
-                let licenseNumber = "No plpLicenseNumber :(";
+                let licenseNumber = "No licenseNumber :(";
 
                 if (productKey.length > 20) {
                     errorMessageFunction("There is an issue with the license file: one of your product keys is greater than 20 characters long. This means it's likely been " +
@@ -286,7 +287,7 @@ function gatherData() {
                             "Your license file has likely been tampered with. Please regenerate it for this product before proceeding.");
                         return;
                     }
-                    errorMessageFunction(`There is an issue with the license file: the license number {licenseNumber} was not found for the product ${productName}.`);
+                    errorMessageFunction(`There is an issue with the license file: the license number ${licenseNumber} was not found for the product ${productName}.`);
                     return;
                 }
 
