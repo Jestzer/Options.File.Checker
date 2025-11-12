@@ -36,7 +36,10 @@ function gatherData() {
     const ipAddressRegex = /\d{2,3}\./g;
     const quoteRegex = /"/g;
     const whiteSpaceRegex = /\s+/g;
-    const tabRegex = /t/g;
+    const tabRegex = /\t/g;
+    const windowsNewLineRegex = /\\\r\n/g;
+    const unixNewLineRegex = /\\\n/g;
+    const newLineTabRegex = /\n\t/g;
 
     // Other.
     let containsPLP = false;
@@ -48,17 +51,19 @@ function gatherData() {
     try {
         // Remove line breaks from license file.
         window.licenseFileText = window.licenseFileRawText
-            .replace(/\\\r\n/g, '')
-            .replace(/\\\n/g, '')
-            .replace(/\n\t/g, '');
+            .replace(windowsNewLineRegex, '')
+            .replace(unixNewLineRegex, '')
+            .replace(newLineTabRegex, '')
+            .replace(tabRegex, '');
 
         // Break into lines, for later usage.
         const licenseFileContentsLines = window.licenseFileText.split(/\r\n|\r|\n/);
 
         // Same process for options file.
         window.optionsFileText = window.optionsFileRawText
-            .replace(/\\\r\n/g, '')
-            .replace(/\\\n/g, '');
+            .replace(windowsNewLineRegex, '')
+            .replace(unixNewLineRegex, '')
+            .replace(tabRegex, '');
 
         const optionsFileContentsLines = optionsFileText.split(/\r\n|\r|\n/);
 
@@ -1035,7 +1040,6 @@ function gatherData() {
                 lineWithTabsRemoved = lineWithTabsRemoved.replaceAll("\r", "");
                 let lineParts = lineWithTabsRemoved.split(" ").filter(part => /\S/.test(part));
 
-
                 groupName = lineParts[1];
                 groupName = groupName.replace(" ", ""); // Hopefully just removing them in general and not at the beginning + end of lines works...
                 groupName = groupName.replace("\t", "");
@@ -1050,7 +1054,7 @@ function gatherData() {
                 const optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(key => groupDictionary[key].groupName === groupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
-                    let [, oldUsers, oldCount] = groupDictionary[optionsLineIndexToWriteTo];
+                    let {groupUsers: oldUsers, groupUserCount: oldCount} = groupDictionary[optionsLineIndexToWriteTo];
                     let combinedUsers = `${oldUsers} ${groupUsers}`;
                     let combinedCount = oldCount + groupUserCount;
 
@@ -1089,7 +1093,7 @@ function gatherData() {
                     .find(hostGroupDictionaryGroupNameEntry => hostGroupDictionary[hostGroupDictionaryGroupNameEntry][0] === hostGroupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
-                    let [, oldUsers] = hostGroupDictionary[optionsLineIndexToWriteTo];
+                    let {hostGroupUsers: oldUsers} = hostGroupDictionary[optionsLineIndexToWriteTo];
                     let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
 
                     hostGroupDictionary[optionsLineIndexToWriteTo] = {hostGroupName, combinedUsers};
