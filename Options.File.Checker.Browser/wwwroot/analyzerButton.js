@@ -65,7 +65,7 @@ if (analyzerBtn) {
                     if (obj.licenseOffering === "NNU" && obj.seatCount < 0 && nnuOverdraftWarningHasBeenDisplayed === false) {
                         cnOverdraftWarningHasBeenDisplayed = true;
                         let message = `There is an issue with the options file: you have specified more users than available on the NNU product ${obj.productName} on license ${obj.licenseNumber}. ` +
-                            `The original seat count was ${obj.originalLicenseFileSeatCount}, it is now counting as ${obj.seatCount}.`;
+                            `The original seat count was ${obj.originalLicenseFileSeatCount}, it is now counting as ${obj.seatCount}. See the full output by closing this message for more details.`;
                         outputTextbox.textContent += message;
                         errorMessageFunction(message);
                     }
