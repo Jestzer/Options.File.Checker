@@ -39,7 +39,7 @@ function gatherData() {
     const tabRegex = /\t/g;
     const windowsNewLineRegex = /\\\r\n/g;
     const unixNewLineRegex = /\\\n/g;
-    const newLineTabRegex = /\n\t/g;
+    const newLineTabRegex = /\\\n\t/g;
 
     // Other.
     let containsPLP = false;
@@ -287,8 +287,8 @@ function gatherData() {
                 } else if (containsPLP && productName.includes("PolySpace")) {
                     licenseNumber = containsPLP
                 } else {
-                    if (!licenseNumber || !licenseNumber.trim()) {
-                        errorMessageFunction(`There is an issue with the license file: the license number was not found for the product {productName} with the product key ${productKey}. ` +
+                    if (!licenseNumber || !licenseNumber.trim() || licenseNumber === "No licenseNumber :(") {
+                        errorMessageFunction(`There is an issue with the license file: the license number was not found for the product ${productName} with the product key ${productKey}. ` +
                             "Your license file has likely been tampered with. Please regenerate it for this product before proceeding.");
                         return;
                     }
@@ -423,7 +423,7 @@ function gatherData() {
                     return;
                 }
 
-                if (!licenseNumber || !licenseNumber.trim() || licenseNumberRegex.test(licenseNumber)) {
+                if (!licenseNumber || !licenseNumber.trim() || licenseNumberRegex.test(licenseNumber) || licenseNumber === "No licenseNumber :(") {
                     if (licenseNumber === "DEMO") {
                         errorMessageFunction(`There is an issue with the license file: an invalid license number is detected for your trial license of ${productName}. ` +
                             "Your trial license file has likely been tampered with. Please regenerate it before proceeding.");
