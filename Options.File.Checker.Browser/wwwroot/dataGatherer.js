@@ -110,6 +110,9 @@ function gatherData() {
                 }
                 serverLineCount++
                 let lineParts = currentLine.split(" ");
+
+                // Remove blank lineParts from the SERVER line since FlexLM doesn't seem to care about them.
+                lineParts = lineParts.filter(part => part && part.trim());
                 let theWordServer = lineParts[0];
                 let serverHostID = lineParts[2];
 
