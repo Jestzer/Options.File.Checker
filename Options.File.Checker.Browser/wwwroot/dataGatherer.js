@@ -288,7 +288,7 @@ function gatherData() {
                     }
                     // This is the best guess we can make if you're using a PLP-era product.
                 } else if (containsPLP && productName.includes("PolySpace")) {
-                    licenseNumber = containsPLP
+                    licenseNumber = plpLicenseNumber
                 } else {
                     if (!licenseNumber || !licenseNumber.trim() || licenseNumber === "No licenseNumber :(") {
                         errorMessageFunction(`There is an issue with the license file: the license number was not found for the product ${productName} with the product key ${productKey}. ` +
@@ -358,7 +358,7 @@ function gatherData() {
                                 containsPLP = true;
                             }
                         } else {
-                            errorMessageFunction(`There is an issue with the license file: the product ${productName} has an valid license offering.`);
+                            errorMessageFunction(`There is an issue with the license file: the product ${productName} has an invalid license offering.`);
                             return;
                         }
                     }
@@ -440,7 +440,7 @@ function gatherData() {
                     return;
                 }
 
-                if (!productKey || !productName.trim()) {
+                if (!productKey || !productKey.trim()) {
                     errorMessageFunction(`There is an issue with the license file: a product key could not be detected for ${productName} on license number ${licenseNumber}.`);
                     return;
                 }
@@ -828,7 +828,7 @@ function gatherData() {
                 if (currentLine.trimEnd().startsWith("INCLUDEALL ")) {
                     includeAllDictionary[optionsLineIndex] = {clientType, clientSpecified, savedLine};
                 } else if (currentLine.trimEnd().startsWith("EXCLUDEALL ")) {
-                    excludeBorrowDictionary[optionsLineIndex] = {clientType, clientSpecified, savedLine};
+                    excludeAllDictionary[optionsLineIndex] = {clientType, clientSpecified, savedLine};
                 }
             } else if (currentLine.trim().startsWith("MAX ")) {
                 lastLineWasAGroupLine = false;

@@ -325,7 +325,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                     // RESERVE lines don't care about your clientType. You explicitly selected a number of seats to reserve, so that's all we'll be using for subtraction.
                     case "RESERVE":
                         if (firstAttemptToSubtractSeats) {
-                            if (reserveSeatCount > licenseFileLicenseNumber && forceSeatSubtraction === false) {
+                            if (reserveSeatCount > licenseFileSeatCount && forceSeatSubtraction === false) {
                                 // Subtract as much as possible from licenseFileSeatCount.
                                 let seatsToSubtract = (reserveSeatCount - licenseFileSeatCount);
                                 licenseFileSeatCount -= seatsToSubtract;
@@ -396,7 +396,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                     // Spreading out seats between multiple instances of the same product will not be done because of this.
                     case "INCLUDEALL":
                         // Without this, the recorded product name will be blank.
-                        productName = licenseFileProductKey;
+                        productName = licenseFileProductName;
 
                         if (licenseFileLicenseOffering !== "NNU") {
                             switch (clientType) {
@@ -411,7 +411,7 @@ function seatSubtractor(dictionaryToUse, dictionaryToUseString, dictionaryEntry,
                                     forceSeatSubtraction = false;
                                     break;
                                 case "GROUP":
-                                    if (!clientSpecified || clientSpecified.trim()) {
+                                    if (!clientSpecified || !clientSpecified.trim()) {
                                         errorMessageFunction("There is an issue with the options file: you have specified to use a GROUP on an INCLUDEALL line, but you did not specify which GROUP. " +
                                             `The line in question reads as this: ${rawOptionLine}`);
                                         return;
