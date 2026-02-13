@@ -1,72 +1,95 @@
-﻿/* Window shell */
+/* Reset */
+*, *::before, *::after {
+    box-sizing: border-box;
+}
+
+/* Window shell */
 body {
     margin: 0;
-    font-family: Segoe UI, system-ui, sans-serif;
-    background: #2d2b2b;
-    color: #fff;
+    font-family: "Segoe UI", system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    background: #1e1e1e;
+    color: #e0e0e0;
 }
 
 .window {
     width: auto;
     max-width: 100%;
-    height: 100vh;          /* fill the viewport height */
-    max-height: 100vh;      /* cap it there */
-    min-height: 0;          /* allow children to shrink */
-    margin: 30px;
+    height: 100vh;
+    max-height: 100vh;
+    min-height: 0;
+    padding: 24px 30px;
     display: flex;
     flex-direction: column;
     box-sizing: border-box;
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: 1fr;   /* one flexible column */
+    display: flex;
+    flex-direction: column;
     gap: 10px;
+    flex: 1;
+    min-height: 0;
 }
 
 .label {
-    font-size: 14px;
-    margin-bottom: 5px;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: #aaa;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
 }
 
 .textbox {
-    width: 300px;
-    padding: 6px 8px;
-    border: 1px solid #464646;
-    background: #464646;
-    color: #fff;
-    border-radius: 2px;
+    width: 340px;
+    padding: 7px 10px;
+    border: 1px solid #555;
+    background: #3c3c3c;
+    color: #e0e0e0;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+}
+
+.textbox:focus {
+    outline: none;
+    border-color: #1e699b;
 }
 
 .textbox::placeholder {
-    color: #aaa;
+    color: #777;
 }
 
-/* All button properties */
+/* Buttons */
 .btn {
-    padding: 6px 14px;
+    padding: 7px 16px;
     margin-left: 10px;
-    border: 2px solid #1e699b;
-    background: #464646;
-    color: #fff;
+    border: 1px solid #1e699b;
+    background: transparent;
+    color: #e0e0e0;
     cursor: pointer;
-    border-radius: 2px;
+    border-radius: 4px;
+    font-size: 13px;
+    font-family: inherit;
+    transition: background 0.15s, color 0.15s;
 }
 
 .btn:hover:not(:disabled) {
-    background: gray;
+    background: #1e699b;
+    color: #fff;
 }
 
 .btn:active:not(:disabled) {
-    background: #cecece;
-    color: #000;
+    background: #2580bb;
+    color: #fff;
 }
 
 .btn:disabled {
-    background: #858585;
-    border-color: #858585;
-    color: #a5a5a5;
+    border-color: #555;
+    color: #777;
     cursor: not-allowed;
+    background: transparent;
 }
 
 /* Input row */
@@ -75,39 +98,95 @@ body {
     align-items: center;
 }
 
-/* Output text block */
+/* Output text block (warnings) */
 .output-text {
-    border: 2px solid gray;
-    padding: 8px;
+    border: 1px solid #555;
+    border-radius: 4px;
+    padding: 10px 12px;
     height: 150px;
     overflow-y: auto;
     margin: 10px 0;
     width: 100%;
-    box-sizing: border-box;
+    background: #252525;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #ccc;
+    white-space: pre-wrap;
 }
+
+.output-text p {
+    margin: 0;
+    color: #777;
+}
+
 /* Output tree view */
 .output-tree {
-    flex: 1 1 0;            /* consume remaining vertical space */
-    overflow: auto;         /* scroll when content overflows */
-    border: 2px solid gray;
+    flex: 1 1 0;
+    overflow: auto;
+    border: 1px solid #555;
+    border-radius: 4px;
     margin: 10px 0;
+    padding: 8px;
     width: 100%;
-    box-sizing: border-box;
+    background: #252525;
 }
 
-/* Version bar */
-.version-bar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 20px;
+.output-tree summary {
+    cursor: pointer;
+    padding: 6px 8px;
+    border-radius: 4px;
+    font-size: 13px;
+    line-height: 1.5;
+    transition: background 0.1s;
 }
 
-/* Absolutely-positioned action buttons (like Canvas) */
+.output-tree summary:hover {
+    background: #333;
+}
+
+.output-tree details {
+    margin-bottom: 2px;
+}
+
+.output-tree details[open] > summary {
+    background: #2d2d2d;
+    margin-bottom: 4px;
+}
+
+.output-tree ul {
+    margin: 0 0 8px 20px;
+    padding: 0;
+    list-style: disc;
+}
+
+.output-tree li {
+    padding: 3px 0;
+    font-size: 13px;
+    color: #aaa;
+    line-height: 1.4;
+}
+
+/* Scrollbar styling */
+.output-text::-webkit-scrollbar,
+.output-tree::-webkit-scrollbar {
+    width: 8px;
+}
+
+.output-text::-webkit-scrollbar-track,
+.output-tree::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.output-text::-webkit-scrollbar-thumb,
+.output-tree::-webkit-scrollbar-thumb {
+    background: #555;
+    border-radius: 4px;
+}
+
+/* Action buttons - responsive positioning */
 .action-buttons {
-    position: absolute;
-    top: 65px; /* matches Canvas.Top="65" */
-    left: 500px; /* matches Canvas.Left="500" */
     display: flex;
     gap: 10px;
+    margin-top: 4px;
+    margin-bottom: 8px;
 }
