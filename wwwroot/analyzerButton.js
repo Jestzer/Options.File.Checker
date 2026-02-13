@@ -15,6 +15,23 @@ if (analyzerBtn) {
         outputTextbox.textContent = "";
         document.querySelector('.output-tree').innerHTML = '';
 
+        // Re-read files from disk in case they were modified since selection.
+        const licenseFile = document.getElementById('licenseFilePicker')?.files[0];
+        const optionsFile = document.getElementById('optionsFilePicker')?.files[0];
+
+        if (!licenseFile || !optionsFile) {
+            alert('Please select both license and options files.');
+            return;
+        }
+
+        try {
+            window.licenseFileRawText = await licenseFile.text();
+            window.optionsFileRawText = await optionsFile.text();
+        } catch (err) {
+            alert('Could not re-read the selected files. Please re-select them and try again.');
+            return;
+        }
+
         gatherData()
 
         if (!window.errorOccurred) {
