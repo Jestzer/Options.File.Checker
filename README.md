@@ -9,7 +9,7 @@ Notes for user:
 - Yes, options= and port= aren't technically needed on the DAEMON line, but MathWorks says you should use them.
 - I _think_ it's possible in the options file to specify multiple entries (ex: INCLUDE MATLAB USER rob) without creating a line break. This program does not support this type of formatting and probably never will.
 - Options and license files over 50 MB will not be able to be used. I will keep this limit until I see a need to lift it.
-- Latest release uses .NET 8.0.
+- Latest release uses .NET 8.0. Future builds will have no C# and instead primarily use JavaScript.
 - In general, with FlexLM, USERs are case-sensitive. Additionally, if you have the exact same INCLUDE line multiple times, each one will be counted separately and will subtract from the seat count. Because FlexLM does this, so does this program.
 - If you combined your license file with non-MathWorks products, this will not work. Support for other products is not planned.
 
