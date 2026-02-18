@@ -19,6 +19,7 @@ function gatherData() {
     window.groupDictionary = {};
     window.hostGroupDictionary = {};
     window.productExpirationDate = "No product expiration date set."
+    window.useServerFound = false;
     window.currentLine = "window.currentLine has not been set. :("
 
 
@@ -469,7 +470,7 @@ function gatherData() {
             } else if (window.currentLine.trimEnd().startsWith("#") || window.currentLine === "") {
                 // Ignore empty and commented out lines.
             } else if (window.currentLine.trimEnd().startsWith("USE_SERVER")) {
-                // Someday, there will be code here to yell at your for your sins, no matter how minor they are.
+                window.useServerFound = true;
             } else {
                 errorMessageFunction("There is an issue with the license file: it has an unrecognized line. You likely manually edited the license file " +
                     "and likely need to regenerate it. The lines' contents are the following: " + window.currentLine);
@@ -840,6 +841,8 @@ function gatherData() {
 
                 if (lineParts.length < 5) {
                     errorMessageFunction("There is an issue with the options file: you have an incorrectly formatted MAX line. It is missing necessary information. " +
+                        "A MAX line should be formatted as: MAX <number_of_seats> <product_name> <client_type> <client_specified>. " +
+                        "Example: MAX 5 MATLAB USER john_doe. " +
                         `The line in question reads as this: \"${currentLine}\".`);
                 }
 
@@ -1093,10 +1096,10 @@ function gatherData() {
 
                 // Check if the groupName already exists in the dictionary. If it does, we want to combine them, since this is what FlexLM does.
                 let optionsLineIndexToWriteTo = Object.keys(hostGroupDictionary)
-                    .find(hostGroupDictionaryGroupNameEntry => hostGroupDictionary[hostGroupDictionaryGroupNameEntry][0] === hostGroupName);
+                    .find(hostGroupDictionaryGroupNameEntry => hostGroupDictionary[hostGroupDictionaryGroupNameEntry].hostGroupName === hostGroupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
-                    let {hostGroupUsers: oldUsers} = hostGroupDictionary[optionsLineIndexToWriteTo];
+                    let oldUsers = hostGroupDictionary[optionsLineIndexToWriteTo].combinedUsers ?? hostGroupDictionary[optionsLineIndexToWriteTo].hostGroupClientSpecified;
                     let combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
 
                     hostGroupDictionary[optionsLineIndexToWriteTo] = {hostGroupName, combinedUsers};
@@ -1177,10 +1180,11 @@ function gatherData() {
 
                 if (optionsLineIndexToWriteTo !== undefined) {
                     const existingHostGroupEntry = hostGroupDictionary[optionsLineIndexToWriteTo];
-                    const combinedUsers = `${existingHostGroupEntry.groupUsers} ${hostGroupClientSpecified}`;
+                    const oldUsers = existingHostGroupEntry.combinedUsers ?? existingHostGroupEntry.hostGroupClientSpecified;
+                    const combinedUsers = `${oldUsers} ${hostGroupClientSpecified}`;
                     hostGroupDictionary[optionsLineIndexToWriteTo] = {
                         ...existingHostGroupEntry,
-                        groupUsers: combinedUsers,
+                        combinedUsers,
                     };
                 }
 

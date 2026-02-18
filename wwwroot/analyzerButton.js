@@ -68,6 +68,25 @@ if (analyzerBtn) {
                     outputTextbox.textContent += "Warning: you are using an IP address in your options file. IP addresses are often dynamic and therefore cannot be reliably used to identify users.\n";
                 }
 
+                if (useServerFound === true) {
+                    outputTextbox.textContent += "Warning: USE_SERVER was found in your license file. This line is not needed and can be removed.\n";
+                }
+
+                if (window.nnuProductsWithNoSeatsAssigned && window.nnuProductsWithNoSeatsAssigned.length > 0) {
+                    for (let nnuProduct of window.nnuProductsWithNoSeatsAssigned) {
+                        outputTextbox.textContent += `Warning: the NNU product ${nnuProduct} has no seats assigned. NNU products require INCLUDE lines with USER or GROUP to assign seats.\n`;
+                    }
+                }
+
+                if (window.maxExceedsSeatCountWarnings && window.maxExceedsSeatCountWarnings.length > 0) {
+                    for (let maxWarning of window.maxExceedsSeatCountWarnings) {
+                        let maxSeatWord = maxWarning.maxSeats === 1 ? "seat" : "seats";
+                        let totalSeatWord = maxWarning.totalSeats === 1 ? "seat" : "seats";
+                        outputTextbox.textContent += `Warning: a MAX line specifies ${maxWarning.maxSeats} ${maxSeatWord} for ${maxWarning.productName}, ` +
+                            `but only ${maxWarning.totalSeats} ${totalSeatWord} are available in the license file.\n`;
+                    }
+                }
+
                 let cnOverdraftWarningHasBeenDisplayed = false;
                 let nnuOverdraftWarningHasBeenDisplayed = false;
 

@@ -152,6 +152,54 @@ function analyzeData() {
                 errorMessageFunction("There is an issue with the options file: you have no INCLUDE lines with a USER or GROUP. You need these to use an NNU license.");
             }
         }
+
+        // Check if any NNU products have no users assigned via INCLUDE (applies to both NNU-only and mixed licenses).
+        window.nnuProductsWithNoSeatsAssigned = [];
+        for (let [licenseFileDictionaryKey, licenseFileDictionaryEntry] of licenseFileDictionaryEntries) {
+            if (licenseFileDictionaryEntry.licenseOffering !== "NNU") continue;
+
+            let nnuProductName = licenseFileDictionaryEntry.productName;
+            let hasAssignedUser = false;
+
+            let includeDictionaryEntries = Object.entries(includeDictionary);
+            for (let [includeDictionaryKey, includeDictionaryEntry] of includeDictionaryEntries) {
+                if (includeDictionaryEntry.productName === nnuProductName &&
+                    (includeDictionaryEntry.clientType === "USER" || includeDictionaryEntry.clientType === "GROUP")) {
+                    hasAssignedUser = true;
+                    break;
+                }
+            }
+
+            if (!hasAssignedUser && !window.nnuProductsWithNoSeatsAssigned.includes(nnuProductName)) {
+                window.nnuProductsWithNoSeatsAssigned.push(nnuProductName);
+            }
+        }
+
+        // Check if any MAX line specifies more seats than available for the product.
+        window.maxExceedsSeatCountWarnings = [];
+        if (Object.keys(maxDictionary).length > 0) {
+            let maxDictionaryEntries = Object.entries(maxDictionary);
+            for (let [maxDictionaryKey, maxDictionaryEntry] of maxDictionaryEntries) {
+                let maxProductName = maxDictionaryEntry.maxProductName;
+                let maxSeats = maxDictionaryEntry.maxSeats;
+
+                // Sum total seats for this product across all license entries.
+                let totalSeats = 0;
+                for (let [licenseKey, licenseEntry] of licenseFileDictionaryEntries) {
+                    if (licenseEntry.productName === maxProductName) {
+                        totalSeats += licenseEntry.originalLicenseFileSeatCount;
+                    }
+                }
+
+                if (totalSeats > 0 && maxSeats > totalSeats) {
+                    window.maxExceedsSeatCountWarnings.push({
+                        productName: maxProductName,
+                        maxSeats: maxSeats,
+                        totalSeats: totalSeats
+                    });
+                }
+            }
+        }
     } catch (rawErrorMessage) {
         errorMessageFunction(`Something broke really badly in the Analyzer. What a bummer. Here's the automatically generated error: ${rawErrorMessage}.`);
     }
