@@ -1,5 +1,7 @@
 # Options File Checker
-A simple program designed to help you spot obvious errors in your options file used for MathWorks Products. You may find some precompiled builds in the Releases section of this page to download.
+A simple program designed to help you spot obvious errors in your options file used for MathWorks Products.
+
+To download this program, click the green <>Code button, select "Download ZIP", extract the ZIP archive, if it isn't done automatically, go into the newly extracted folder, go into the wwwroot folder, and then double-click the index.html folder.
 
 Notes for user:
 - This tool is not created by nor associated with MathWorks.
@@ -14,4 +16,3 @@ Notes for user:
 
 To-do:
 - Identify bad INCREMENT lines (possibly counting lineParts?)
-- Setup bug testing.
