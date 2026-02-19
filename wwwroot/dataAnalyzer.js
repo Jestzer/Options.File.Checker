@@ -223,7 +223,7 @@ function performGroupCheck(dictionaryToUse, dictionaryToUseString) {
                 for (let [groupDictionaryKey, groupEntry] of groupEntries) {
 
                     let groupName = groupEntry.groupName;
-                    let groupUsers = groupEntry.combinedUsers ?? groupEntry.groupUsers;
+                    let groupUsers = groupEntry.groupUsers;
 
                     if (!groupUsers || !groupUsers.trim()) {
                         errorMessageFunction(`There is an issue with the options file: you attempted to use an empty GROUP. The GROUP name is ${groupName}.`);

@@ -93,7 +93,8 @@ if (analyzerBtn) {
                 Object.entries(licenseFileDictionary).forEach(([idx, obj]) => {
                     const details = document.createElement('details');
                     const summary = document.createElement('summary');
-                    summary.textContent = `${obj.productName} Seats remaining: ${obj.seatCount}. Original seat count: ${obj.originalLicenseFileSeatCount}. License offering: ${obj.licenseOffering}. ` +
+                    const displayOffering = obj.licenseOffering === "lo=CN" ? "CN" : obj.licenseOffering;
+                    summary.textContent = `${obj.productName} Seats remaining: ${obj.seatCount}. Original seat count: ${obj.originalLicenseFileSeatCount}. License offering: ${displayOffering}. ` +
                     `License ${obj.licenseNumber}. Product Key: ${obj.productKey}.`;
 
                     // Wait!! I might have some things to tell you...
@@ -105,7 +106,7 @@ if (analyzerBtn) {
                         outputTextbox.textContent += message;
                         errorMessageFunction(message);
                     }
-                    if (obj.licenseOffering === "lo=CN" && obj.seatCount < 0 && cnOverdraftWarningHasBeenDisplayed === false) {
+                    if ((obj.licenseOffering === "lo=CN" || obj.licenseOffering === "CN") && obj.seatCount < 0 && cnOverdraftWarningHasBeenDisplayed === false) {
                         outputTextbox.textContent += "Warning: you have specified more users on a CN license than the number of seats available. " +
                             "This is introduces the possibility of License Manager Error -4 appearing, since there is not a seat available for every user to use at once.\n"
                         cnOverdraftWarningHasBeenDisplayed = true;
@@ -138,9 +139,8 @@ if (analyzerBtn) {
                                     details.appendChild(summary);
 
                                     const subUl = document.createElement('ul');
-                                    const items = Array.isArray(entry.groupUsers)
-                                        ? entry.groupUsers
-                                        : [entry.groupUsers];
+                                    const usersString = entry.groupUsers || "";
+                                    const items = usersString.split(/\s+/).filter(u => u.length > 0);
                                     items.forEach(item => {
                                         const subLi = document.createElement('li');
                                         subLi.textContent = item;

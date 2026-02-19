@@ -1060,11 +1060,12 @@ function gatherData() {
                 const optionsLineIndexToWriteTo = Object.keys(groupDictionary).find(key => groupDictionary[key].groupName === groupName);
 
                 if (optionsLineIndexToWriteTo !== undefined) {
-                    let {groupUsers: oldUsers, groupUserCount: oldCount} = groupDictionary[optionsLineIndexToWriteTo];
-                    let combinedUsers = `${oldUsers} ${groupUsers}`;
-                    let combinedCount = oldCount + groupUserCount;
+                    let oldUsers = groupDictionary[optionsLineIndexToWriteTo].groupUsers;
+                    let oldCount = groupDictionary[optionsLineIndexToWriteTo].groupUserCount;
+                    let newGroupUsers = `${oldUsers} ${groupUsers}`;
+                    let newGroupUserCount = oldCount + groupUserCount;
 
-                    groupDictionary[optionsLineIndexToWriteTo] = {groupName, combinedUsers, combinedCount};
+                    groupDictionary[optionsLineIndexToWriteTo] = {groupName, groupUsers: newGroupUsers, groupUserCount: newGroupUserCount};
 
                 } else { // If no existing entry can be found, create a new one.
                     // Ready for entry into the object.
